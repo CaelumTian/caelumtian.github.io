@@ -108,7 +108,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://yoursite.com/2017/09/21/riot-js-源码解析1/a.png">
 <meta property="og:image" content="http://yoursite.com/2017/09/21/riot-js-源码解析1/b.png">
-<meta property="og:updated_time" content="2017-09-27T06:26:10.000Z">
+<meta property="og:updated_time" content="2017-10-18T07:14:27.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Riot.js 源码解析 【一】 基础内容">
 <meta name="twitter:description" content="Simple and elegant component-based UI library (Riot.js)      riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了">
@@ -372,7 +372,7 @@
         <blockquote>
 <p>Simple and elegant component-based UI library (Riot.js)    </p>
 </blockquote>
-<p>riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。<br>目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。<br>本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容。<br><a id="more"></a></p>
+<p>riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。<br>目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。<br>本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容，riot.js 版本为3.6.1。<br><a id="more"></a></p>
 <h1 id="Hello-world"><a href="#Hello-world" class="headerlink" title="Hello world"></a>Hello world</h1><p>来一个简单的例子，基于 webpack 构建，依赖 riotjs-loader。<br>自定义标签代码，content-demo.tag   </p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> riot <span class="keyword">from</span> <span class="string">'riot'</span>;</div><div class="line">&lt;content-demo&gt; </div><div class="line">    &lt;style&gt;</div><div class="line">        h1 &#123;</div><div class="line">            color: pink;</div><div class="line">        &#125;</div><div class="line">    &lt;<span class="regexp">/style&gt;</span></div><div class="line"><span class="regexp">    &lt;h1&gt;&#123; message &#125;&lt;/</span>h1&gt;</div><div class="line">    &lt;ul&gt;</div><div class="line">        &lt;li each=&#123; lists &#125;&gt;&#123; name &#125;&lt;<span class="regexp">/li&gt;</span></div><div class="line"><span class="regexp">        &lt;script&gt;</span></div><div class="line"><span class="regexp">            this.message = 'hello world';</span></div><div class="line"><span class="regexp">            this.lists = [</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'caelumtian'</span></div><div class="line"><span class="regexp">                &#125;,</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'hyang'</span></div><div class="line"><span class="regexp">                &#125;</span></div><div class="line"><span class="regexp">            ]</span></div><div class="line"><span class="regexp">        &lt;/</span>script&gt;</div><div class="line">    &lt;<span class="regexp">/ul&gt;</span></div><div class="line"><span class="regexp">&lt;/</span>content-demo&gt;</div></pre></td></tr></table></figure>
 <p>html 页面代码如下：  </p>
@@ -423,7 +423,7 @@
 <p>riot.unregister() 源码十分简单，如下：  </p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">unregister</span>(<span class="params">name</span>) </span>&#123;</div><div class="line">    __TAG_IMPL[name] = <span class="literal">null</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>暴露在 riot 全局变量上的函数，还包括 <code>riot.update</code> 和 <code>riot.mixin</code> 两个，将在后面的内容介绍。  </p>
-<h1 id="源码目录结构"><a href="#源码目录结构" class="headerlink" title="源码目录结构"></a>源码目录结构</h1><p>riot 的源码目录结构如下：</p>
+<h1 id="源码目录结构"><a href="#源码目录结构" class="headerlink" title="源码目录结构"></a>源码目录结构</h1><p>riot 3.6.1 的源码目录结构如下：</p>
 <pre><code>|____browser
 | |____common
 | | |____global-variables.js // 使用到的常量
@@ -490,8 +490,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2017/09/28/js增量更新算法研究/" rel="prev" title="">
-                 <i class="fa fa-chevron-right"></i>
+              <a href="/2017/10/18/riot-js源码解析2/" rel="prev" title="Riot.js 源码解析 【二】 组件化">
+                Riot.js 源码解析 【二】 组件化 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>

@@ -80,7 +80,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="CaelumTian的个人博客" />
+  <meta name="keywords" content="javascript,前端源码解析,Riot.js," />
 
 
 
@@ -98,17 +98,18 @@
 
 
 
-<meta name="description" content="愿归来时，仍是少年">
-<meta name="keywords" content="CaelumTian 的博客">
-<meta property="og:type" content="website">
-<meta property="og:title" content="CaelumTian的博客">
-<meta property="og:url" content="http://yoursite.com/archives/2017/index.html">
+<meta name="description" content="riot 组件使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见Riot.js 源码解析 【一】 基础内容)。   riot 组件声明周期riot组件状态分为以下几个部分：    before-mount：标签被加载之前 mount：标签实例被加载到页面上以后 update：允许在更新之前重新计">
+<meta name="keywords" content="javascript,前端源码解析,Riot.js">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Riot.js 源码解析 【二】 组件化">
+<meta property="og:url" content="http://yoursite.com/2017/10/18/riot-js源码解析2/index.html">
 <meta property="og:site_name" content="CaelumTian的博客">
-<meta property="og:description" content="愿归来时，仍是少年">
+<meta property="og:description" content="riot 组件使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见Riot.js 源码解析 【一】 基础内容)。   riot 组件声明周期riot组件状态分为以下几个部分：    before-mount：标签被加载之前 mount：标签实例被加载到页面上以后 update：允许在更新之前重新计">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-10-18T07:46:36.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CaelumTian的博客">
-<meta name="twitter:description" content="愿归来时，仍是少年">
+<meta name="twitter:title" content="Riot.js 源码解析 【二】 组件化">
+<meta name="twitter:description" content="riot 组件使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见Riot.js 源码解析 【一】 基础内容)。   riot 组件声明周期riot组件状态分为以下几个部分：    before-mount：标签被加载之前 mount：标签实例被加载到页面上以后 update：允许在更新之前重新计">
 
 
 
@@ -137,13 +138,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/archives/2017/"/>
+  <link rel="canonical" href="http://yoursite.com/2017/10/18/riot-js源码解析2/"/>
 
 
 
 
 
-  <title>归档 | CaelumTian的博客</title>
+  <title>Riot.js 源码解析 【二】 组件化 | CaelumTian的博客</title>
   
 
 
@@ -168,7 +169,7 @@
     
   
 
-  <div class="container sidebar-position-right  page-archive  ">
+  <div class="container sidebar-position-right page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -262,370 +263,191 @@
           <div id="content" class="content">
             
 
-  
-  
-  
-  <div class="post-block archive">
-    <div id="posts" class="posts-collapse">
-      <span class="archive-move-on"></span>
+  <div id="posts" class="posts-expand">
+    
 
-      <span class="archive-page-counter">
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/18/riot-js源码解析2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
         
         
+          <h1 class="post-title" itemprop="name headline">Riot.js 源码解析 【二】 组件化</h1>
         
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-18T14:24:12+08:00">
+                2017-10-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
           
-        
-        嗯..! 目前共计 12 篇日志。 继续努力。
-      </span>
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/前端源码解析/" itemprop="url" rel="index">
+                    <span itemprop="name">前端源码解析</span>
+                  </a>
+                </span>
 
-      
-
-        
-        
-        
-
-        
+                
+                
+              
+            </span>
           
-          <div class="collection-title">
-            <h2 class="archive-year motion-element" id="archive-year-2017">2017</h2>
-          </div>
-        
-        
 
-        
+          
+            
+          
 
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+          
+          
 
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/10/18/riot-js源码解析2/" itemprop="url">
-              
-                <span itemprop="name">Riot.js 源码解析 【二】 组件化</span>
-              
-            </a>
-        
-      </h2>
+          
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-10-18T14:24:12+08:00"
-              content="2017-10-18" >
-          10-18
-        </time>
-      </div>
+          
 
-    </header>
-  </article>
+          
 
+        </div>
+      </header>
+    
 
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/09/21/riot-js-源码解析1/" itemprop="url">
-              
-                <span itemprop="name">Riot.js 源码解析 【一】 基础内容</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-09-21T22:36:37+08:00"
-              content="2017-09-21" >
-          09-21
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
       
 
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/09/02/译-使用WebSpeechAPI/" itemprop="url">
-              
-                <span itemprop="name">[译] 使用Web Speech API和Node.js构建简单的AI Chatbot</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-09-02T19:55:05+08:00"
-              content="2017-09-02" >
-          09-02
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/08/28/图片惰性加载的实现/" itemprop="url">
-              
-                <span itemprop="name">图片惰性加载 IntersectionObserver</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-08-28T20:41:11+08:00"
-              content="2017-08-28" >
-          08-28
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
+        <h1 id="riot-组件"><a href="#riot-组件" class="headerlink" title="riot 组件"></a>riot 组件</h1><p>使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见<a href="">Riot.js 源码解析 【一】 基础内容</a>)。  </p>
+<h1 id="riot-组件声明周期"><a href="#riot-组件声明周期" class="headerlink" title="riot 组件声明周期"></a>riot 组件声明周期</h1><p>riot组件状态分为以下几个部分：  </p>
+<ul>
+<li>before-mount：标签被加载之前</li>
+<li>mount：标签实例被加载到页面上以后</li>
+<li>update：允许在更新之前重新计算上下文数据</li>
+<li>updated：标签模板更新后</li>
+<li>before-unmount：标签实例被卸载之前</li>
+<li>unmount：标签实例被从页面上卸载后    </li>
+</ul>
+<p>riot.js 采用事件驱动的方式来进行通讯，我们可以采用如下函数来监听上面的事件，例如处理 update 事件：  </p>
+<pre><code class="html"><span class="tag">&lt;<span class="name">riot-demo</span>&gt;</span>
+    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span>
+<span class="javascript">        <span class="keyword">this</span>.on(<span class="string">'update'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span>
+<span class="javascript">            <span class="comment">// 标签更新后的处理</span></span>
+<span class="undefined">        })</span>
+<span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>
+<span class="tag">&lt;/<span class="name">riot-demo</span>&gt;</span>
+</code></pre>
+<h2 id="mount-阶段"><a href="#mount-阶段" class="headerlink" title="mount 阶段"></a>mount 阶段</h2>
       
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/08/23/译-将你的网站升级为PWA/" itemprop="url">
-              
-                <span itemprop="name">[译] 将你的网站改造为PWA</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-08-23T20:07:14+08:00"
-              content="2017-08-23" >
-          08-23
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/" itemprop="url">
-              
-                <span itemprop="name">[译] 如何利用 localStorage 来构建更快的应用程序</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-08-23T19:45:13+08:00"
-              content="2017-08-23" >
-          08-23
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/08/21/译-为-Web-Bluetooth-做好准备/" itemprop="url">
-              
-                <span itemprop="name">[译] 为 Web Bluetooth 做好准备</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-08-21T19:43:00+08:00"
-              content="2017-08-21" >
-          08-21
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/08/21/利用javascript搭建富文本编辑器/" itemprop="url">
-              
-                <span itemprop="name">利用javascript搭建富文本编辑器</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-08-21T19:37:32+08:00"
-              content="2017-08-21" >
-          08-21
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
-        
-        
-        
-
-        
-        
-
-        
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
-        
-            <a class="post-title-link" href="/2017/08/21/数据响应系统原理解析/" itemprop="url">
-              
-                <span itemprop="name">数据响应系统原理解析</span>
-              
-            </a>
-        
-      </h2>
-
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2017-08-21T19:36:49+08:00"
-              content="2017-08-21" >
-          08-21
-        </time>
-      </div>
-
-    </header>
-  </article>
-
-
-
-      
-
     </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+            <a href="/tags/前端源码解析/" rel="tag">前端源码解析</a>
+          
+            <a href="/tags/Riot-js/" rel="tag">Riot.js</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/21/riot-js-源码解析1/" rel="next" title="Riot.js 源码解析 【一】 基础内容">
+                <i class="fa fa-chevron-left"></i> Riot.js 源码解析 【一】 基础内容
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
   </div>
   
   
   
+  </article>
 
-  
 
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -633,6 +455,10 @@
 
 
           
+  <div class="comments" id="comments">
+    
+  </div>
+
 
         </div>
         
@@ -653,8 +479,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.jpg"
@@ -795,6 +630,22 @@
       </section>
 
       
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#riot-组件"><span class="nav-number">1.</span> <span class="nav-text">riot 组件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#riot-组件声明周期"><span class="nav-number">2.</span> <span class="nav-text">riot 组件声明周期</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#mount-阶段"><span class="nav-number">2.1.</span> <span class="nav-text">mount 阶段</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
 
       
 
@@ -893,11 +744,9 @@
   
 
   
-  
-    <script type="text/javascript" id="motion.page.archive">
-      $('.archive-year').velocity('transition.slideLeftIn');
-    </script>
-  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
 
 
   

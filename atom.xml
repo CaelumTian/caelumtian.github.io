@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-09-28T08:07:10.000Z</updated>
+  <updated>2017-10-18T07:46:36.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,79 +16,47 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title></title>
-    <link href="http://yoursite.com/2017/09/28/js%E5%A2%9E%E9%87%8F%E6%9B%B4%E6%96%B0%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/"/>
-    <id>http://yoursite.com/2017/09/28/js增量更新算法研究/</id>
-    <published>2017-09-28T03:42:55.000Z</published>
-    <updated>2017-09-28T08:07:10.000Z</updated>
+    <title>Riot.js 源码解析 【二】 组件化</title>
+    <link href="http://yoursite.com/2017/10/18/riot-js%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%902/"/>
+    <id>http://yoursite.com/2017/10/18/riot-js源码解析2/</id>
+    <published>2017-10-18T06:24:12.000Z</published>
+    <updated>2017-10-18T07:46:36.000Z</updated>
     
-    <content type="html"><![CDATA[<hr>
-<p>title: js增量更新算法研究<br>date: 2017-09-28 11:42:55</p>
-<h2 id="tags"><a href="#tags" class="headerlink" title="tags:"></a>tags:</h2><h1 id="serviceWorker-方案-js增量更新算法研究"><a href="#serviceWorker-方案-js增量更新算法研究" class="headerlink" title="serviceWorker 方案 - js增量更新算法研究"></a>serviceWorker 方案 - js增量更新算法研究</h1><h2 id="调研背景"><a href="#调研背景" class="headerlink" title="调研背景"></a>调研背景</h2><blockquote>
-<p>根据之前 serviceWorker 的调研，当服务端文件更新后，serviceWorker 会做对比，并请求这些新的文件。所有发生变化的文件都会被更新。现在 new-mini 内嵌页面，js 都被压缩成了一个文件。这样每次很小的文件改动，都会导致客户端需要下载整个js文件，这样会造成流量的浪费，同时也对服务器造成过大的流量压力。为此我们需要减少更新文件的体积，来更好的完成 serviceWorker 的架构。</p>
-<h2 id="js-增量更新算法"><a href="#js-增量更新算法" class="headerlink" title="js 增量更新算法"></a>js 增量更新算法</h2><p>利用增量更新算法，我们大大的降低每次文件变动后传输的大小。这里调研了4中常见的js 增量更新算法：  </p>
-<h3 id="基于chunk的增量更新算法"><a href="#基于chunk的增量更新算法" class="headerlink" title="基于chunk的增量更新算法"></a>基于chunk的增量更新算法</h3><p>首先将旧的文件分成n块并并编号<br><img src="/2017/09/28/js增量更新算法研究/a.png" alt="a.png" title=""><br>然后在新文件上进行，滚动查找。如果找到匹配的则记录块号，如果没找到则块往前移动 1 个字符，并把上个字符压入新数据块,然后扫描下一块，最终得到一个新数据和数据块号的组合的增量文件（这一步可以用上线 JavaScript 时用的打包工具或者请求 JavaScript 服务器程序实时计算出来）。<br><img src="/2017/09/28/js增量更新算法研究/b.png" alt="b.png" title=""><br>最终得到的增量文件如下所示：<br>1, data1, 2, 3, data2, 4, 5, 6  </p>
-</blockquote>
-<p>进一步合并顺序快得到：  </p>
-<blockquote>
-<p>[1, 1], data1, [2, 2], data2, [4, 4]  </p>
-</blockquote>
-<p>客户端根据旧文件的 chunk 数据和增量更新数据，我们可以得出新版本数据由如下数据组成：  </p>
-<blockquote>
-<p>chunk0+data1+chunk1+chunk2+data2+chunk3+chunk4+chunk5  </p>
-</blockquote>
-<p>例如以 s = ‘‘1345678abcdefghijklmnopq’ 修改为 a = ‘‘13456<code>f</code>78abcd<code>2</code>efghijklmnopq’为例, 设块长度为4 则， 源文件分成：<br><br>通过滚动查找，得到新文件<br><br>最终增量文件表示如下数组: [“a=‘1”,2,”f”,3,”cd2ef”,5,6,7]。 进一步合并顺序块，可用一个js数组表示为： [“a=‘1”,[2,1],“f”,[3,1],“cd2ef”,[5,3]。<br>在 serviceWorker 客户端这边，调用如下函数，进行文件更新：  </p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//source 是上一个版本内容，trunkSize 是块大小，checksumcode 是两个版本间的增量文件数组</span></div><div class="line"><span class="keyword">var</span> rsyncjs = <span class="function"><span class="keyword">function</span>(<span class="params">source,trunkSize,checksumcode</span>)</span>&#123;</div><div class="line">   <span class="keyword">var</span> strResult=<span class="string">""</span>;</div><div class="line">   <span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; checksumcode.length; i++)&#123;</div><div class="line">       <span class="keyword">var</span> code = checksumcode[i];</div><div class="line">       <span class="keyword">if</span>(<span class="keyword">typeof</span> code === <span class="string">'string'</span>)&#123;</div><div class="line">            strResult+=code;</div><div class="line">       &#125;</div><div class="line">       <span class="keyword">else</span>&#123;</div><div class="line">            <span class="keyword">var</span> start = code[<span class="number">0</span>] * trunkSize;</div><div class="line">            <span class="keyword">var</span> len = code[<span class="number">1</span>] * trunkSize;</div><div class="line">            <span class="keyword">var</span> oldcode = source.substr(start, len);</div><div class="line">            strResult += oldcode;</div><div class="line">       &#125;</div><div class="line">   &#125;</div><div class="line">   <span class="keyword">return</span> strResult;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>该方法存在的问题为：增量更新的精确度依赖于chunk的大小，在实际使用中总是会有不少代码需要冗余下载。  </p>
-<h3 id="Myer’s-diff-algorithm"><a href="#Myer’s-diff-algorithm" class="headerlink" title="Myer’s diff algorithm"></a>Myer’s diff algorithm</h3><p>Myer’s diff algorithm 首次出是在1986年一篇论文中<a href="https://neil.fraser.name/software/diff_match_patch/myers.pdf" target="_blank" rel="external">“An O(ND) Difference Algorithm and Its Variations”</a>, 在文中实现上介绍了两种此diff算法 的实现。两种实现的核心思想是一致的，只是在具体的实现过程中，为进一步提升算法的性能及空间利用率，采取了不一致的迭代方式。<br>算法原理比较复杂，github 上有根据该算法实现的 <a href="https://github.com/kpdecker/jsdiff" target="_blank" rel="external">jsdiff 插件</a><br>简单的演示如下：   </p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">require</span>(<span class="string">'colors'</span>);</div><div class="line"><span class="keyword">let</span> jsdiff = <span class="built_in">require</span>(<span class="string">'diff'</span>);</div><div class="line"><span class="keyword">let</span> oldStr = <span class="string">'bcdsgaff2 123'</span>;</div><div class="line"><span class="keyword">let</span> newStr = <span class="string">'accdgadff2 42356'</span>;</div><div class="line"><span class="keyword">let</span> diff = jsdiff.diffChars(oldStr, newStr);</div><div class="line"><span class="built_in">console</span>.log(diff);</div><div class="line">diff.forEach(<span class="function"><span class="params">part</span> =&gt;</span> &#123;</div><div class="line">    <span class="keyword">let</span> color = part.added ? <span class="string">'green'</span> : part.removed ? <span class="string">'red'</span> : <span class="string">'gray'</span>;</div><div class="line">    process.stderr.write(part.value[color]); </div><div class="line">&#125;) </div><div class="line"><span class="string">``</span><span class="string">`    </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">&#123;% asset_img 5.png %&#125;  </span></div><div class="line"><span class="string">可以清楚的看到差异信息，这里我们利用下面这个函数 简化一下jsdiff输出信息，方便传输。    </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript  </div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">minimizeDiffInfo</span>(<span class="params">originalInfo</span>)</span>&#123;</div><div class="line">    <span class="keyword">let</span> result = originalInfo.map(<span class="function"><span class="params">info</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">if</span>(info.added)&#123;</div><div class="line">            <span class="keyword">return</span> <span class="string">'+'</span> + info.value;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span>(info.removed)&#123;</div><div class="line">            <span class="keyword">return</span> <span class="string">'-'</span> + info.count;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> info.count;</div><div class="line">    &#125;);</div><div class="line">    <span class="keyword">return</span> <span class="built_in">JSON</span>.stringify(result);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>输出结果为：<br><img src="/2017/09/28/js增量更新算法研究/6.png" alt="6.png" title=""><br>客户端，采用如下函数，更新 serviceWorker 中的资源：  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">mergeDiff</span>(<span class="params">oldString, diffInfo</span>)</span>{
-    <span class="keyword">let</span> newString = <span class="string">''</span>;
-    <span class="keyword">let</span> diffInfo = <span class="built_in">JSON</span>.parse(diffInfo);
-    <span class="keyword">let</span> index = <span class="number">0</span>;
-    <span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; diffInfo.length; i++){
-        <span class="keyword">let</span> info = diffInfo[i];
-        <span class="keyword">if</span>(<span class="keyword">typeof</span> info === <span class="string">'number'</span>){
-            newString += oldString.slice(index, index + info);
-            index += info;
-            <span class="keyword">continue</span>;
-        }
-        <span class="keyword">if</span>(<span class="keyword">typeof</span> info === <span class="string">'string'</span>){
-            <span class="keyword">if</span>(info[<span class="number">0</span>] === <span class="string">'+'</span>){
-                <span class="keyword">let</span> addedString = info.slice(<span class="number">1</span>, info.length);
-                newString += addedString;
-            }
-            <span class="keyword">if</span>(info[<span class="number">0</span>] === <span class="string">'-'</span>){
-                <span class="keyword">let</span> removedCount = <span class="built_in">parseInt</span>(info.slice(<span class="number">1</span>, info.length));
-                index += removedCount;
-            }
-        }
-    }
-    <span class="keyword">return</span> newString;
-}
-</code></pre>
-<p>该方案，实际测试结果很糟糕，对于文件很大的内容比对时间都够我睡一觉了。    </p>
-<h2 id="基于编辑距离的比对算法"><a href="#基于编辑距离的比对算法" class="headerlink" title="基于编辑距离的比对算法"></a>基于编辑距离的比对算法</h2><h3 id="什么是编辑距离"><a href="#什么是编辑距离" class="headerlink" title="什么是编辑距离"></a>什么是编辑距离</h3><blockquote>
-<p>编辑距离是针对二个字符串（例如英文字）的差异程度的量化量测，量测方式是看至少需要多少次的处理才能将一个字符串变成另一个字符串。编辑距离可以用在自然语言处理中，例如拼写检查可以根据一个拼错的字和其他正确的字的编辑距离，判断哪一个（或哪几个）是比较可能的字。DNA也可以视为用A、C、G和T组成的字符串，因此编辑距离也用在生物信息学中，判断二个DNA的类似程度。Unix 下的 diff 及 patch 即是利用编辑距离来进行文本编辑对比的例子。  </p>
-</blockquote>
-<h4 id="求解算法"><a href="#求解算法" class="headerlink" title="求解算法"></a>求解算法</h4><p>比如要计算cafe和coffee的编辑距离。cafe→caffe→coffe→coffee。先创建一个6×8的表（cafe长度为4，coffee长度为6，各加2):<br><img src="/2017/09/28/js增量更新算法研究/8.png" alt="8.png" title=""><br>接着，在如下位置添加数字<br><img src="/2017/09/28/js增量更新算法研究/9.png" alt="9.png" title=""><br>从3,3格开始，开始计算。取以下三个值的最小值：    </p>
+    <content type="html"><![CDATA[<h1 id="riot-组件"><a href="#riot-组件" class="headerlink" title="riot 组件"></a>riot 组件</h1><p>使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见<a href="">Riot.js 源码解析 【一】 基础内容</a>)。  </p>
+<h1 id="riot-组件声明周期"><a href="#riot-组件声明周期" class="headerlink" title="riot 组件声明周期"></a>riot 组件声明周期</h1><p>riot组件状态分为以下几个部分：  </p>
 <ul>
-<li>如果最上方的字符等于最左方的字符，则为左上方的数字。否则为左上方的数字+1。（对于3,3来说为0）</li>
-<li>左方数字+1（对于3,3格来说为2）</li>
-<li>上方数字+1（对于3,3格来说为2）  </li>
+<li>before-mount：标签被加载之前</li>
+<li>mount：标签实例被加载到页面上以后</li>
+<li>update：允许在更新之前重新计算上下文数据</li>
+<li>updated：标签模板更新后</li>
+<li>before-unmount：标签实例被卸载之前</li>
+<li>unmount：标签实例被从页面上卸载后    </li>
 </ul>
-<p>因此为格3,3为0:<br><img src="/2017/09/28/js增量更新算法研究/10.png" alt="10.png" title=""><br>循环操作，推出下表：<br><img src="/2017/09/28/js增量更新算法研究/11.png" alt="11.png" title=""><br>取右下角，得编辑距离为3。   </p>
-]]></content>
+<p>riot.js 采用事件驱动的方式来进行通讯，我们可以采用如下函数来监听上面的事件，例如处理 update 事件：  </p>
+<pre><code class="html"><span class="tag">&lt;<span class="name">riot-demo</span>&gt;</span>
+    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span>
+<span class="javascript">        <span class="keyword">this</span>.on(<span class="string">'update'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span>
+<span class="javascript">            <span class="comment">// 标签更新后的处理</span></span>
+<span class="undefined">        })</span>
+<span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>
+<span class="tag">&lt;/<span class="name">riot-demo</span>&gt;</span>
+</code></pre>
+<h2 id="mount-阶段"><a href="#mount-阶段" class="headerlink" title="mount 阶段"></a>mount 阶段</h2>]]></content>
     
     <summary type="html">
     
-      &lt;hr&gt;
-&lt;p&gt;title: js增量更新算法研究&lt;br&gt;date: 2017-09-28 11:42:55&lt;/p&gt;
-&lt;h2 id=&quot;tags&quot;&gt;&lt;a href=&quot;#tags&quot; class=&quot;headerlink&quot; title=&quot;tags:&quot;&gt;&lt;/a&gt;tags:&lt;/h2&gt;&lt;h1 
+      &lt;h1 id=&quot;riot-组件&quot;&gt;&lt;a href=&quot;#riot-组件&quot; class=&quot;headerlink&quot; title=&quot;riot 组件&quot;&gt;&lt;/a&gt;riot 组件&lt;/h1&gt;&lt;p&gt;使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放
     
     </summary>
     
+      <category term="前端源码解析" scheme="http://yoursite.com/categories/%E5%89%8D%E7%AB%AF%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/"/>
+    
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+      <category term="前端源码解析" scheme="http://yoursite.com/tags/%E5%89%8D%E7%AB%AF%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/"/>
+    
+      <category term="Riot.js" scheme="http://yoursite.com/tags/Riot-js/"/>
     
   </entry>
   
@@ -97,12 +65,12 @@
     <link href="http://yoursite.com/2017/09/21/riot-js-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%901/"/>
     <id>http://yoursite.com/2017/09/21/riot-js-源码解析1/</id>
     <published>2017-09-21T14:36:37.000Z</published>
-    <updated>2017-09-27T06:26:10.000Z</updated>
+    <updated>2017-10-18T07:14:27.000Z</updated>
     
     <content type="html"><![CDATA[<blockquote>
 <p>Simple and elegant component-based UI library (Riot.js)    </p>
 </blockquote>
-<p>riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。<br>目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。<br>本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容。<br><a id="more"></a></p>
+<p>riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。<br>目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。<br>本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容，riot.js 版本为3.6.1。<br><a id="more"></a></p>
 <h1 id="Hello-world"><a href="#Hello-world" class="headerlink" title="Hello world"></a>Hello world</h1><p>来一个简单的例子，基于 webpack 构建，依赖 riotjs-loader。<br>自定义标签代码，content-demo.tag   </p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> riot <span class="keyword">from</span> <span class="string">'riot'</span>;</div><div class="line">&lt;content-demo&gt; </div><div class="line">    &lt;style&gt;</div><div class="line">        h1 &#123;</div><div class="line">            color: pink;</div><div class="line">        &#125;</div><div class="line">    &lt;<span class="regexp">/style&gt;</span></div><div class="line"><span class="regexp">    &lt;h1&gt;&#123; message &#125;&lt;/</span>h1&gt;</div><div class="line">    &lt;ul&gt;</div><div class="line">        &lt;li each=&#123; lists &#125;&gt;&#123; name &#125;&lt;<span class="regexp">/li&gt;</span></div><div class="line"><span class="regexp">        &lt;script&gt;</span></div><div class="line"><span class="regexp">            this.message = 'hello world';</span></div><div class="line"><span class="regexp">            this.lists = [</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'caelumtian'</span></div><div class="line"><span class="regexp">                &#125;,</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'hyang'</span></div><div class="line"><span class="regexp">                &#125;</span></div><div class="line"><span class="regexp">            ]</span></div><div class="line"><span class="regexp">        &lt;/</span>script&gt;</div><div class="line">    &lt;<span class="regexp">/ul&gt;</span></div><div class="line"><span class="regexp">&lt;/</span>content-demo&gt;</div></pre></td></tr></table></figure>
 <p>html 页面代码如下：  </p>
@@ -153,7 +121,7 @@
 <p>riot.unregister() 源码十分简单，如下：  </p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">unregister</span>(<span class="params">name</span>) </span>&#123;</div><div class="line">    __TAG_IMPL[name] = <span class="literal">null</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>暴露在 riot 全局变量上的函数，还包括 <code>riot.update</code> 和 <code>riot.mixin</code> 两个，将在后面的内容介绍。  </p>
-<h1 id="源码目录结构"><a href="#源码目录结构" class="headerlink" title="源码目录结构"></a>源码目录结构</h1><p>riot 的源码目录结构如下：</p>
+<h1 id="源码目录结构"><a href="#源码目录结构" class="headerlink" title="源码目录结构"></a>源码目录结构</h1><p>riot 3.6.1 的源码目录结构如下：</p>
 <pre><code>|____browser
 | |____common
 | | |____global-variables.js // 使用到的常量
@@ -183,7 +151,7 @@
       &lt;blockquote&gt;
 &lt;p&gt;Simple and elegant component-based UI library (Riot.js)    &lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。&lt;br&gt;目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。&lt;br&gt;本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容。&lt;br&gt;
+&lt;p&gt;riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。&lt;br&gt;目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。&lt;br&gt;本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容，riot.js 版本为3.6.1。&lt;br&gt;
     
     </summary>
     
@@ -749,9 +717,9 @@
       <category term="浏览器" scheme="http://yoursite.com/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
     
     
-      <category term="浏览器" scheme="http://yoursite.com/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
-    
       <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+      <category term="浏览器" scheme="http://yoursite.com/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
     
   </entry>
   
