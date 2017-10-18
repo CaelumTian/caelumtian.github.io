@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="移动开发,PWA," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="本文翻译自：Retrofit Your Website as a Progressive Web App如果原文打不开请移步：这里       最近大家都在讨论渐进增强web应用(Progressive Web Apps 简称PWA)，许多人质疑PWA是否能代表移动web的未来。这里我不会介入navtive app 和 PWA的争论之中，但是有件事是可以确定的-PWA在很大的长度上增强移动端提高">
+<meta name="keywords" content="移动开发,PWA">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[译] 将你的网站改造为PWA">
+<meta property="og:url" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="本文翻译自：Retrofit Your Website as a Progressive Web App如果原文打不开请移步：这里       最近大家都在讨论渐进增强web应用(Progressive Web Apps 简称PWA)，许多人质疑PWA是否能代表移动web的未来。这里我不会介入navtive app 和 PWA的争论之中，但是有件事是可以确定的-PWA在很大的长度上增强移动端提高">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/1.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/2.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/3.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/4.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/5.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/6.png">
+<meta property="og:updated_time" content="2017-09-22T07:16:06.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[译] 将你的网站改造为PWA">
+<meta name="twitter:description" content="本文翻译自：Retrofit Your Website as a Progressive Web App如果原文打不开请移步：这里       最近大家都在讨论渐进增强web应用(Progressive Web Apps 简称PWA)，许多人质疑PWA是否能代表移动web的未来。这里我不会介入navtive app 和 PWA的争论之中，但是有件事是可以确定的-PWA在很大的长度上增强移动端提高">
+<meta name="twitter:image" content="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/"/>
+
+
+
+
+
+  <title>[译] 将你的网站改造为PWA | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">愿归来时，仍是少年</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">[译] 将你的网站改造为PWA</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-23T20:07:14+08:00">
+                2017-08-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/翻译文章/" itemprop="url" rel="index">
+                    <span itemprop="name">翻译文章</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>本文翻译自：<a href="https://www.sitepoint.com/retrofit-your-website-as-a-progressive-web-app/?utm_source=mobilewebweekly&amp;utm_medium=email" target="_blank" rel="external">Retrofit Your Website as a Progressive Web App</a><br>如果原文打不开请移步：<a href="https://www.zybuluo.com/caelumtian/note/860343" target="_blank" rel="external">这里</a>     </p>
+</blockquote>
+<p>最近大家都在讨论渐进增强web应用(Progressive Web Apps 简称PWA)，许多人质疑PWA是否能代表移动web的未来。这里我不会介入navtive app 和 PWA的争论之中，但是有件事是可以确定的-PWA在很大的长度上增强移动端提高了用户的体验。到2018年移动设备的web接入的数量注定要超过其他所有设备总量和，这种趋势是不可忽视的。<br><a id="more"></a><br>好消息是制作PWA程序并不是很困难。实际上，将现有的网站转换成PWA是很有可能的。在本文中，我将会介绍如何将一个网站改造成像native app一样。它可以离线工作，并且拥有自己的应用图标。  </p>
+<h2 id="什么是渐进增强web应用？"><a href="#什么是渐进增强web应用？" class="headerlink" title="什么是渐进增强web应用？"></a>什么是渐进增强web应用？</h2><p>Progressiv Web App (简称PWA)是web上一个令人兴奋的创新。PWA由一系列技术组成，用来是web应用程序更像native应用。对于开发人员和用户来说，它可以突破web和native上面的限制因素：    </p>
+<ol>
+<li>你只需要开发一个符合W3c标准的web程序，不必开发单独的native版本  </li>
+<li>用户可以在安装前就使用你的程序  </li>
+<li>我们不在需要使用 AppStore，忍受那些难懂的规则或付费。应用程序可以自动更新，不再需要用户手动操作  </li>
+<li>网页可以提醒用户是否在主屏幕上添加应用图标    </li>
+<li>当程序启动时，PWA的具有吸引力的展示效果</li>
+<li>如果有必要，可以修改浏览器设置达到全屏浏览的效果   </li>
+<li>基本的文件被缓存在本地因此PWA具有比普通web应用更快的响应速度（他们设置比native app还要快  </li>
+<li>安装更加的轻量，也许只是几百KB的缓存数据  </li>
+<li>PWA处于离线状态可以在连接返回后同步数据  </li>
+</ol>
+<p>现在PWA技术还有些不成熟，但是已经有了积极的案例。印度最大的商务网站Flipkart 通过将native app转换成PWA使得销售增长了70%。全球最大的交易平台Alibaba转换率也达到了70%。<br>PWA技术已经被支持与Firefox,Chrome和其他基于Blink内核的浏览器中。微软的Edge也在努力的实现。尽管Apple在webkit五年计划上发表了很多积极的言论，但是依然没有支持PWA。  </p>
+<h2 id="“渐进增强”-web-应用"><a href="#“渐进增强”-web-应用" class="headerlink" title="“渐进增强” web 应用"></a>“渐进增强” web 应用</h2><p>你的网站有可能依然运行在不支持PWA的浏览器中。这样做仅仅是让用户不能使用离线等功能，网站依然可以像网站一样正常运行。鉴于利益的汇报，我们没有理由不去将PWA技术添加到我们的网站之中。  </p>
+<h2 id="这不仅仅是应用程序"><a href="#这不仅仅是应用程序" class="headerlink" title="这不仅仅是应用程序"></a>这不仅仅是应用程序</h2><p>Google 引领了PWA运动，以至于许多教程都在讲述如何在基于Chrome的基础上从头开始构建PWA应用。然而，你并不一定需要一个单页应用或者遵循界面设计指南。大多数网站都可以在几个小时能升级到PWA。这包括你的WordPress或者静态页面。在编写本文的时候，<code>Smashing</code> 杂志宣布，他们正在支持PWA的建设。  </p>
+<h2 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h2><p>你可以在这里找到示例代码：<a href="https://github.com/sitepoint-editors/pwa-retrofit" target="_blank" rel="external">https://github.com/sitepoint-editors/pwa-retrofit</a><br>demo 提供了一个带有一些图片，一个样式表和一些主要的javascrit文件的四页网站。该网站可以运行在所有的现在浏览器中(IE10+)。如果您的浏览器支持PWA，那么你可以在离线时浏览整个网站。<br>运行代码请确保Node.js环境，在终端中执行下面的命令启动服务器:  </p>
+<blockquote>
+<p>node ./server.js [port]  </p>
+</blockquote>
+<p>打开Chrome或者基于Blik内核的浏览器，访问 <a href="http://localhost:8888/" target="_blank" rel="external">http://localhost:8888/</a> 来查看页面。你可以打开 Developer Tools来查看控制台输出信息。   </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/1.png" alt="1.png" title=""> 
+<p>下面的方案可以帮你离线查看： 关闭 web 服务器，或者在Developer Tools的 Network或Application中点击offline复选框。 重新访问你之前的页面，他们依然会加载。访问你没有看到过的网站，则会显示 <code>您处于离线状态</code>的页面，其中包含了网页列表信息。<br><img src="/2017/08/23/译-将你的网站升级为PWA/2.png" alt="2.png" title=""> </p>
+<h3 id="连接移动设备"><a href="#连接移动设备" class="headerlink" title="连接移动设备"></a>连接移动设备</h3><p>你也可以通过USB线将移动设备连接到PC/MAC上，来查看页面。打开浏览器 More tools选中的Remote devices面板。    </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/3.png" alt="3.png" title="">
+<p>选择左侧的设置，点击 Add rule 添加 localhost:8888。现在你可以在移动设备上打开Chrome浏览器访问 <a href="http://localhost:8888。" target="_blank" rel="external">http://localhost:8888。</a>  </p>
+<p>你可以使用浏览器菜单中的<code>Add to Home screen</code>。几次访问后，浏览器也会提醒你是否安装。上述两种方法都可以将应用程序添加到你的主屏幕。浏览几个页面后关闭Chrome断开设备链接。之后打开你的 PWA 网站，你可以看见启动屏幕并且依然能够查看之前的页面，尽管这时候你处于离线状态。  </p>
+<h2 id="如何使用PWA技术"><a href="#如何使用PWA技术" class="headerlink" title="如何使用PWA技术"></a>如何使用PWA技术</h2><p>将你的网站转换成PWA仅需要一下三个基本步骤：  </p>
+<h3 id="步骤1：设置HTTPS"><a href="#步骤1：设置HTTPS" class="headerlink" title="步骤1：设置HTTPS"></a>步骤1：设置HTTPS</h3><p>PWA需要HTTPS的支持，原因不言而喻。设置HTTPS在不同的主机上有不同的流程，但是HTTPS网站会在 Google 获得更高的 Rank 这使得一切都是值得的。<br>Chrome 允许使用 localhost 或者任何 127.x.x.x 来进行HTTPS测试。你也可以在Chrome启动中添加下面的命令，来使得PWA运行在HTTP中：  </p>
+<blockquote>
+<p>– user-data-dir<br>– unsafety-treat-insecure-origin-as-secure  </p>
+</blockquote>
+<h3 id="步骤2：创建-manifest-文件"><a href="#步骤2：创建-manifest-文件" class="headerlink" title="步骤2：创建 manifest 文件"></a>步骤2：创建 manifest 文件</h3><p>提供一个web应用程序相关的信息，包括名称，描述和配置到主屏幕的图标，启动图片和viewport。实际上，manifest 文件是提供上述信息的文件。<br>manifest 是一个JSON格式的文件。我们必须提供含有 Content-Type: application/manifest+json 或者 Content-Type: applicaiont/json 的HTTP请求头来时使用它。该文件可以随意起名，这里我们叫做 manifest.json：   </p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">"name"</span>              : <span class="string">"PWA Website"</span>,</div><div class="line">  <span class="attr">"short_name"</span>        : <span class="string">"PWA"</span>,</div><div class="line">  <span class="attr">"description"</span>       : <span class="string">"An example PWA website"</span>,</div><div class="line">  <span class="attr">"start_url"</span>         : <span class="string">"/"</span>,</div><div class="line">  <span class="attr">"display"</span>           : <span class="string">"standalone"</span>,</div><div class="line">  <span class="attr">"orientation"</span>       : <span class="string">"any"</span>,</div><div class="line">  <span class="attr">"background_color"</span>  : <span class="string">"#ACE"</span>,</div><div class="line">  <span class="attr">"theme_color"</span>       : <span class="string">"#ACE"</span>,</div><div class="line">  <span class="attr">"icons"</span>: [</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo072.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"72x72"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo152.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"152x152"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo192.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"192x192"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo256.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"256x256"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo512.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"512x512"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;</div><div class="line">  ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在<code>&lt;head&gt;</code>标签中需要加入下面的内容：  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"manifest"</span> <span class="attr">href</span>=<span class="string">"/manifest.json"</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>这些字段的含义如下：  </p>
+<ul>
+<li>name – 应用名称</li>
+<li>short_name – 应用的缩略名</li>
+<li>description – 应用描述</li>
+<li>start_url – 应用启动的相对路径 (通常为 /)</li>
+<li>scope - 导航范围。例如：/app/会将应用限制在app文件夹下 </li>
+<li>background-color - 启动界面的背景颜色  </li>
+<li>display - 展示方式：fullscreen 全屏，standalong 类似native app，minimal-ui 一个简单的UI空间，browser 传统浏览器界面  </li>
+<li>icons - 定义图片信息的数组，包括图片URL，大小和类型。应该定义一些列图标信息。  </li>
+</ul>
+<p>MDN 定义了完整的列表<a href="https://developer.mozilla.org/en-US/docs/Web/Manifest" target="_blank" rel="external">Web App Manifest properties</a><br>Chrome 浏览器会监听验证你的manifest文件，并且提供<code>add to homescreen</code> 链接：  </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/4.png" alt="4.png" title="">  
+<h3 id="步骤3：创建Service-Worker"><a href="#步骤3：创建Service-Worker" class="headerlink" title="步骤3：创建Service Worker"></a>步骤3：创建Service Worker</h3><p>Service Workers 是一个用来拦截网络请求的Javascript脚本，放在应用程序根目录下即可。<br>下面这段代码（/js/main.js）用来检测当网站支持 Service Worker 后注册service-worker.js脚本:  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (<span class="string">'serviceWorker'</span> <span class="keyword">in</span> navigator) &#123;</div><div class="line">    <span class="comment">// register service worker</span></div><div class="line">    navigator.serviceWorker.register(<span class="string">'/service-worker.js'</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Service workers 可能会让感到迷惑，你可以根据自己的目的来调整demo代码。示例代码是标准的浏览器下载脚本，它单独运行在一个线程上。该脚本无权访问DOM或其他页面的API，但是它可以在网页发生变化的时候拦截网络请求，资源下载和Ajax请求。<br>Service workers也是网站需要采用HTTPS的根本原因。试想一下，如果第三方脚本可有轻易注入你的Service worker中。它就有可能窃取和篡改客户端和服务端之间的通讯信息。<br>Service workers 需要响应下面三个基本事件：install, activate 和 fetch。   </p>
+<h4 id="Install-Event"><a href="#Install-Event" class="headerlink" title="Install Event"></a>Install Event</h4><p>这个事件发生在Service worker注册阶段。它通常用于使用Cache API来创建缓存，放置应用离线时所需要的资源。<br>首先，我们定义一些基础的配置：    </p>
+<ol>
+<li><code>缓存名称（CACHE）和版本号（version）</code> 你的应用可以有多个缓存，但我们只使用一个。因此应用版本号就很有用，当网站有重大的改变后，将使用心得缓存忽略掉之前的缓存。  </li>
+<li><code>离线页面URL(offlineURL)</code> 当用户离线后视图访问之前没有访问过的页面，该页面将被显示。  </li>
+<li><code>一系列提供离线功能的基本文件(installFilesEssential)</code> 这里应该提供一个包含CSS和Javascript的数组，我还向数组中加入了主页(/)和logo。你也应该加入其他的需要文件例如：/ 或者 /index.html。注意offlineURL也要加入这个数组。  </li>
+<li><code>一些可选的文件(installFilesDesirable)</code> 如果有可能，这些内容将会被下载，但不会使安装中断    </li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// configuration</span></div><div class="line"><span class="keyword">const</span></div><div class="line">  version = <span class="string">'1.0.0'</span>,</div><div class="line">  CACHE = version + <span class="string">'::PWAsite'</span>,</div><div class="line">  offlineURL = <span class="string">'/offline/'</span>,</div><div class="line">  installFilesEssential = [</div><div class="line">    <span class="string">'/'</span>,</div><div class="line">    <span class="string">'/manifest.json'</span>,</div><div class="line">    <span class="string">'/css/styles.css'</span>,</div><div class="line">    <span class="string">'/js/main.js'</span>,</div><div class="line">    <span class="string">'/js/offlinepage.js'</span>,</div><div class="line">    <span class="string">'/images/logo/logo152.png'</span></div><div class="line">  ].concat(offlineURL),</div><div class="line">  installFilesDesirable = [</div><div class="line">    <span class="string">'/favicon.ico'</span>,</div><div class="line">    <span class="string">'/images/logo/logo016.png'</span>,</div><div class="line">    <span class="string">'/images/hero/power-pv.jpg'</span>,</div><div class="line">    <span class="string">'/images/hero/power-lo.jpg'</span>,</div><div class="line">    <span class="string">'/images/hero/power-hi.jpg'</span></div><div class="line">  ];</div></pre></td></tr></table></figure>
+<p>installStaticFiles() 函数利用异步的Cache API 来将这些文件添加到缓存。当缓存生成后返回Promise对象：   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// install static assets</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">installStaticFiles</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> caches.open(CACHE)</div><div class="line">    .then(<span class="function"><span class="params">cache</span> =&gt;</span> &#123;</div><div class="line"></div><div class="line">      <span class="comment">// cache desirable files</span></div><div class="line">      cache.addAll(installFilesDesirable);</div><div class="line"></div><div class="line">      <span class="comment">// cache essential files</span></div><div class="line">      <span class="keyword">return</span> cache.addAll(installFilesEssential);</div><div class="line"></div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>最后，我们注册一个 install 监听器。我们必须提供一个waitUntil方法(参数为promise对象)，当oninstall或者onactivate触发时被调用，来执行我们的函数：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// application installation</span></div><div class="line">self.addEventListener(<span class="string">'install'</span>, event =&gt; &#123;</div><div class="line">  <span class="built_in">console</span>.log(<span class="string">'service worker: install'</span>);</div><div class="line">  <span class="comment">// cache core files</span></div><div class="line">  event.waitUntil(</div><div class="line">    installStaticFiles()</div><div class="line">    .then(<span class="function"><span class="params">()</span> =&gt;</span> self.skipWaiting())</div><div class="line">  );</div><div class="line">&#125;); </div><div class="line"><span class="string">``</span><span class="string">` </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">#### Activate Event   </span></div><div class="line"><span class="string">当Service worker安装成功后会被立刻激活该事件。你可能并不总是需要这个处理程序。下面这段代码可以用来删除旧的缓存：  </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript  </div><div class="line"><span class="comment">// clear old caches</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">clearOldCaches</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> caches.keys()</div><div class="line">    .then(<span class="function"><span class="params">keylist</span> =&gt;</span> &#123;</div><div class="line">      <span class="keyword">return</span> <span class="built_in">Promise</span>.all(</div><div class="line">        keylist</div><div class="line">          .filter(<span class="function"><span class="params">key</span> =&gt;</span> key !== CACHE)</div><div class="line">          .map(<span class="function"><span class="params">key</span> =&gt;</span> caches.delete(key))</div><div class="line">      );</div><div class="line">    &#125;);</div><div class="line">&#125;</div><div class="line"><span class="comment">// application activated</span></div><div class="line">self.addEventListener(<span class="string">'activate'</span>, event =&gt; &#123;</div><div class="line">  <span class="built_in">console</span>.log(<span class="string">'service worker: activate'</span>);</div><div class="line">    <span class="comment">// delete old caches</span></div><div class="line">  event.waitUntil(</div><div class="line">    clearOldCaches()</div><div class="line">    .then(<span class="function"><span class="params">()</span> =&gt;</span> self.clients.claim())</div><div class="line">    );</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>注意，最后的 self.clients.claim() 将当前Service worker对象作为所有客户端的活动对象。  </p>
+<h4 id="Fetch-Event"><a href="#Fetch-Event" class="headerlink" title="Fetch Event"></a>Fetch Event</h4><p>当网络产生请求后触发该事件，它通过调用respondWith() 方法来拦截GET请求并返回：  </p>
+<ol>
+<li>缓存中的内容。 </li>
+<li>如果#1没有缓存，则使用Fetch API从网络加载资源(与Service worker的fetch event无关)，然后将资源添加到缓存中。  </li>
+<li>如果#1，#2都失败了，则返回一个适当的结果。  </li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// application fetch network data</span></div><div class="line">self.addEventListener(<span class="string">'fetch'</span>, event =&gt; &#123;</div><div class="line">  <span class="comment">// abandon non-GET requests</span></div><div class="line">  <span class="keyword">if</span> (event.request.method !== <span class="string">'GET'</span>) <span class="keyword">return</span>;</div><div class="line">  <span class="keyword">let</span> url = event.request.url;</div><div class="line">  event.respondWith(</div><div class="line">    caches.open(CACHE)</div><div class="line">      .then(<span class="function"><span class="params">cache</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">return</span> cache.match(event.request)</div><div class="line">          .then(<span class="function"><span class="params">response</span> =&gt;</span> &#123;</div><div class="line">            <span class="keyword">if</span> (response) &#123;</div><div class="line">              <span class="comment">// return cached file</span></div><div class="line">              <span class="built_in">console</span>.log(<span class="string">'cache fetch: '</span> + url);</div><div class="line">              <span class="keyword">return</span> response;</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// make network request</span></div><div class="line">            <span class="keyword">return</span> fetch(event.request)</div><div class="line">              .then(<span class="function"><span class="params">newreq</span> =&gt;</span> &#123;</div><div class="line">                <span class="built_in">console</span>.log(<span class="string">'network fetch: '</span> + url);</div><div class="line">                <span class="keyword">if</span> (newreq.ok) cache.put(event.request, newreq.clone());</div><div class="line">                <span class="keyword">return</span> newreq;</div><div class="line">              &#125;)</div><div class="line">              <span class="comment">// app is offline</span></div><div class="line">              .catch(<span class="function"><span class="params">()</span> =&gt;</span> offlineAsset(url));</div><div class="line">          &#125;);</div><div class="line">      &#125;)</div><div class="line">  );</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>最后我们调用 offlineAsset(url) 方法返回一个适当的响应：    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// is image URL?</span></div><div class="line"><span class="keyword">let</span> iExt = [<span class="string">'png'</span>, <span class="string">'jpg'</span>, <span class="string">'jpeg'</span>, <span class="string">'gif'</span>, <span class="string">'webp'</span>, <span class="string">'bmp'</span>].map(<span class="function"><span class="params">f</span> =&gt;</span> <span class="string">'.'</span> + f);</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">isImage</span>(<span class="params">url</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> iExt.reduce(<span class="function">(<span class="params">ret, ext</span>) =&gt;</span> ret || url.endsWith(ext), <span class="literal">false</span>);</div><div class="line">&#125;</div><div class="line"><span class="comment">// return offline asset</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">offlineAsset</span>(<span class="params">url</span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span> (isImage(url)) &#123;</div><div class="line">    <span class="comment">// return image</span></div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Response(</div><div class="line">      <span class="string">'&lt;svg role="img" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"&gt;&lt;title&gt;offline&lt;/title&gt;&lt;path d="M0 0h400v300H0z" fill="#eee" /&gt;&lt;text x="200" y="150" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="50" fill="#ccc"&gt;offline&lt;/text&gt;&lt;/svg&gt;'</span>,</div><div class="line">      &#123; <span class="attr">headers</span>: &#123;</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'image/svg+xml'</span>,</div><div class="line">        <span class="string">'Cache-Control'</span>: <span class="string">'no-store'</span></div><div class="line">      &#125;&#125;</div><div class="line">    );</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">else</span> &#123;</div><div class="line">    <span class="comment">// return page</span></div><div class="line">    <span class="keyword">return</span> caches.match(offlineURL);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>例子中，offlineAsset()函数用来检测请求是否是一个图片并且返回一个包含”offline”字段的SVG。其他请求则返回离线页面。<br>Chrome开发工具提供了查看Service Worker信息的选项，包含了错误消息，重新加载工具和页面离线等内容：  </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/5.png" alt="5.png" title="">
+<p><code>Cache Storage</code> 列出了当前环境下所有的缓存内容，如果缓存有更新你需要点击刷新按钮来看到他们。  </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/6.png" alt="6.png" title="">  
+<p>同样Clear storage选项可以删除你的Service worker和缓存。  </p>
+<h3 id="步骤4：创建一个实用的离线页面"><a href="#步骤4：创建一个实用的离线页面" class="headerlink" title="步骤4：创建一个实用的离线页面"></a>步骤4：创建一个实用的离线页面</h3><p>离线页面可以是一个静态页面来提醒用户他们访问的页面不能离线查看。同时，我们还需要提供一个可访问页面的URL列表供用户查看。<br>我们可以再main.js中来使用Cache API。但是，API的异步请求失败的时候会导致浏览器停止运行。为了防止这种情况发生，我们将检测离线元素和Caches API是否可用的代码放在其他的文件中 /js/offlinepage.js（必须放在 installFiledEssential数组前):    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// load script to populate offline page list</span></div><div class="line"><span class="keyword">if</span> (<span class="built_in">document</span>.getElementById(<span class="string">'cachedpagelist'</span>) &amp;&amp; <span class="string">'caches'</span> <span class="keyword">in</span> <span class="built_in">window</span>) &#123;</div><div class="line">  <span class="keyword">var</span> scr = <span class="built_in">document</span>.createElement(<span class="string">'script'</span>);</div><div class="line">  scr.src = <span class="string">'/js/offlinepage.js'</span>;</div><div class="line">  scr.async = <span class="number">1</span>;</div><div class="line">  <span class="built_in">document</span>.head.appendChild(scr);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>/js/offlinepage 通过版本名称来查找最近的缓存，URL列表，删除没有页面的URLs，对列表进行排序并添加到id为cachedpagelist的DOM节点上：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// cache name</span></div><div class="line"><span class="keyword">const</span></div><div class="line">  CACHE = <span class="string">'::PWAsite'</span>,</div><div class="line">  offlineURL = <span class="string">'/offline/'</span>,</div><div class="line">  list = <span class="built_in">document</span>.getElementById(<span class="string">'cachedpagelist'</span>);</div><div class="line"><span class="comment">// fetch all caches</span></div><div class="line"><span class="built_in">window</span>.caches.keys()</div><div class="line">  .then(<span class="function"><span class="params">cacheList</span> =&gt;</span> &#123;</div><div class="line">    <span class="comment">// find caches by and order by most recent</span></div><div class="line">    cacheList = cacheList</div><div class="line">      .filter(<span class="function"><span class="params">cName</span> =&gt;</span> cName.includes(CACHE))</div><div class="line">      .sort(<span class="function">(<span class="params">a, b</span>) =&gt;</span> a - b);</div><div class="line">    <span class="comment">// open first cache</span></div><div class="line">    caches.open(cacheList[<span class="number">0</span>])</div><div class="line">      .then(<span class="function"><span class="params">cache</span> =&gt;</span> &#123;</div><div class="line">        <span class="comment">// fetch cached pages</span></div><div class="line">        cache.keys()</div><div class="line">          .then(<span class="function"><span class="params">reqList</span> =&gt;</span> &#123;</div><div class="line">            <span class="keyword">let</span> frag = <span class="built_in">document</span>.createDocumentFragment();</div><div class="line">            reqList</div><div class="line">              .map(<span class="function"><span class="params">req</span> =&gt;</span> req.url)</div><div class="line">              .filter(<span class="function"><span class="params">req</span> =&gt;</span> (req.endsWith(<span class="string">'/'</span>) || req.endsWith(<span class="string">'.html'</span>)) &amp;&amp; !req.endsWith(offlineURL))</div><div class="line">              .sort()</div><div class="line">              .forEach(<span class="function"><span class="params">req</span> =&gt;</span> &#123;</div><div class="line">                <span class="keyword">let</span></div><div class="line">                  li = <span class="built_in">document</span>.createElement(<span class="string">'li'</span>),</div><div class="line">                  a = li.appendChild(<span class="built_in">document</span>.createElement(<span class="string">'a'</span>));</div><div class="line">                  a.setAttribute(<span class="string">'href'</span>, req);</div><div class="line">                  a.textContent = a.pathname;</div><div class="line">                  frag.appendChild(li);</div><div class="line">              &#125;);</div><div class="line">            <span class="keyword">if</span> (list) list.appendChild(frag);</div><div class="line">          &#125;);</div><div class="line">      &#125;)</div><div class="line">  &#125;);</div></pre></td></tr></table></figure>
+<h2 id="调试工具"><a href="#调试工具" class="headerlink" title="调试工具"></a>调试工具</h2><p>如果你认为调试Serice Workers有困难，Chrome Development Tools中的 Application选项提供了一些列日志消息在控制台中。<br>你应该在隐身模式下开发你的应用程序，这样可以避免文件缓存带来的影响。<br>Firefox也提供了来自Service Workers的JavaScript调试信息，未来也会更加的完善。<br>最后Chrome 扩展程序 Lighthouse 可以提供更加丰富的PWA信息。  </p>
+<h2 id="PWA-的问题"><a href="#PWA-的问题" class="headerlink" title="PWA 的问题"></a>PWA 的问题</h2><p>对于渐进增强web应用的支持需要谨慎，如果改造它花了很长时间那就得不偿失了。毕竟不支持 PWA 也不会造成很大的负面影响。<br>这里我们还有几个问题需要考虑：  </p>
+<h3 id="URL-隐藏"><a href="#URL-隐藏" class="headerlink" title="URL 隐藏"></a>URL 隐藏</h3><p>如何隐藏地址栏我并没有演示，除非你开发了一个单页的游戏这才有必要。manifest的diplay：minimal-ui 或者 display: browser 才是适合大多数网站的。  </p>
+<h3 id="缓存重载"><a href="#缓存重载" class="headerlink" title="缓存重载"></a>缓存重载</h3><p>你可以缓存站点的每一页。这对于小型网站是有好处的，但是对于那些拥有很多页面的网站就不那么可取了。没有人会对你所有的内容感兴趣并且设备缓存是有限度的。及时你只缓存访问过的页面，缓存依旧增长的很明显。<br>你也许该考虑以下建议：  </p>
+<ul>
+<li>只缓存重要的页面如主页，链接，最近的文章等</li>
+<li>不缓存图片，视频和大的文件  </li>
+<li>定期清除旧的缓存文件  </li>
+<li>提供一个”缓存到本地”的按钮，以便用户可以自行选择  </li>
+</ul>
+<h3 id="缓存更新"><a href="#缓存更新" class="headerlink" title="缓存更新"></a>缓存更新</h3><p>缓存同样需要定期更新，不然用户只能看见旧的页面。<br>对于图片和视频这种不经常变化的内容，你可以设置一个持续一年的缓存时间：  </p>
+<blockquote>
+<p>Cache-Control: max-age=31536000    </p>
+</blockquote>
+<p>页面，css和脚本文件有可能频繁更新，你需要设置较短的更新时间例如24小时，确保在线状态服务器对版本的验证:  </p>
+<blockquote>
+<p>Cache-Control: must-revalidate, max-age=86400    </p>
+</blockquote>
+<p>你也可以考虑使用缓存清除技术来确定哪些不适用的旧文件，例如：命名你的CSS文件 styles-abc124.css，每个版本都修改哈希值。<br>缓存是很复杂的这里我建议你阅读 Jake Archibold 的文章 <a href="https://jakearchibald.com/2016/caching-best-practices/" target="_blank" rel="external">Caching best practices &amp; max-age gotchas</a>  </p>
+<h2 id="更多内容"><a href="#更多内容" class="headerlink" title="更多内容"></a>更多内容</h2><p>如果你想了解更多，可以参考一下内容：  </p>
+<ul>
+<li><a href="https://pwa.rocks/" target="_blank" rel="external">PWA.rocks example applications</a></li>
+<li><a href="https://developers.google.com/web/progressive-web-apps/" target="_blank" rel="external">Progressive Web Apps</a></li>
+<li><a href="https://codelabs.developers.google.com/codelabs/your-first-pwapp/" target="_blank" rel="external">Your First PWA</a></li>
+<li><a href="https://serviceworke.rs/" target="_blank" rel="external">Mozilla Service Worker Cookbook</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers" target="_blank" rel="external">MDN Using Service Workers</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/移动开发/" rel="tag">移动开发</a>
+          
+            <a href="/tags/PWA/" rel="tag">PWA</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/" rel="next" title="[译] 如何利用 localStorage 来构建更快的应用程序">
+                <i class="fa fa-chevron-left"></i> [译] 如何利用 localStorage 来构建更快的应用程序
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/28/图片惰性加载的实现/" rel="prev" title="图片惰性加载 IntersectionObserver">
+                图片惰性加载 IntersectionObserver <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">愿归来时，仍是少年</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么是渐进增强web应用？"><span class="nav-number">1.</span> <span class="nav-text">什么是渐进增强web应用？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#“渐进增强”-web-应用"><span class="nav-number">2.</span> <span class="nav-text">“渐进增强” web 应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#这不仅仅是应用程序"><span class="nav-number">3.</span> <span class="nav-text">这不仅仅是应用程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#示例代码"><span class="nav-number">4.</span> <span class="nav-text">示例代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#连接移动设备"><span class="nav-number">4.1.</span> <span class="nav-text">连接移动设备</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如何使用PWA技术"><span class="nav-number">5.</span> <span class="nav-text">如何使用PWA技术</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤1：设置HTTPS"><span class="nav-number">5.1.</span> <span class="nav-text">步骤1：设置HTTPS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤2：创建-manifest-文件"><span class="nav-number">5.2.</span> <span class="nav-text">步骤2：创建 manifest 文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤3：创建Service-Worker"><span class="nav-number">5.3.</span> <span class="nav-text">步骤3：创建Service Worker</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Install-Event"><span class="nav-number">5.3.1.</span> <span class="nav-text">Install Event</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Fetch-Event"><span class="nav-number">5.3.2.</span> <span class="nav-text">Fetch Event</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤4：创建一个实用的离线页面"><span class="nav-number">5.4.</span> <span class="nav-text">步骤4：创建一个实用的离线页面</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#调试工具"><span class="nav-number">6.</span> <span class="nav-text">调试工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PWA-的问题"><span class="nav-number">7.</span> <span class="nav-text">PWA 的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#URL-隐藏"><span class="nav-number">7.1.</span> <span class="nav-text">URL 隐藏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存重载"><span class="nav-number">7.2.</span> <span class="nav-text">缓存重载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#缓存更新"><span class="nav-number">7.3.</span> <span class="nav-text">缓存更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#更多内容"><span class="nav-number">8.</span> <span class="nav-text">更多内容</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>

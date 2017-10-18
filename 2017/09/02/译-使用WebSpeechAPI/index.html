@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="javascript," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="随着语音技术的普及，越来越多的手机用户开始使用Siri和Cortana等语音助理软件。Amazon Echo和Google Home等语音软件同样走入了我们的日常生活。这些系统基于语音识别软件构建允许用户直接通过语音下达命令。现在，浏览器也已经支持了Web Speech API，它允许用户在web应用程序中集成语音数据。基于现在的web应用程序，我们可以使用多种UI元素来和用户交互。使用Web S">
+<meta name="keywords" content="javascript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[译] 使用Web Speech API和Node.js构建简单的AI Chatbot">
+<meta property="og:url" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="随着语音技术的普及，越来越多的手机用户开始使用Siri和Cortana等语音助理软件。Amazon Echo和Google Home等语音软件同样走入了我们的日常生活。这些系统基于语音识别软件构建允许用户直接通过语音下达命令。现在，浏览器也已经支持了Web Speech API，它允许用户在web应用程序中集成语音数据。基于现在的web应用程序，我们可以使用多种UI元素来和用户交互。使用Web S">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/1.png">
+<meta property="og:image" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/2.png">
+<meta property="og:image" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/3.png">
+<meta property="og:image" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/4.png">
+<meta property="og:image" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/5.png">
+<meta property="og:image" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/6.gif">
+<meta property="og:updated_time" content="2017-09-22T07:09:09.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[译] 使用Web Speech API和Node.js构建简单的AI Chatbot">
+<meta name="twitter:description" content="随着语音技术的普及，越来越多的手机用户开始使用Siri和Cortana等语音助理软件。Amazon Echo和Google Home等语音软件同样走入了我们的日常生活。这些系统基于语音识别软件构建允许用户直接通过语音下达命令。现在，浏览器也已经支持了Web Speech API，它允许用户在web应用程序中集成语音数据。基于现在的web应用程序，我们可以使用多种UI元素来和用户交互。使用Web S">
+<meta name="twitter:image" content="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/"/>
+
+
+
+
+
+  <title>[译] 使用Web Speech API和Node.js构建简单的AI Chatbot | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">愿归来时，仍是少年</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">[译] 使用Web Speech API和Node.js构建简单的AI Chatbot</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-02T19:55:05+08:00">
+                2017-09-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/翻译文章/" itemprop="url" rel="index">
+                    <span itemprop="name">翻译文章</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>随着语音技术的普及，越来越多的手机用户开始使用Siri和Cortana等语音助理软件。Amazon Echo和Google Home等语音软件同样走入了我们的日常生活。这些系统基于语音识别软件构建允许用户直接通过语音下达命令。现在，浏览器也已经支持了Web Speech API，它允许用户在web应用程序中集成语音数据。<br>基于现在的web应用程序，我们可以使用多种UI元素来和用户交互。使用Web Speech API，我们可以开发更加自然地小巧的web可视化界面。这样我们就能开发更丰富的web应用程序。此外，该API也可以帮助身体或认知障碍的人更好的访问web信息。<br><a id="more"></a>   </p>
+<blockquote>
+<p>增强用户体验<br>Web Speeh API可以使网站和Web app不仅仅可以交谈还可以聆听。这里有一些关于猪呢个条用户体验的很好的例子。<a href="https://www.smashingmagazine.com/2014/12/enhancing-ux-with-the-web-speech-api/" target="_blank" rel="external">阅读更多</a>  </p>
+</blockquote>
+<p>在本教程中，我们将使用API在浏览器中创建人工智能（AI）语音聊天界面。该应用将听取用户的声音并以合成语音回复。因为Web Speech API依然是实现性的，所以目前仅能支持在有限的浏览器中。本文使用的语音识别和语音合成功能目前仅基于Chromium浏览器，包括Chrome 25+和Opera 27+，而Firefox，Edge和Safari目前仅支持语音合成。    </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/1.png" alt="1.png" title="">  
+<img src="/2017/09/02/译-使用WebSpeechAPI/2.png" alt="2.png" title="">  
+<p>要构建该程序，我们主要采取三个步骤：    </p>
+<ol>
+<li>使用Web Speech API的SpeechRecognition接口来聆听用户的语音  </li>
+<li>将用户消息作为字符串文本发送给商业的自然语言处理API</li>
+<li>一旦API.AI返回响应文本，我们就利用SpeechSynthesis接口返回给用户一个合成声音    </li>
+</ol>
+<img src="/2017/09/02/译-使用WebSpeechAPI/3.png" alt="3.png" title="">
+<p>本教程使用的<a href="https://github.com/girliemac/web-speech-ai" target="_blank" rel="external">完整的源代码</a>在GitHub上。  </p>
+<h2 id="先决条件"><a href="#先决条件" class="headerlink" title="先决条件"></a>先决条件</h2><p>本教程依赖于Node.js,你需要对JavaScript和Node.js有一定的了解并确保您的电脑上已经安装了Noded.js。  </p>
+<h2 id="构建你的Node-js应用"><a href="#构建你的Node-js应用" class="headerlink" title="构建你的Node.js应用"></a>构建你的Node.js应用</h2><p>首先，让我们搭建一个Node.js的应用框架。创建你的应用目录，并设置如下的目录结构：   </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">├── index.js</div><div class="line">├── public</div><div class="line">│   ├── css</div><div class="line">│   │   └── style.css</div><div class="line">│   └── js</div><div class="line">│       └── script.js</div><div class="line">└── views</div><div class="line">    └── index.html</div></pre></td></tr></table></figure>
+<p>之后利用如下命令来初始化你的Node.js应用：  </p>
+<blockquote>
+<p>npm init -f    </p>
+</blockquote>
+<p>我们将使用Express(一个Node.js Web应用框架)来搭建本地服务。为了实现服务器和浏览器之间的双向通信，我们将使用Socket.IO。同时，我们还将使用自然语言处理工具API.AI，来构建可以人工交谈的AI聊天工具。<br>Socket.IO，能够让我们更方便的使用WebSocket。通过在客户端和服务端建立socket连接。当Web Speech API或API.AI 返回文本数据的时候，我们能将聊天信息在浏览器和服务器之间传递。<br>首先，我们创建index.js文件并实例化Express作为服务器：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">'express'</span>);</div><div class="line"><span class="keyword">const</span> app = express();</div><div class="line"></div><div class="line">app.use(express.static(__dirname + <span class="string">'/views'</span>)); <span class="comment">// html</span></div><div class="line">app.use(express.static(__dirname + <span class="string">'/public'</span>)); <span class="comment">// js, css, images</span></div><div class="line"></div><div class="line"><span class="keyword">const</span> server = app.listen(<span class="number">5000</span>);</div><div class="line">app.get(<span class="string">'/'</span>, (req, res) =&gt; &#123;</div><div class="line">  res.sendFile(<span class="string">'index.html'</span>);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>下一步，我们将Web Speech API集成到前端代码。  </p>
+<h2 id="利用-SpeechRecognition-接口接收语音"><a href="#利用-SpeechRecognition-接口接收语音" class="headerlink" title="利用 SpeechRecognition 接口接收语音"></a>利用 SpeechRecognition 接口接收语音</h2><p>Web Speech API具有名为SpeechRecognition的接口，用来从麦克风中获取用户们的讲话并了解他们在说什么。 </p>
+<h3 id="创建用户界面"><a href="#创建用户界面" class="headerlink" title="创建用户界面"></a>创建用户界面</h3><p>该程序的UI界面很简单，仅有一个按钮来触发语音识别。让我们创建一个index.html文件，其中包含js文件和Socket.IO，稍后我们将用它启动实时通讯：  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span>…<span class="tag">&lt;/<span class="name">head</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line">    …</div><div class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"js/script.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>然后，在页面中加入按钮接口：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">button</span>&gt;</span>Talk<span class="tag">&lt;/<span class="name">button</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>要想查看按钮的样式，你何以查看<a href="https://github.com/girliemac/web-speech-ai" target="_blank" rel="external">源代码</a>中的style.css文件。  </p>
+<h3 id="使用JavaScript捕获语音"><a href="#使用JavaScript捕获语音" class="headerlink" title="使用JavaScript捕获语音"></a>使用JavaScript捕获语音</h3><p>在script.js中，创建SpeechRecognition实例来识别语音： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> SpeechRecognition = <span class="built_in">window</span>.SpeechRecognition || <span class="built_in">window</span>.webkitSpeechRecognition;</div><div class="line"><span class="keyword">const</span> recognition = <span class="keyword">new</span> SpeechRecognition();</div></pre></td></tr></table></figure>
+<p>我们使用了带有前缀和不带的两个对象做判断，因为Chrome当前支持带有前缀的API。<br>同时，我们在本教程中使用了一些ES6语法，包括const，箭头函数等等，他们都可以在支持语音接口的浏览器中使用。<br>你可以设置各种属性，来自定义语音识别：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">recognition.lang = <span class="string">'en-US'</span>;</div><div class="line">recognition.interimResults = <span class="literal">false</span>;</div></pre></td></tr></table></figure>
+<p>之后，监听button UI的DOM节点的点击事件来启动语音识别：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">document</span>.querySelector(<span class="string">'button'</span>).addEventListener(<span class="string">'click'</span>, () =&gt; &#123;</div><div class="line">    recognition.start();</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>一旦语音开始，我们就调用result事件，来获取语音文本：   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">recognition.addEventListener(<span class="string">'result'</span>, (e) =&gt; &#123;</div><div class="line">  <span class="keyword">let</span> last = e.results.length - <span class="number">1</span>;</div><div class="line">  <span class="keyword">let</span> text = e.results[last][<span class="number">0</span>].transcript;</div><div class="line">  <span class="built_in">console</span>.log(<span class="string">'Confidence: '</span> + e.results[<span class="number">0</span>][<span class="number">0</span>].confidence);</div><div class="line">  <span class="comment">// We will use the Socket.IO here later…</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>这将返回一个包含结果的SpeechRecognitionResultList兑现，你可以在数组中检索文字信息。接下来我们使用Socket.IO来传递数据额给我们的服务器。</p>
+<h2 id="Socket-IO做实时通讯"><a href="#Socket-IO做实时通讯" class="headerlink" title="Socket.IO做实时通讯"></a>Socket.IO做实时通讯</h2><p>Socket.IO是一个做实时通讯web应用的库。他可以实现web客户端和服务端之间的双向通讯。我们将使用它将语音结果传递给Node.js，将相应信息传回浏览器。<br>你也许会有疑虑为什么我们不使用简单的HTTP协议或者AJAX。你可以发送POST请求来传奇数据。但是我们通过Socket.IO来创建webscoket，是因为这是最好的实现双向通讯的解决方案。特别是服务器向浏览器发送数据，如果采用AJAX来实现我们就不得不再用轮训的方式： </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/4.png" alt="4.png" title=""> 
+<p>在script.js中实例化Socket.IO：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> socket = io();</div></pre></td></tr></table></figure>
+<p>然后将下面这段代码加入到监听reuslt事件的回调函数中：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">socket.emit(<span class="string">'chat message'</span>, text);</div></pre></td></tr></table></figure>
+<p>我们回到Node.js代码中，来接受这些文本并使用API来回复用户的消息。  </p>
+<h2 id="从AI中获取回复"><a href="#从AI中获取回复" class="headerlink" title="从AI中获取回复"></a>从AI中获取回复</h2><p>许多平台提供的服务可以将带有自然语言处理的AI系统结合到项目中，包括IBM的Watson，微软的LUIS和Wit.ai。为了快速构建一个会话接口，我们使用API.AI。因为它提供了免费的开发者帐户，并允许我们使用其Web界面和Node.js库快速设置一个小型的系统。  </p>
+<h3 id="设置API-AI"><a href="#设置API-AI" class="headerlink" title="设置API.AI"></a>设置API.AI</h3><p>首先创建一个账户和代理。更多内容可以参考<a href="https://docs.api.ai/docs/get-started" target="_blank" rel="external">入门指南</a>中的第一步。<br>然后，创建entities和intents。点击左侧菜单中的”Small Talk”，然后切换开关即可开启服务。  </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/5.png" alt="5.png" title="">
+<p>根据你的喜好，自定义API.AI接口的代理。  </p>
+<h3 id="使用API-AI的Node-js-SDK"><a href="#使用API-AI的Node-js-SDK" class="headerlink" title="使用API.AI的Node.js SDK"></a>使用API.AI的Node.js SDK</h3><p>我们利用Node.js SDK来链接Node.js应用和API.AI。回到你的index.js文件中，利用你的access token来初始化API.AI：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> apiai = <span class="built_in">require</span>(<span class="string">'apiai'</span>)(APIAI_TOKEN);</div></pre></td></tr></table></figure>
+<p>如果您只想在本地运行代码，可以在此处对API密钥进行编码。这里有多种方式来设置环境变量，我通常使用设置 .env 文件来包含变量信息。在GitHub源码中，我将包含凭证的信息文件添加到了.gitignroe中，你可以查看 <a href="https://github.com/girliemac/web-speech-ai/blob/master/.env_test" target="_blank" rel="external">.env-test</a> 文件来查看他是如何设置的。  </p>
+<p>现在我么能使用服务端的Socket.IO来获取浏览器的结果。<br>一旦接收到消息，我们就用API.AI的API来检索并回复用户信息：    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">io.on(<span class="string">'connection'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">socket</span>) </span>&#123;</div><div class="line">    socket.on(<span class="string">'chat message'</span>, (text) =&gt; &#123;</div><div class="line">        <span class="comment">// Get a reply from API.AI</span></div><div class="line">        <span class="keyword">let</span> apiaiReq = apiai.textRequest(text, &#123;</div><div class="line">            sessionId: APIAI_SESSION_ID</div><div class="line">        &#125;);</div><div class="line">        apiaiReq.on(<span class="string">'response'</span>, (response) =&gt; &#123;</div><div class="line">            <span class="keyword">let</span> aiText = response.result.fulfillment.speech;</div><div class="line">            socket.emit(<span class="string">'bot reply'</span>, aiText); <span class="comment">// Send the result back to the browser!</span></div><div class="line">        &#125;);</div><div class="line">        apiaiReq.on(<span class="string">'error'</span>, (error) =&gt; &#123;</div><div class="line">            <span class="built_in">console</span>.log(error);</div><div class="line">        &#125;);</div><div class="line">        apiaiReq.end();</div><div class="line">    &#125;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>当API.AI返回结果时，使用Socket.IO socket.emit()将其发送回浏览器。  </p>
+<h2 id="利用SpeechSynthesis接口来合成语音"><a href="#利用SpeechSynthesis接口来合成语音" class="headerlink" title="利用SpeechSynthesis接口来合成语音"></a>利用SpeechSynthesis接口来合成语音</h2><p>然我们再次回到script.js中，完成我们的应用！<br>创建一个语音合成器，这次我们使用SpeechSynthesis接口。该函数将接受字符串作为参数，并使浏览器能够说出文本：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">synthVoice</span>(<span class="params">text</span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> synth = <span class="built_in">window</span>.speechSynthesis;</div><div class="line">    <span class="keyword">const</span> utterance = <span class="keyword">new</span> SpeechSynthesisUtterance();</div><div class="line">    utterance.text = text;</div><div class="line">    synth.speak(utterance);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该函数中，我们首先创建了一个API入口对象，window.speechSynthesis。这次我们没有在使用前缀，该API的支持度更高，许多浏览器已经移除了该前缀。<br>然后，我们创建一个SpeechSynthesisUtterance实例，并设置要合成语音的文本。你也可以设置其他属性，例如voice类型和操作系统支持的语音类型。<br>最后，我们使用SpeechSynthesis.speak()来是浏览器说话。现在，再次从Socket.IO获取服务器的响应。一旦接收到消息，请调用该功能。    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">socket.on(<span class="string">'bot reply'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">replyText</span>) </span>&#123;</div><div class="line">  synthVoice(replyText);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>至此我们完成了全部功能，你可以试试:  </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/6.gif" alt="6.gif" title="">
+<p>请注意，浏览器在首次的时候会询问你是否使用麦克风。像其他Web API（如Geolocation API和Notification API）一样，除非你授予它，否则浏览器将永远不会访问您的敏感信息，因此你的声音不会在不知情的情况下被秘密记录。<br>API.AI是可配置和可训练的。阅读API.AI文档，使其更加智能。   </p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>本教程仅涵盖了API的核心功能，但该API实际上是非常灵活和可自定义的。您可以改变识别语言，合成语音，包括口音（如美国或英国英语），语音音调和语速。你可以在这里了解有关API的更多信息：   </p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="external">Web Speech API</a> Mozilla Developer Network</li>
+<li><a href="https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html" target="_blank" rel="external">Web Speech API Specification</a> W3C</li>
+<li><a href="https://docs.microsoft.com/en-us/microsoft-edge/dev-guide/multimedia/web-speech-api" target="_blank" rel="external">Web Speech API: Speech Synthesis</a> (Microsoft Edge documentation) Microsoft  </li>
+</ul>
+<p>自然语言处理工具你可以参考如下：  </p>
+<ul>
+<li><a href="https://api.ai/" target="_blank" rel="external">API.AI</a> Google</li>
+<li><a href="https://wit.ai/" target="_blank" rel="external">Wit.ai</a> Facebook</li>
+<li><a href="https://www.luis.ai/" target="_blank" rel="external">LUIS</a> Microsoft</li>
+<li><a href="https://www.ibm.com/watson/" target="_blank" rel="external">Watson</a> IBM</li>
+<li><a href="https://aws.amazon.com/cn/lex/" target="_blank" rel="external">Lex</a> Amazon</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/28/图片惰性加载的实现/" rel="next" title="图片惰性加载 IntersectionObserver">
+                <i class="fa fa-chevron-left"></i> 图片惰性加载 IntersectionObserver
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/21/riot-js-源码解析1/" rel="prev" title="Riot.js 源码解析 【一】 基础内容">
+                Riot.js 源码解析 【一】 基础内容 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">愿归来时，仍是少年</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#先决条件"><span class="nav-number">1.</span> <span class="nav-text">先决条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构建你的Node-js应用"><span class="nav-number">2.</span> <span class="nav-text">构建你的Node.js应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用-SpeechRecognition-接口接收语音"><span class="nav-number">3.</span> <span class="nav-text">利用 SpeechRecognition 接口接收语音</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#创建用户界面"><span class="nav-number">3.1.</span> <span class="nav-text">创建用户界面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用JavaScript捕获语音"><span class="nav-number">3.2.</span> <span class="nav-text">使用JavaScript捕获语音</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Socket-IO做实时通讯"><span class="nav-number">4.</span> <span class="nav-text">Socket.IO做实时通讯</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从AI中获取回复"><span class="nav-number">5.</span> <span class="nav-text">从AI中获取回复</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#设置API-AI"><span class="nav-number">5.1.</span> <span class="nav-text">设置API.AI</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用API-AI的Node-js-SDK"><span class="nav-number">5.2.</span> <span class="nav-text">使用API.AI的Node.js SDK</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用SpeechSynthesis接口来合成语音"><span class="nav-number">6.</span> <span class="nav-text">利用SpeechSynthesis接口来合成语音</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>

@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="javascript,数据交互,翻译文章," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="本文翻译自：How to leverage Local Storage to build lightning-fast apps如果原文打不开请移步：这里     用户偏爱快速响应的应用程序。他们并不关心API运行所需要的时间，而仅仅是想立即看到变化。所以我们怎么做才能尽力满足用户的需求？解决方案：本地存储应用的更改，然后不定时的与你的服务器同步这些内容。但是当我们考虑到连接延迟问题的时候，这样">
+<meta name="keywords" content="javascript,数据交互,翻译文章">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[译] 如何利用 localStorage 来构建更快的应用程序">
+<meta property="og:url" content="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="本文翻译自：How to leverage Local Storage to build lightning-fast apps如果原文打不开请移步：这里     用户偏爱快速响应的应用程序。他们并不关心API运行所需要的时间，而仅仅是想立即看到变化。所以我们怎么做才能尽力满足用户的需求？解决方案：本地存储应用的更改，然后不定时的与你的服务器同步这些内容。但是当我们考虑到连接延迟问题的时候，这样">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/1.jpeg">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/2.jpeg">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/3.jpeg">
+<meta property="og:image" content="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/4.jpeg">
+<meta property="og:updated_time" content="2017-08-25T09:03:48.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="[译] 如何利用 localStorage 来构建更快的应用程序">
+<meta name="twitter:description" content="本文翻译自：How to leverage Local Storage to build lightning-fast apps如果原文打不开请移步：这里     用户偏爱快速响应的应用程序。他们并不关心API运行所需要的时间，而仅仅是想立即看到变化。所以我们怎么做才能尽力满足用户的需求？解决方案：本地存储应用的更改，然后不定时的与你的服务器同步这些内容。但是当我们考虑到连接延迟问题的时候，这样">
+<meta name="twitter:image" content="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/1.jpeg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/"/>
+
+
+
+
+
+  <title>[译] 如何利用 localStorage 来构建更快的应用程序 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">愿归来时，仍是少年</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">[译] 如何利用 localStorage 来构建更快的应用程序</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-23T19:45:13+08:00">
+                2017-08-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/翻译文章/" itemprop="url" rel="index">
+                    <span itemprop="name">翻译文章</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>本文翻译自：<a href="https://medium.freecodecamp.org/how-leverage-local-storage-to-build-lightning-fast-apps-4e8218134e0c" target="_blank" rel="external">How to leverage Local Storage to build lightning-fast apps</a><br>如果原文打不开请移步：<a href="https://www.zybuluo.com/caelumtian/note/857353" target="_blank" rel="external">这里</a>   </p>
+</blockquote>
+<p>用户偏爱快速响应的应用程序。他们并不关心API运行所需要的时间，而仅仅是想立即看到变化。所以我们怎么做才能尽力满足用户的需求？<br>解决方案：本地存储应用的更改，然后不定时的与你的服务器同步这些内容。但是当我们考虑到连接延迟问题的时候，这样做将会变得更加复杂。<br><a id="more"></a><br>让我们以一个媒体网站为例，用户可以通过点击 ❤️ 按钮来推荐一篇文章给他的朋友们。当用于再次点击该按钮后，则取消推荐。  </p>
+<h2 id="上述案例虽然简单，但有一些极端的例子造成了很多问题"><a href="#上述案例虽然简单，但有一些极端的例子造成了很多问题" class="headerlink" title="上述案例虽然简单，但有一些极端的例子造成了很多问题"></a>上述案例虽然简单，但有一些极端的例子造成了很多问题</h2><p>我们并不知道网站内部发生了什么，为了简单起见，我们可以想象在第一次点击的时候，程序将一个项目添加到了推荐列表中，并且在第二次点击的时候移除这个项目。<br>下面让我们看看，如果我们开发这样一个简单的应用功能，会遇到哪儿些问题    </p>
+<ol>
+<li>我们需要考虑如果用户疯狂的点击 ❤️ 按钮，这些行为将会触发一系列响应 事件  </li>
+<li>网速并不总是快的。在一个网速差的环境下，甚至连最简单的API调用都要花上几秒钟才可以完成。在这段时间用户就有可能离开了当前屏幕，然后才会返回  </li>
+<li>有的时候，API调用可能失败，我们的程序应该能够有能力从在状况下正常运行  </li>
+<li>用户有可能使用不同的设备来打开我们的网站，或者同时在移动设备和PC上面访问我们的网站。不管在哪儿种情况下我们都应该有一个策略来和后端同步数据并更新其状态  </li>
+</ol>
+<p>我们在实际中可能遇到更多的问题，但是本文着重来解决上面提到的问题。  </p>
+<h2 id="明确问题"><a href="#明确问题" class="headerlink" title="明确问题"></a>明确问题</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/1.jpeg" alt="1.jpeg" title="">  
+<p>在讨论如何解决问题之前，我们来先定义要开发功能的实现标准。任务是开发一个可以在列表中添加和删除项目的功能，列表数据存储在后端。功能必须满足如下要求：  </p>
+<ol>
+<li>用户界面需要立刻响应用户的操作，让用户看到他们操作的结果。如果之后由于某些原因我们不能同步这些更改内容，我们应该通知用户操作失败。并且回滚到之前的状态。  </li>
+<li>支持多个设备的交互。这并不意味着我们需要支持实时修改的功能，但是我们需要不断地获取整个数据。此外，后端为我们提供了添加和删除项目的API，我们必须使用它们来支持更好的同步效果。  </li>
+<li>保证数据的完整性：无论什么时候一旦数据同步失败，我们的网站都应该从错误中恢复正常状态。  </li>
+</ol>
+<p>幸运的是，我们并不需要实现所有，而是开发一种可以实现它的数据存储机制。让我们来探究不同的实现方案。  </p>
+<h2 id="最直接的方法"><a href="#最直接的方法" class="headerlink" title="最直接的方法"></a>最直接的方法</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/2.jpeg" alt="2.jpeg" title="">   
+<p>第一种解决办法是在 localStorage 中存储一份列表数据的副本，当用户进行操作时，我们也同时更新 localStorage 中的数据。这种解决问题的方案大多数与竞争条件或者API调用失败有关，例如：  </p>
+<ol>
+<li><code>获取并修改列表之间冲突</code> 让我们设想这样一个场景，网站从后端获取列表数据来更新我们的 localStorage。用户这个在更新没有完成之前，修改了数据。这将导致获取到的列表和本地列表之间产生合并冲突。为此我们需要区分那些还没有添加的项目和已经从web中或其他设备上删除的项目。  </li>
+<li><code>API调用失败</code> 用户可能进行快速的大量的修改操作，也有可能是恢复操作。例如，用户可以添加项目到列表，然后删除它们，然后又添加回来。如果第一次操作失败，我们应该复原列表即从列表中删除该项。但是这样会破坏我们数据的完整性，因为该项目实际是应该在列表中的。我们最后一次调用时添加操作，而且它还没有完成。  </li>
+</ol>
+<p>因此，我认为应该保留更多的信息在 localStorage 中，而不仅仅只有最终的预期效果。这样我们才有能力从可能遇到的问题中恢复过来。  </p>
+<h2 id="保留用户的操作历史记录"><a href="#保留用户的操作历史记录" class="headerlink" title="保留用户的操作历史记录"></a>保留用户的操作历史记录</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/3.jpeg" alt="3.jpeg" title="">   
+<p>这里有一个不同的方案：我们保留冲后端获取到的列表，并记录用户的所有操作。每个记录都会匹配一个后端API的调用(分别是’add’和’remove’)。<br>一旦API调用完成，我们更新本地副本数据并从历史记录中删去记录。当我们想和后端同步用户浏览器数据，我们仅仅获取列表的版本然后替换我们的副本。<br>我们不在有任何API调用失败的问题，因为我们明确知道API调用前列表的状态，并且我们可以从历史记录中删除该记录，从而保证数据的完整性。<br>这么做主要会带来性能问题。每次检查一个特性的项目是否在列表中，我们都需要通过所有记录来计算用户期望看到的内容。当然，这些性能都取决于在一定时间内用户进行的交互次数以及数据的存储方式。<br>我认为，这种方案非常利于用户在应用中创建内容的场景，因为它提供了许多解决同步问题的方案。但是我们的问题比这更简单，所以我们应该能够进行一些优化来提升性能。  </p>
+<h2 id="中间地带"><a href="#中间地带" class="headerlink" title="中间地带"></a>中间地带</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/4.jpeg" alt="4.jpeg" title="">   
+<p>这种方案有足够的信息从负面情况中恢复。我们需要两个额外的列表，一个用于持续添加另一个用于删除。为了确保数据的完整性，你仅仅需要添加一些规则：  </p>
+<ol>
+<li><code>添加和删除列表优先于主列表</code> 例如：一个项目同时在删除列表中和主列表中时。如果浏览器检查项目是否在列表中，它应该返回 false。  </li>
+<li><code>一个项目不能同时出现在两个列表中如果用户对一个项目进行了多次操作，则最后的修改应该具有优先级</code> 例如，如果用户添加了项目然后删除了它，作为结果它应该出现在删除列表中。项目在不在主列表中反而无关紧要。  </li>
+<li><code>只有某个项目在最后一次调用API完成后，才可以从相应的列表中删除</code> 例如，用户添加了一个项目并删除了它，然后又在第一次调用完成之前添加了它。在这种情况下，该项目应该在添加列表中。但是只有在第二次添加完成后它才应该被删除。我们可以通过为每个条目分配一个ID来实现。在API调用完成后，删除使用这些ID的条目。  </li>
+<li><code>每次API调用完成后，主列表应该被更新</code> 主列表应该反映后端的实际情况。所以在连续的添加和删除的情况下，即使在客户端看起来，项目并不在列表中，在第一次调用后我们应该把它添加到主列表中。  </li>
+</ol>
+<h2 id="关于API调用失败"><a href="#关于API调用失败" class="headerlink" title="关于API调用失败"></a>关于API调用失败</h2><p>调用API失败的原因是有所不同的。有些是临时的，有些不是。他们当中有些是致命的，有些事可以恢复的。无论解决方案是什么，失败的请求都应该返回一些关于失败原因的有用信息。<br>我认为HTTP状态吗是完美的。例如，如果状态吗是504网关超时，重新请求将是个不错的方案。但是如果是400请求错误，那么简单的重新请求将不会有任何效果。其中一些，比如401未经授权，可能需要用户额外的操作。在删除项目的时候，410状态码就可能意味着是用户从不同的设备删除了该项目。  </p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>第一个解决方案是简单的列表，他是快速的，但处理负面情况是困难的  </li>
+<li>第二种方案，我们创建了一个像列表的数据结构，但是保留了所有的更改记录。这有利于解决负面情况，但是速度很慢  </li>
+<li>中间地带解决方案，从外表看依然想一个列表。但是他允许我们平衡性能并且简单快速的从错误中恢复  </li>
+</ul>
+<p>本文提到的问题只是一个方面。还有就是API调用的数量问题。如果用户执行了大量类似的交互，我们可以尝试最小化API调用的数量。此优化也会影响本地存储的结构。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+            <a href="/tags/数据交互/" rel="tag">数据交互</a>
+          
+            <a href="/tags/翻译文章/" rel="tag">翻译文章</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/21/译-为-Web-Bluetooth-做好准备/" rel="next" title="[译] 为 Web Bluetooth 做好准备">
+                <i class="fa fa-chevron-left"></i> [译] 为 Web Bluetooth 做好准备
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/23/译-将你的网站升级为PWA/" rel="prev" title="[译] 将你的网站改造为PWA">
+                [译] 将你的网站改造为PWA <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">愿归来时，仍是少年</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#上述案例虽然简单，但有一些极端的例子造成了很多问题"><span class="nav-number">1.</span> <span class="nav-text">上述案例虽然简单，但有一些极端的例子造成了很多问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#明确问题"><span class="nav-number">2.</span> <span class="nav-text">明确问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最直接的方法"><span class="nav-number">3.</span> <span class="nav-text">最直接的方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#保留用户的操作历史记录"><span class="nav-number">4.</span> <span class="nav-text">保留用户的操作历史记录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#中间地带"><span class="nav-number">5.</span> <span class="nav-text">中间地带</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于API调用失败"><span class="nav-number">6.</span> <span class="nav-text">关于API调用失败</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>

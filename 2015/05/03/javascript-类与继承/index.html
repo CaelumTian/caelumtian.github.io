@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="javascript," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="类的创建在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，J">
+<meta name="keywords" content="javascript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="javascript 类与继承">
+<meta property="og:url" content="http://yoursite.com/2015/05/03/javascript-类与继承/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="类的创建在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，J">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-08-22T10:02:33.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="javascript 类与继承">
+<meta name="twitter:description" content="类的创建在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，J">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2015/05/03/javascript-类与继承/"/>
+
+
+
+
+
+  <title>javascript 类与继承 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">愿归来时，仍是少年</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/05/03/javascript-类与继承/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">javascript 类与继承</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2015-05-03T18:59:31+08:00">
+                2015-05-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="类的创建"><a href="#类的创建" class="headerlink" title="类的创建"></a>类的创建</h1><p>在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，Javascript中创建类的方式有很多种：工厂模式，构造函数模式，原形模式，动态原形模式，寄生构造模式，稳妥构造模式。<br><a id="more"></a></p>
+<h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>通过函数把一个类型实例包装起来，这样可以通过函数来实现类型的实例化；但是这只是一种伪装的构造函数，而且instanceof判断会发现创建的对象并不属于自己定义的类而是Object不推荐使用     </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name,age</span>) </span>{
+    <span class="keyword">var</span> o = <span class="keyword">new</span> <span class="built_in">Object</span>();    <span class="comment">//Object创建对象</span>
+    o.name = name;
+    o.age = age;
+    <span class="keyword">return</span> o;
+}
+<span class="keyword">var</span> per1 = Person(<span class="string">"tian"</span>,<span class="number">11</span>);
+per1 <span class="keyword">instanceof</span> Person;   <span class="comment">//false</span>
+per1 <span class="keyword">instanceof</span> <span class="built_in">Object</span>;   <span class="comment">//true</span>
+</code></pre>
+<h2 id="原形模式"><a href="#原形模式" class="headerlink" title="原形模式"></a>原形模式</h2><p>声明一个构造函数，利用构造函数的prototype属性为该构造函数定义原形属性（原形prototype是Javascript核心特性之一，设计的目的就是用来实现继承的，从予以角度分析，prototype就是构造类拥有的原始成员。注意对象是没有原形的，只有构造函数拥有原形)；  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>) </span>{
+
+}
+Person.prototype = {
+        name : <span class="string">"tian"</span>,
+        age : <span class="number">21</span>,
+        run : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+            <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);
+        }                                                                                                                
+}
+<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person(<span class="string">"tian"</span>, <span class="number">12</span>);
+</code></pre>
+<p>一般的我们把定义在原形上的方法叫做原形方法，他们被所有对象共享，也就是只有一份。这样就解决了构造模式的缺点，但是又没有特权方法||属性。于是，我们参考以上这几种方法，就可以得到目前最常用的类的创建方法。  </p>
+<h2 id="组合模式（构造原形模式）"><a href="#组合模式（构造原形模式）" class="headerlink" title="组合模式（构造原形模式）"></a>组合模式（构造原形模式）</h2><p>可以看出这是原型模式和构造模式的组合，构造函数中我们放入特权属性和特权方法，他们每一个实例就是一个副本，互不影响。在内部还可以放入var 声明的变量作为私有属性。把公共的方法给原形，这样就可以通用。  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name, age</span>) </span>{
+        <span class="keyword">this</span>.name = name;        <span class="comment">//特权方法</span>
+        <span class="keyword">this</span>.age = age;
+        <span class="keyword">var</span> _idNum = <span class="number">0</span>;     <span class="comment">//该属性无法被访问到</span>
+}
+Person.prototype = {
+        run : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+                conosole.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);  <span class="comment">//公共方法</span>
+        }
+}
+<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person(<span class="string">"tian"</span>, <span class="number">12</span>);
+</code></pre>
+<p>原形方法和特权方法都属于实例方法，还有一种类方法或者类属性，我们直接在函数上定义就可以：Person.method = function(){}。遵循对象设计原则，类的所有成员都应该封装在类的结构体内，因此优化该模式，产生动态原形模式。</p>
+<h2 id="动态原形模式"><a href="#动态原形模式" class="headerlink" title="动态原形模式"></a>动态原形模式</h2><p>把所有信息放在构造函数中，并且动态的判断是否具有某方法并创建  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name, age</span>) </span>{
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.age = age;
+        <span class="keyword">if</span>(<span class="keyword">typeof</span> <span class="keyword">this</span>.run === <span class="string">'undefined'</span>) {
+                Person.prototype.run = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+                        <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);
+                }
+        }
+}
+</code></pre>
+<h2 id="其他模式"><a href="#其他模式" class="headerlink" title="其他模式"></a>其他模式</h2><p>寄生构造函数：类似工厂模式，将工厂中的对象实例o，换成指定构造器生成，常用来扩展一些JS本身构造函数，又不希望直接修改构造函数时候使用。比如扩展Array构造函数。<br>稳妥构造函数模式：一般用于安全的环境中。最后这两种方法直接十分类似，也不太常用，具体代码就不贴了都和工厂模式长得很像，有兴趣的自行查找。  </p>
+<h1 id="Prototype原形与new操作符"><a href="#Prototype原形与new操作符" class="headerlink" title="Prototype原形与new操作符"></a>Prototype原形与new操作符</h1><p>在讨论继承之前，我们先探索一下原形链和new操作符在创建对象的时候的步骤。<br>首先：我们知道在当我们访问对象的一个属性或方法的时候，那么他会先找特权成员，如果有同名的就返回，没有就查找原形，在没有查找父类原形。我们通过组合模式创建的对象都有父类：Object。这种原形链的查找方式我们看看在修改prototype的时候会发生什么：  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>) </span>{}
+Person.prototype = {
+        name : <span class="string">"tian"</span>
+}
+<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person();
+<span class="built_in">console</span>.log(per1.name) <span class="comment">//tian</span>
+Person.prototype = {
+        name : <span class="string">"hyang"</span>     <span class="comment">//原形链断开，重写</span>
+}
+<span class="built_in">console</span>.log(per1.name) <span class="comment">//tian 不受影响</span>
+<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params"></span>)</span>{}
+Teacher.prototype = {
+       name : <span class="string">"qiqi"</span>
+}
+per1.constructor = Teacher;
+<span class="built_in">console</span>.log(per1.name)  <span class="comment">//tian 依然不受影响</span>
+</code></pre>
+<p>通过上述代码我们发现，当重写类的原形链的时候，已经生成的实例并不受任何影响，修改construct属性（该属性表示对象的构造函数），也没有任何效果。那么究竟什么才是对象回溯的依据呢？其实每个对象都有一个 <code>__proto__</code>属性。该属性保存着对象指向的原形。  </p>
+<pre><code class="javascript"><span class="built_in">console</span>.log(per1.__proto__)   <span class="comment">//Object {name: "tian"}</span>
+per1.__proto__ = Person.prototype;   <span class="comment">//修改__proto__属性</span>
+<span class="built_in">console</span>.log(per1.name)   <span class="comment">//hyang</span>
+per1.__proto__ = Teacher.prototype 
+<span class="built_in">console</span>.log(per1.name)   <span class="comment">//qiqi</span>
+</code></pre>
+<p>在IE11以后和标准浏览器中该属性可以修改访问，之前的该属性不暴露。于是我们得出new操作符在执行的时候过程（参考Person类）：</p>
+<blockquote>
+<p>1）创建一个空对象obj<br>2）obj.<strong>proto</strong> = Person.prototype (引用)<br>3）将构造器中this = obj<br>4）执行构造器里面的代码<br>5）判断有没有返回值，没有返回值默认undefined，有返回值且为复合类型则返回该类型，否则返回this如果通过new生成对象的时候，忘记加上new了，那么属性会保存在哪儿里呢？  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name</span>) </span>{
+        <span class="keyword">this</span>.name = name;
+}
+<span class="keyword">var</span> per = Person(<span class="string">"tian"</span>);
+per   <span class="comment">//'undefined'</span>
+<span class="built_in">console</span>.log(<span class="built_in">window</span>.name) <span class="comment">//'tian'</span>
+</code></pre>
+<p>可以看到没有加new操作符，Person中的this会被解释称window对象，全局变量就很容易受到污染，谨慎使用new操作符。  </p>
+</blockquote>
+<h1 id="继承"><a href="#继承" class="headerlink" title="继承"></a>继承</h1><p>Javascript实现继承，通过上面我们知道只要prototype有什么，那么实例就有什么；如果我们将类prototype置换为另一类的prototype，那么该类就可以轻易得到类的原型成员。但是由于对象是引用类型，所以不能直接替换  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>)</span>{}  <span class="comment">//父类</span>
+Person.prototype = {
+        <span class="string">"name"</span> : <span class="string">"tian"</span>
+}
+<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params"></span>)</span>{}    <span class="comment">//子类</span>
+Teacher.prototype = Person.prototype;
+</code></pre>
+<p>这样Teacher的原形保存的是对Person的引用，修改Teacher会同时修改Person。解决的方法有两个，一个是通过for in把父类原型逐一赋给子类的原形（拷贝继承）；第二种现将父类的原形赋给一个函数，然后将该函数的实例作为子类的原形。<br>方法1：  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">extend</span>(<span class="params">child, super</span>) </span>{
+        <span class="keyword">for</span>(<span class="keyword">var</span> property <span class="keyword">in</span> <span class="keyword">super</span>) {
+                child[property] = <span class="keyword">super</span>[property];
+        }
+        <span class="keyword">return</span> child;
+}
+</code></pre>
+<p>该方法有一个缺陷，就是无法通过instanceof验证。<br>方法2 原型继承：  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name</span>)</span>{
+        <span class="keyword">this</span>.name = name;
+}
+Person.prototype = {
+        <span class="string">"run"</span> : <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+                <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"跑步"</span>)
+        }
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">birdge</span>(<span class="params"></span>)</span>{}
+birdge.prototype = Person.prototype;
+
+<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params">name, wage</span>)</span>{
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.wage = wage;
+}
+Teacher.prototype = <span class="keyword">new</span> birdge();
+<span class="keyword">var</span> per = <span class="keyword">new</span> Person(<span class="string">"tian"</span>);
+<span class="keyword">var</span> tea = <span class="keyword">new</span> Teacher(<span class="string">"hyang"</span>,<span class="number">10</span>);
+Person.prototype === Teacher.prototype;  <span class="comment">// false 说明原型已经分离</span>
+Person.prototype.say = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+    <span class="built_in">console</span>.log(<span class="keyword">this</span>.name)
+} <span class="comment">//为父类添加一个方法</span>
+tea.say()    <span class="comment">//hyang  说明子类得到了父类新添加的方法</span>
+Teacher.prototype.getWage = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+    <span class="built_in">console</span>.log(<span class="keyword">this</span>.wage);
+}
+per.getWage;  <span class="comment">//'undefined' 说明子类添加的方法并没有影响到父类</span>
+</code></pre>
+<p>这样我们就完成了类的原型继承，我们给子类原形添加的新方法，其实是保存在了生成的new bridge()那个对象中（Teacher的原型保存的是对new bridge这个对象的引用）  </p>
+<pre><code class="javascript">per.__proto__                  <span class="comment">//Object {run: function, say: function}</span>
+tea.__proto__                  <span class="comment">//birdge {getWage: function, run: function, say: function}</span>
+tea.__proto__.__proto__  <span class="comment">//Object {run: function, say: function}</span>
+</code></pre>
+<p>这里我们可以清除的看到对象各自的原型是什么，中介函数bridge的使用在ES5中有更加简单的方法 Object.create(原型)这样就可以创建出一个具有指定原形的对象。对于不支持Object.create我们可以自己定义该函数   </p>
+<pre><code class="javascript"><span class="keyword">if</span>(!<span class="built_in">Object</span>.create){
+        <span class="built_in">Object</span>.create= (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+                <span class="function"><span class="keyword">function</span> <span class="title">F</span>(<span class="params"></span>)</span>{}   <span class="comment">//创建中介函数（bridge）</span>
+                <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">obj</span>) </span>{
+                        <span class="keyword">if</span>(<span class="built_in">arguments</span>.length !== <span class="number">1</span>) {
+                                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"仅支持一个参数"</span>);
+                        }
+                        F.prototype = obj;   <span class="comment">//原形绑定</span>
+                        <span class="keyword">return</span> <span class="keyword">new</span> F();      <span class="comment">//返回实例</span>
+                }
+        })()
+}
+</code></pre>
+<p>这样上述继承就可以改写成，Teacher.prototype = Object.create(Person.prototype)。对于特权属性和函并没有在原型链中，我们可以采用借用构造函数来继承，于是上面Teacher子类修改为    </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params">name, wage</span>) </span>{
+        Person.call(<span class="keyword">this</span>, name);   <span class="comment">//调用父类的构造方法，实现特权函数继承;</span>
+        <span class="keyword">this</span>.wage = wage;
+}
+</code></pre>
+<p>综上两种当时组合在一起，就是我们常用的类的类的继承方法（组合继承）。  还有其他的继承方式比如寄生式继承，寄生组合式继承，这些方法个人用的比较少，有兴趣的可以自己参考。  </p>
+<h1 id="类工厂"><a href="#类工厂" class="headerlink" title="类工厂"></a>类工厂</h1><p>js作为一个基于对象的语言，本身并没有提供class这一概念，通过上一篇文章Javascript 类工厂Ⅰ - 类与继承我们明白了类的继承原理，为此我们可以实现一个属于的简单的OO原型继承。  </p>
+<pre><code class="javascript"><span class="comment">/**</span>
+<span class="comment"> * 提供简单的OO原型继承</span>
+<span class="comment"> */</span>
+(<span class="function"><span class="keyword">function</span>(<span class="params">global</span>) </span>{
+<span class="meta">    "use strict"</span>
+    global.Class = {
+        <span class="comment">/**</span>
+<span class="comment">         * @param superclass  父类</span>
+<span class="comment">         * @param definition  类的属性设置</span>
+<span class="comment">         * @returns {_Object}  返回生成好的类</span>
+<span class="comment">         */</span>
+        create : <span class="function"><span class="keyword">function</span>(<span class="params">superclass, definition</span>) </span>{
+            <span class="keyword">if</span>(<span class="built_in">arguments</span>.length === <span class="number">1</span>) {
+                definition = superclass;
+                superclass = <span class="built_in">Object</span>;
+            }
+            <span class="keyword">if</span>(<span class="keyword">typeof</span> superclass !== <span class="string">"function"</span>) {
+                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"superclass must be fun"</span>);
+            }
+            <span class="keyword">var</span> _super = superclass.prototype;
+
+            <span class="comment">//删去静态方法（静态方法不能被继承）</span>
+            <span class="keyword">var</span> statics = definition.statics;
+            <span class="keyword">delete</span> definition.statics;
+
+            <span class="comment">// 用于返回的中间类,调去deinition对象中的内容</span>
+            <span class="function"><span class="keyword">function</span> <span class="title">_Object</span>(<span class="params"></span>) </span>{
+                <span class="keyword">this</span>.init.apply(<span class="keyword">this</span>, <span class="built_in">arguments</span>);
+            }
+            _Object.prototype = <span class="built_in">Object</span>.create(_super);
+
+            <span class="comment">//_super 属性保存父类原型</span>
+            _Object.prototype._super = _super;
+            _Object.prototype.constructor = _Object;
+           <span class="comment">//确保一定存在init方法</span>
+            <span class="keyword">if</span>(<span class="keyword">typeof</span> _Object.prototype.init !== <span class="string">'function'</span>) {
+                _Object.prototype.init = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+                    superclass.apply(<span class="keyword">this</span>, <span class="built_in">arguments</span>);
+                }
+            }
+            <span class="comment">//copy对象内容到原型中</span>
+            <span class="keyword">for</span>(<span class="keyword">var</span> name <span class="keyword">in</span> definition) {
+                _Object.prototype[name] = definition[name];
+            }
+
+           <span class="comment">//绑定静态内容</span>
+            _Object.statics = {};
+            <span class="keyword">for</span>(<span class="keyword">var</span> name <span class="keyword">in</span> statics) {
+                _Object.statics[name] = statics[name];
+            }
+
+            <span class="keyword">return</span> _Object;
+        }
+    }
+
+})(<span class="keyword">this</span>);
+</code></pre>
+<h2 id="使用说明"><a href="#使用说明" class="headerlink" title="使用说明"></a>使用说明</h2><p>通过Class.create([properties])创建类，properties为属性对象;<br>init 初始化方法，会在创建实例是被调用<br>statics 类的静态方法，ClassName.fn()   </p>
+<pre><code class="javascript"><span class="keyword">var</span> Person = Class.create({
+    init : <span class="function"><span class="keyword">function</span>(<span class="params">name, age</span>) </span>{
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.age = age;
+    },
+    statics : {
+       <span class="string">"name"</span> : <span class="string">"Person"</span>,
+       <span class="string">"type"</span> : <span class="string">"Class"</span>
+    }
+})
+<span class="keyword">var</span> per = <span class="keyword">new</span> Person(<span class="string">"phantom"</span>, <span class="number">1</span>);
+</code></pre>
+<p>使用Class.create(superClass, properties) 继承父类superClass</p>
+<p>this._super 保存有父类属性，可以用于子类中调用父类方法。  </p>
+<pre><code class="javascript"><span class="keyword">var</span> Teacher = Class.create(Person, {
+    init : <span class="function"><span class="keyword">function</span>(<span class="params">name, age, school</span>) </span>{
+        <span class="keyword">this</span>._super.init.call(<span class="keyword">this</span>, name, age);  <span class="comment">//调用父类init</span>
+        <span class="keyword">this</span>.school = school;
+    },
+    teach : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+        <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"上课呢"</span>);
+    }
+})
+<span class="keyword">var</span> te = <span class="keyword">new</span> Teacher(<span class="string">"cjk"</span>, <span class="number">30</span>, <span class="string">'t_hot'</span>);
+</code></pre>
+<h1 id="ES6的类扩展"><a href="#ES6的类扩展" class="headerlink" title="ES6的类扩展"></a>ES6的类扩展</h1><p>ES6提供了更接近传统语言的写法，引入了Class（类）这个概念，作为对象的模板。通过class关键字，可以定义类。  </p>
+<pre><code class="javascript"><span class="comment">//定义类</span>
+<span class="class"><span class="keyword">class</span> <span class="title">Point</span> </span>{
+  <span class="keyword">constructor</span>(x, y) {
+    <span class="keyword">this</span>.x = x;
+    <span class="keyword">this</span>.y = y;
+  }
+  toString() {
+    <span class="keyword">return</span> <span class="string">'('</span> + <span class="keyword">this</span>.x + <span class="string">', '</span> + <span class="keyword">this</span>.y + <span class="string">')'</span>;
+  }
+}
+</code></pre>
+<p>上面代码定义了一个“类”，可以看到里面有一个constructor方法，这就是构造方法，而this关键字则代表实例对象。</p>
+<p>继承类:<br>Class之间可以通过extends关键字实现继承，这比ES5的通过修改原型链实现继承，要清晰和方便很多。<br><code>class ColorPoint extends Point {}</code><br>上面代码定义了一个ColorPoint类，该类通过extends关键字，继承了Point类的所有属性和方法。但是由于没有部署任何代码，所以这两个类完全一样，等于复制了一个Point类。下面，我们在ColorPoint内部加上代码。  </p>
+<pre><code class="javascript"><span class="class"><span class="keyword">class</span> <span class="title">ColorPoint</span> <span class="keyword">extends</span> <span class="title">Point</span> </span>{
+  <span class="keyword">constructor</span>(x, y, color) {
+    <span class="keyword">super</span>(x, y); <span class="comment">// 调用父类的constructor(x, y)</span>
+    <span class="keyword">this</span>.color = color;
+  }
+  toString() {
+    <span class="keyword">return</span> <span class="keyword">this</span>.color + <span class="string">' '</span> + <span class="keyword">super</span>.toString(); <span class="comment">// 调用父类的toString()</span>
+  }
+}
+</code></pre>
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><p>参考资料如下：  </p>
+<ul>
+<li><a href="http://product.dangdang.com/1900470931.html" target="_blank" rel="external">javascript高级程序设计第三版</a></li>
+<li>Prototype.js源码</li>
+<li><a href="https://item.jd.com/11436424.html" target="_blank" rel="external">jQuery框架设计</a></li>
+<li><a href="https://github.com/T-phantom" target="_blank" rel="external">PhantomUI组件库</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/08/22/CORS-跨域数据交互/" rel="prev" title="CORS 跨域数据交互">
+                CORS 跨域数据交互 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">愿归来时，仍是少年</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#类的创建"><span class="nav-number">1.</span> <span class="nav-text">类的创建</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#工厂模式"><span class="nav-number">1.1.</span> <span class="nav-text">工厂模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#原形模式"><span class="nav-number">1.2.</span> <span class="nav-text">原形模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#组合模式（构造原形模式）"><span class="nav-number">1.3.</span> <span class="nav-text">组合模式（构造原形模式）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#动态原形模式"><span class="nav-number">1.4.</span> <span class="nav-text">动态原形模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他模式"><span class="nav-number">1.5.</span> <span class="nav-text">其他模式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Prototype原形与new操作符"><span class="nav-number">2.</span> <span class="nav-text">Prototype原形与new操作符</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#继承"><span class="nav-number">3.</span> <span class="nav-text">继承</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类工厂"><span class="nav-number">4.</span> <span class="nav-text">类工厂</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#使用说明"><span class="nav-number">4.1.</span> <span class="nav-text">使用说明</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ES6的类扩展"><span class="nav-number">5.</span> <span class="nav-text">ES6的类扩展</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#附录"><span class="nav-number">6.</span> <span class="nav-text">附录</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>

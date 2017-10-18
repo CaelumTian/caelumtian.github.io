@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="浏览器,javascript," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="跨域数据交互  在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。">
+<meta name="keywords" content="浏览器,javascript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CORS 跨域数据交互">
+<meta property="og:url" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="跨域数据交互  在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-1.png">
+<meta property="og:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-2.png">
+<meta property="og:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-3.png">
+<meta property="og:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-4.png">
+<meta property="og:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-5.png">
+<meta property="og:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-6.png">
+<meta property="og:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-7.png">
+<meta property="og:updated_time" content="2017-09-22T07:01:23.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CORS 跨域数据交互">
+<meta name="twitter:description" content="跨域数据交互  在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。">
+<meta name="twitter:image" content="http://yoursite.com/2016/08/22/CORS-跨域数据交互/js12-1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/08/22/CORS-跨域数据交互/"/>
+
+
+
+
+
+  <title>CORS 跨域数据交互 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">愿归来时，仍是少年</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/22/CORS-跨域数据交互/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">CORS 跨域数据交互</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-08-22T12:09:20+08:00">
+                2016-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/浏览器/" itemprop="url" rel="index">
+                    <span itemprop="name">浏览器</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="跨域数据交互"><a href="#跨域数据交互" class="headerlink" title="跨域数据交互  "></a>跨域数据交互  </h1><p>在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求<br>跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。<br><a id="more"></a></p>
+<h1 id="什么是-CORS"><a href="#什么是-CORS" class="headerlink" title="什么是 CORS"></a>什么是 CORS</h1><p>CORS是一种允许当前域（domain）的资源（比如html/js/web service）被其他域（domain）的脚本请求访问的机制。使用CORS，可以通过普通的XMLHttpRequest发起请求和获得数据，并且支持各种类型请求。说白了就是利用XMLHttpRequest来实现跨站通信，而不是仅仅遵循同源策略，再也不用为了ajax能跨域写苦逼的jsonp了。  CORS技术现在已经被广泛的支持了。 兼容性如下：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-1.png" alt="js12-1.png" title=""><br>CORS 兼容大部分浏览器， IE8 及其以下就自求多福吧。  </p>
+<h1 id="CORS-使用方法及场景举例"><a href="#CORS-使用方法及场景举例" class="headerlink" title="CORS 使用方法及场景举例"></a>CORS 使用方法及场景举例</h1><p>所谓的跨域请求，从本质上来说并不是浏览器对其他域名的请求不能发送，而是请求可以正常发起，<br>但是浏览器在收到服务器信息后就屏蔽掉了，并向前端报错(跨域)。如图所示，跨域请求结果被屏蔽。<br><img src="/2016/08/22/CORS-跨域数据交互/js12-2.png" alt="js12-2.png" title=""><br>解决方案，服务器在响应HTTP头部加入 <code>Access-Control-Allow-Origin：*</code>即可，这样就表示服务端同意任意域名的请求。<br>一般我们会指定可响应的域名如：<code>Access-Control-Allow-Origin: http://b.com, http://c.com</code>等。这样浏览器在检测到服务端HTTP头部的时候就可以不再拦截响应。<br>请求头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-3.png" alt="js12-3.png" title=""><br>响应头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-4.png" alt="js12-4.png" title=""><br>就在我们以为轻松搞定的时候，我们又遇到了问题。前端要给后端传json格式的数据于是在http头部加入了<br><code>content-type: application/json</code>, <code>access_token</code>等信息。请求再次失败，通过观察控制台信息我们发现，多了一个请求<code>options</code>:<br><img src="/2016/08/22/CORS-跨域数据交互/js12-5.png" alt="js12-5.png" title=""><br>原来在CORS中的请求分为两种：简单请求和复杂请求    </p>
+<h2 id="简单请求"><a href="#简单请求" class="headerlink" title="简单请求"></a>简单请求</h2><ol>
+<li>只使用GET，HEAD或者POST。如果使用POST来发送数据到服务器，那么使用HTTP POST请求发送到服务器的数据的Content-Type为以下几种之一：application/x-www-form-urlencoded，multipart/form-data以及text/plain。  </li>
+<li>不使用HTTP请求发送定制请求头（例如X-Modified等）  </li>
+</ol>
+<p>在简单请求下，我们只需要像上面所说设置Access-Control-Allow-Origin头部即可。  </p>
+<h2 id="复杂请求"><a href="#复杂请求" class="headerlink" title="复杂请求"></a>复杂请求</h2><ol>
+<li>使用了除GET，HEAD和POST以外的方法。如果使用POST方法发送请求数据时的<code>Content-Type</code>不是<code>application/x-www-form-urlencoded，multipart/form-data</code>或者<code>text/plaint</code>。例如，如果POST请求向服务器使用application/xml或者text/xml向服务器发送请求，那么这个请求就是preflighted的。</li>
+<li>设置了定制请求头的请求（例如，请求使用了例如X-PINGOTHER这样的请求头）。这类请求在发送正式请求之前会发送一个<code>Preflighted(预请求)</code>，<code>Preflighted</code>请求首先通过HTTP OPTIONS方法请求其他域上的资源，以确定发送实际的请求是否安全。这样做，是因为跨站请求可能会对目的站点的数据造成破坏。我们第二次发的请求是一个复杂请求，服务端没有响应options的方法，导致预请求失败，之后的请求也就终止了。我们看一下复杂请求下的HTTP报文:  </li>
+</ol>
+<p>Prelignted请求头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-6.png" alt="js12-6.png" title=""><br>可以看到报文头部信息为OPTIONS请求<br>预请求服务端响应报文<br><img src="/2016/08/22/CORS-跨域数据交互/js12-7.png" alt="js12-7.png" title=""><br>预请求响应只要返回一个2xx表示成功的响应信息即可说明服务端同意了跨域请求，<br>这里我们选择204的状态码作为响应状态。因为<code>204</code>表示响应成功，并且没有结果返回的状态。这样节省了传输信息的事件，加快了预请求的处理。<br>预处理结束后，事情并没有就此解决。错误信息再次传来。<br><br>原来我们自定义了头部信息，还要在响应报文中加入<code>Access-Control-Allow-Headers</code>来指出服务端允许的复杂请求需要的自定义头部信息。注意这里不能用*来表示所有，<br>只能一个个添加。例如：<code>&quot;Access-Control-Allow-Methods&quot; : &quot;PUT,POST,GET,DELETE,OPTIONS&quot;</code>。<br>这样就齐活了，总算是数据可以流通了。这里我建议在服务端响应部分也加入 <code>&quot;Access-Control-Allow-Methods&quot; : &quot;PUT,POST,GET,DELETE,OPTIONS&quot;</code>来指出可接受的请求类型。<br>最后我们的服务端响应头部信息：<br> </p>
+<h2 id="附带凭证信息的请求"><a href="#附带凭证信息的请求" class="headerlink" title="附带凭证信息的请求"></a>附带凭证信息的请求</h2><p>我手贱的在xhr中加入了 <code>xhr.withCredentials = true</code> 因为跨源请求默认请求头部中不提供凭据(cookie、HTTP认证及客户端SSL证明等)。<br>为了能把这些信息带上，我们设置了withCredentials为true。浏览器再次报错，通过检查我们发现，<br>如果你设置了withCredentials为true那么 Access-Control-Allow-Origin就不能用 * ，必须使用明确的域名。<br>而且还要为你的响应头加上<code>&quot;Access-Control-Allow-Credentials&quot;:&quot;true&quot;</code>信息。<br>最后我列出CORS中可能使用的头部信息供大家参考：  </p>
+<ul>
+<li><p><strong>HTTP响应头</strong>：Access-Control-Allow-Origin，Access-Control-Expose-Headers，Access-Control-Max-Age，<br>Access-Control-Allow-Credentials，Access-Control-Allow-Methods，Access-Control-Allow-Headers      </p>
+</li>
+<li><p><strong>HTTP请求头</strong>：Origin，Access-Control-Request-Method，Access-Control-Request-Headers   </p>
+</li>
+</ul>
+<p>附上用Node.js跨域请求服务端的简单配置：  </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">"express"</span>),</div><div class="line">    app = express();</div><div class="line">    </div><div class="line"><span class="comment">//统一拦截请求设置头部信息，响应预请求</span></div><div class="line">app.all(<span class="string">'*'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</div><div class="line">    res.set(&#123;</div><div class="line">        <span class="string">"Access-Control-Allow-Origin"</span>: <span class="string">"*"</span>,</div><div class="line">        <span class="string">"Access-Control-Allow-Headers"</span>: <span class="string">"Content-Type,access_token,user_id"</span>,</div><div class="line">        <span class="string">"Access-Control-Allow-Methods"</span>: <span class="string">"PUT,POST,GET,DELETE,OPTIONS"</span></div><div class="line">    &#125;);</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(req.method==<span class="string">"OPTIONS"</span>) &#123;</div><div class="line">        res.send(<span class="number">204</span>);</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        next();</div><div class="line">    &#125;</div><div class="line">&#125;);</div><div class="line"></div><div class="line">app.post(<span class="string">"/data"</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</div><div class="line">    res.json(&#123;</div><div class="line">        status: <span class="string">"success"</span>,</div><div class="line">        text: <span class="string">"返回数据"</span></div><div class="line">    &#125;)</div><div class="line">&#125;);</div><div class="line"></div><div class="line">app.listen(<span class="number">3000</span>, <span class="string">"127.0.0.1"</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">"服务器启动了"</span>);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h1 id="跨域请求的其他方案"><a href="#跨域请求的其他方案" class="headerlink" title="跨域请求的其他方案"></a>跨域请求的其他方案</h1><p>这里列举一下其他常用的跨域方案，仅供参考:    </p>
+<ol>
+<li><code>jsonp</code>：利用 <code>&lt;script&gt;</code> 元素的这个开放策略，网页可以得到从其他来源动态产生的 JSON 资料，而这种使用模式就是所谓的 JSONP。用 JSONP 抓到的资料并不是 JSON，而是任意的JavaScript，用 JavaScript 直译器执行而不是用 JSON 解析器解析。  </li>
+<li><code>postMessage</code>：postMessage()方法允许来自不同源的脚本采用异步方式进行有限的通信，可以实现跨文本档、多窗口、跨域消息传递。  </li>
+<li><code>websocket</code>：WebSocket实现了全双工通信，使WEB上的真正的实时通信成为可能。浏览器和服务器只需要做一个握手的动作，然后，浏览器和服务器之间就形成了一条快速通道。两者之间就直接可以数据互相传送。  </li>
+<li><code>SSE</code>：Server-Sent Events(SSE)功能，允许服务端推送数据到客户端(通常叫数据推送)。已经在浏览器上普遍支持，然而IE和Edge全系列不支持。</li>
+<li><code>ServiceWorker</code>：一个 service worker 是一段运行在浏览器后台进程里的脚本，它独立于当前页面，提供了那些不需要与web页面交互的功能在网页背后悄悄执行的能力。在将来，基于它可以实现消息推送，静默更新以及地理围栏等服务，但是目前它首先要具备的功能是拦截和处理网络请求，包括可编程的响应缓存管理。简而言之，这是让浏览器具有服务器功能的API，有了他还跨域个球球。不过这只是实验中API目前只有chrome和firfox高版本浏览器支持。   </li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/浏览器/" rel="tag">浏览器</a>
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/05/03/javascript-类与继承/" rel="next" title="javascript 类与继承">
+                <i class="fa fa-chevron-left"></i> javascript 类与继承
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/08/23/移动端交互手势详解与实现/" rel="prev" title="移动端交互手势详解与实现">
+                移动端交互手势详解与实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">愿归来时，仍是少年</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#跨域数据交互"><span class="nav-number">1.</span> <span class="nav-text">跨域数据交互  </span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是-CORS"><span class="nav-number">2.</span> <span class="nav-text">什么是 CORS</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CORS-使用方法及场景举例"><span class="nav-number">3.</span> <span class="nav-text">CORS 使用方法及场景举例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简单请求"><span class="nav-number">3.1.</span> <span class="nav-text">简单请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#复杂请求"><span class="nav-number">3.2.</span> <span class="nav-text">复杂请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#附带凭证信息的请求"><span class="nav-number">3.3.</span> <span class="nav-text">附带凭证信息的请求</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#跨域请求的其他方案"><span class="nav-number">4.</span> <span class="nav-text">跨域请求的其他方案</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>

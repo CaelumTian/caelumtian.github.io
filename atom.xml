@@ -1,0 +1,1056 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>CaelumTian的博客</title>
+  <subtitle>愿归来时，仍是少年</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2017-09-28T08:07:10.000Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>CaelumTian</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title></title>
+    <link href="http://yoursite.com/2017/09/28/js%E5%A2%9E%E9%87%8F%E6%9B%B4%E6%96%B0%E7%AE%97%E6%B3%95%E7%A0%94%E7%A9%B6/"/>
+    <id>http://yoursite.com/2017/09/28/js增量更新算法研究/</id>
+    <published>2017-09-28T03:42:55.000Z</published>
+    <updated>2017-09-28T08:07:10.000Z</updated>
+    
+    <content type="html"><![CDATA[<hr>
+<p>title: js增量更新算法研究<br>date: 2017-09-28 11:42:55</p>
+<h2 id="tags"><a href="#tags" class="headerlink" title="tags:"></a>tags:</h2><h1 id="serviceWorker-方案-js增量更新算法研究"><a href="#serviceWorker-方案-js增量更新算法研究" class="headerlink" title="serviceWorker 方案 - js增量更新算法研究"></a>serviceWorker 方案 - js增量更新算法研究</h1><h2 id="调研背景"><a href="#调研背景" class="headerlink" title="调研背景"></a>调研背景</h2><blockquote>
+<p>根据之前 serviceWorker 的调研，当服务端文件更新后，serviceWorker 会做对比，并请求这些新的文件。所有发生变化的文件都会被更新。现在 new-mini 内嵌页面，js 都被压缩成了一个文件。这样每次很小的文件改动，都会导致客户端需要下载整个js文件，这样会造成流量的浪费，同时也对服务器造成过大的流量压力。为此我们需要减少更新文件的体积，来更好的完成 serviceWorker 的架构。</p>
+<h2 id="js-增量更新算法"><a href="#js-增量更新算法" class="headerlink" title="js 增量更新算法"></a>js 增量更新算法</h2><p>利用增量更新算法，我们大大的降低每次文件变动后传输的大小。这里调研了4中常见的js 增量更新算法：  </p>
+<h3 id="基于chunk的增量更新算法"><a href="#基于chunk的增量更新算法" class="headerlink" title="基于chunk的增量更新算法"></a>基于chunk的增量更新算法</h3><p>首先将旧的文件分成n块并并编号<br><img src="/2017/09/28/js增量更新算法研究/a.png" alt="a.png" title=""><br>然后在新文件上进行，滚动查找。如果找到匹配的则记录块号，如果没找到则块往前移动 1 个字符，并把上个字符压入新数据块,然后扫描下一块，最终得到一个新数据和数据块号的组合的增量文件（这一步可以用上线 JavaScript 时用的打包工具或者请求 JavaScript 服务器程序实时计算出来）。<br><img src="/2017/09/28/js增量更新算法研究/b.png" alt="b.png" title=""><br>最终得到的增量文件如下所示：<br>1, data1, 2, 3, data2, 4, 5, 6  </p>
+</blockquote>
+<p>进一步合并顺序快得到：  </p>
+<blockquote>
+<p>[1, 1], data1, [2, 2], data2, [4, 4]  </p>
+</blockquote>
+<p>客户端根据旧文件的 chunk 数据和增量更新数据，我们可以得出新版本数据由如下数据组成：  </p>
+<blockquote>
+<p>chunk0+data1+chunk1+chunk2+data2+chunk3+chunk4+chunk5  </p>
+</blockquote>
+<p>例如以 s = ‘‘1345678abcdefghijklmnopq’ 修改为 a = ‘‘13456<code>f</code>78abcd<code>2</code>efghijklmnopq’为例, 设块长度为4 则， 源文件分成：<br><br>通过滚动查找，得到新文件<br><br>最终增量文件表示如下数组: [“a=‘1”,2,”f”,3,”cd2ef”,5,6,7]。 进一步合并顺序块，可用一个js数组表示为： [“a=‘1”,[2,1],“f”,[3,1],“cd2ef”,[5,3]。<br>在 serviceWorker 客户端这边，调用如下函数，进行文件更新：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//source 是上一个版本内容，trunkSize 是块大小，checksumcode 是两个版本间的增量文件数组</span></div><div class="line"><span class="keyword">var</span> rsyncjs = <span class="function"><span class="keyword">function</span>(<span class="params">source,trunkSize,checksumcode</span>)</span>&#123;</div><div class="line">   <span class="keyword">var</span> strResult=<span class="string">""</span>;</div><div class="line">   <span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; checksumcode.length; i++)&#123;</div><div class="line">       <span class="keyword">var</span> code = checksumcode[i];</div><div class="line">       <span class="keyword">if</span>(<span class="keyword">typeof</span> code === <span class="string">'string'</span>)&#123;</div><div class="line">            strResult+=code;</div><div class="line">       &#125;</div><div class="line">       <span class="keyword">else</span>&#123;</div><div class="line">            <span class="keyword">var</span> start = code[<span class="number">0</span>] * trunkSize;</div><div class="line">            <span class="keyword">var</span> len = code[<span class="number">1</span>] * trunkSize;</div><div class="line">            <span class="keyword">var</span> oldcode = source.substr(start, len);</div><div class="line">            strResult += oldcode;</div><div class="line">       &#125;</div><div class="line">   &#125;</div><div class="line">   <span class="keyword">return</span> strResult;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该方法存在的问题为：增量更新的精确度依赖于chunk的大小，在实际使用中总是会有不少代码需要冗余下载。  </p>
+<h3 id="Myer’s-diff-algorithm"><a href="#Myer’s-diff-algorithm" class="headerlink" title="Myer’s diff algorithm"></a>Myer’s diff algorithm</h3><p>Myer’s diff algorithm 首次出是在1986年一篇论文中<a href="https://neil.fraser.name/software/diff_match_patch/myers.pdf" target="_blank" rel="external">“An O(ND) Difference Algorithm and Its Variations”</a>, 在文中实现上介绍了两种此diff算法 的实现。两种实现的核心思想是一致的，只是在具体的实现过程中，为进一步提升算法的性能及空间利用率，采取了不一致的迭代方式。<br>算法原理比较复杂，github 上有根据该算法实现的 <a href="https://github.com/kpdecker/jsdiff" target="_blank" rel="external">jsdiff 插件</a><br>简单的演示如下：   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">require</span>(<span class="string">'colors'</span>);</div><div class="line"><span class="keyword">let</span> jsdiff = <span class="built_in">require</span>(<span class="string">'diff'</span>);</div><div class="line"><span class="keyword">let</span> oldStr = <span class="string">'bcdsgaff2 123'</span>;</div><div class="line"><span class="keyword">let</span> newStr = <span class="string">'accdgadff2 42356'</span>;</div><div class="line"><span class="keyword">let</span> diff = jsdiff.diffChars(oldStr, newStr);</div><div class="line"><span class="built_in">console</span>.log(diff);</div><div class="line">diff.forEach(<span class="function"><span class="params">part</span> =&gt;</span> &#123;</div><div class="line">    <span class="keyword">let</span> color = part.added ? <span class="string">'green'</span> : part.removed ? <span class="string">'red'</span> : <span class="string">'gray'</span>;</div><div class="line">    process.stderr.write(part.value[color]); </div><div class="line">&#125;) </div><div class="line"><span class="string">``</span><span class="string">`    </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">&#123;% asset_img 5.png %&#125;  </span></div><div class="line"><span class="string">可以清楚的看到差异信息，这里我们利用下面这个函数 简化一下jsdiff输出信息，方便传输。    </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript  </div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">minimizeDiffInfo</span>(<span class="params">originalInfo</span>)</span>&#123;</div><div class="line">    <span class="keyword">let</span> result = originalInfo.map(<span class="function"><span class="params">info</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">if</span>(info.added)&#123;</div><div class="line">            <span class="keyword">return</span> <span class="string">'+'</span> + info.value;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span>(info.removed)&#123;</div><div class="line">            <span class="keyword">return</span> <span class="string">'-'</span> + info.count;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> info.count;</div><div class="line">    &#125;);</div><div class="line">    <span class="keyword">return</span> <span class="built_in">JSON</span>.stringify(result);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>输出结果为：<br><img src="/2017/09/28/js增量更新算法研究/6.png" alt="6.png" title=""><br>客户端，采用如下函数，更新 serviceWorker 中的资源：  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">mergeDiff</span>(<span class="params">oldString, diffInfo</span>)</span>{
+    <span class="keyword">let</span> newString = <span class="string">''</span>;
+    <span class="keyword">let</span> diffInfo = <span class="built_in">JSON</span>.parse(diffInfo);
+    <span class="keyword">let</span> index = <span class="number">0</span>;
+    <span class="keyword">for</span>(<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; diffInfo.length; i++){
+        <span class="keyword">let</span> info = diffInfo[i];
+        <span class="keyword">if</span>(<span class="keyword">typeof</span> info === <span class="string">'number'</span>){
+            newString += oldString.slice(index, index + info);
+            index += info;
+            <span class="keyword">continue</span>;
+        }
+        <span class="keyword">if</span>(<span class="keyword">typeof</span> info === <span class="string">'string'</span>){
+            <span class="keyword">if</span>(info[<span class="number">0</span>] === <span class="string">'+'</span>){
+                <span class="keyword">let</span> addedString = info.slice(<span class="number">1</span>, info.length);
+                newString += addedString;
+            }
+            <span class="keyword">if</span>(info[<span class="number">0</span>] === <span class="string">'-'</span>){
+                <span class="keyword">let</span> removedCount = <span class="built_in">parseInt</span>(info.slice(<span class="number">1</span>, info.length));
+                index += removedCount;
+            }
+        }
+    }
+    <span class="keyword">return</span> newString;
+}
+</code></pre>
+<p>该方案，实际测试结果很糟糕，对于文件很大的内容比对时间都够我睡一觉了。    </p>
+<h2 id="基于编辑距离的比对算法"><a href="#基于编辑距离的比对算法" class="headerlink" title="基于编辑距离的比对算法"></a>基于编辑距离的比对算法</h2><h3 id="什么是编辑距离"><a href="#什么是编辑距离" class="headerlink" title="什么是编辑距离"></a>什么是编辑距离</h3><blockquote>
+<p>编辑距离是针对二个字符串（例如英文字）的差异程度的量化量测，量测方式是看至少需要多少次的处理才能将一个字符串变成另一个字符串。编辑距离可以用在自然语言处理中，例如拼写检查可以根据一个拼错的字和其他正确的字的编辑距离，判断哪一个（或哪几个）是比较可能的字。DNA也可以视为用A、C、G和T组成的字符串，因此编辑距离也用在生物信息学中，判断二个DNA的类似程度。Unix 下的 diff 及 patch 即是利用编辑距离来进行文本编辑对比的例子。  </p>
+</blockquote>
+<h4 id="求解算法"><a href="#求解算法" class="headerlink" title="求解算法"></a>求解算法</h4><p>比如要计算cafe和coffee的编辑距离。cafe→caffe→coffe→coffee。先创建一个6×8的表（cafe长度为4，coffee长度为6，各加2):<br><img src="/2017/09/28/js增量更新算法研究/8.png" alt="8.png" title=""><br>接着，在如下位置添加数字<br><img src="/2017/09/28/js增量更新算法研究/9.png" alt="9.png" title=""><br>从3,3格开始，开始计算。取以下三个值的最小值：    </p>
+<ul>
+<li>如果最上方的字符等于最左方的字符，则为左上方的数字。否则为左上方的数字+1。（对于3,3来说为0）</li>
+<li>左方数字+1（对于3,3格来说为2）</li>
+<li>上方数字+1（对于3,3格来说为2）  </li>
+</ul>
+<p>因此为格3,3为0:<br><img src="/2017/09/28/js增量更新算法研究/10.png" alt="10.png" title=""><br>循环操作，推出下表：<br><img src="/2017/09/28/js增量更新算法研究/11.png" alt="11.png" title=""><br>取右下角，得编辑距离为3。   </p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;hr&gt;
+&lt;p&gt;title: js增量更新算法研究&lt;br&gt;date: 2017-09-28 11:42:55&lt;/p&gt;
+&lt;h2 id=&quot;tags&quot;&gt;&lt;a href=&quot;#tags&quot; class=&quot;headerlink&quot; title=&quot;tags:&quot;&gt;&lt;/a&gt;tags:&lt;/h2&gt;&lt;h1 
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>Riot.js 源码解析 【一】 基础内容</title>
+    <link href="http://yoursite.com/2017/09/21/riot-js-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%901/"/>
+    <id>http://yoursite.com/2017/09/21/riot-js-源码解析1/</id>
+    <published>2017-09-21T14:36:37.000Z</published>
+    <updated>2017-09-27T06:26:10.000Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote>
+<p>Simple and elegant component-based UI library (Riot.js)    </p>
+</blockquote>
+<p>riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。<br>目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。<br>本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容。<br><a id="more"></a></p>
+<h1 id="Hello-world"><a href="#Hello-world" class="headerlink" title="Hello world"></a>Hello world</h1><p>来一个简单的例子，基于 webpack 构建，依赖 riotjs-loader。<br>自定义标签代码，content-demo.tag   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> riot <span class="keyword">from</span> <span class="string">'riot'</span>;</div><div class="line">&lt;content-demo&gt; </div><div class="line">    &lt;style&gt;</div><div class="line">        h1 &#123;</div><div class="line">            color: pink;</div><div class="line">        &#125;</div><div class="line">    &lt;<span class="regexp">/style&gt;</span></div><div class="line"><span class="regexp">    &lt;h1&gt;&#123; message &#125;&lt;/</span>h1&gt;</div><div class="line">    &lt;ul&gt;</div><div class="line">        &lt;li each=&#123; lists &#125;&gt;&#123; name &#125;&lt;<span class="regexp">/li&gt;</span></div><div class="line"><span class="regexp">        &lt;script&gt;</span></div><div class="line"><span class="regexp">            this.message = 'hello world';</span></div><div class="line"><span class="regexp">            this.lists = [</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'caelumtian'</span></div><div class="line"><span class="regexp">                &#125;,</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'hyang'</span></div><div class="line"><span class="regexp">                &#125;</span></div><div class="line"><span class="regexp">            ]</span></div><div class="line"><span class="regexp">        &lt;/</span>script&gt;</div><div class="line">    &lt;<span class="regexp">/ul&gt;</span></div><div class="line"><span class="regexp">&lt;/</span>content-demo&gt;</div></pre></td></tr></table></figure>
+<p>html 页面代码如下：  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">content-demo</span>&gt;</span><span class="tag">&lt;/<span class="name">content-demo</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"./dist/bundle.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>webpack 入口js文件    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> riot <span class="keyword">from</span> <span class="string">'riot'</span>;</div><div class="line"><span class="keyword">import</span> <span class="string">'./tags/content-demo.tag'</span>;</div><div class="line">riot.mount(<span class="string">'*'</span>);</div></pre></td></tr></table></figure>
+<p>总体来说，riot.js 采用自定义标签的方式来书写UI组件，组件的生命周期仅有 update,updated,mount,unmount 四个。我们通过调用 riot.mount() 函数来决定页面加载哪些组件。  </p>
+<h1 id="riot-js-运行流程"><a href="#riot-js-运行流程" class="headerlink" title="riot.js 运行流程"></a>riot.js 运行流程</h1><p>在上述 demo 中，我们将 <code>&lt;content-demo&gt;</code> 自定义标签写在了 *.tag 格式的文件中，作为一个组件。然后 webpack 打包时会利用 riot-compiler(官方编译工具)，将其编译成 js 代码 riot.tag2()，然后将其内容注册在<code>__TAG_IMPL</code>变量中。 最后用户调用 <code>riot.mount()</code> 函数来指定渲染哪个组件。运行流程，如下图所示：    </p>
+<img src="/2017/09/21/riot-js-源码解析1/a.png" alt="a.png" title="">  
+<h2 id="自定义标签命名"><a href="#自定义标签命名" class="headerlink" title="自定义标签命名"></a>自定义标签命名</h2><p>riot.js 对自定义标签的书写本身没有任何要求，但是 HTML5 引入了对自定义元素的标准 - <a href="https://w3c.github.io/webcomponents/spec/custom/#custom-elements" target="_blank" rel="external">Custom Elements 标准</a>。标准中对自定义元素名称有了限制：  </p>
+<blockquote>
+<p>“自定义元素的名字必须包含一个破折号（-）所以 <code>&lt;x-tags&gt;</code>、<code>&lt;my-element&gt;</code>和<code>&lt;my-awesome-app&gt;</code>都是正确的名字，而<tabs>和<foo_bar>是不正确的。这样的限制使得 HTML 解析器可以分辨那些是标准元素，哪些是自定义元素。”   </foo_bar></tabs></p>
+</blockquote>
+<p>距离来说，如果你的标签名称不带有破折号，那么浏览器会认为自定义元素是 <code>HTMLUnKnownElement</code>，如图所示：  </p>
+<img src="/2017/09/21/riot-js-源码解析1/b.png" alt="b.png" title="">    
+<p>所以，这里推荐在使用 riot.js 自定义标签的时候，遵守带有破折号的命名方式。  </p>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>编译阶段的主要工作就是将riot语法写的<code>.tag</code>文件转换为可执行的.js文件，这部分主要靠编译器来完成。例子中，content-demo 最终会被编译成如下js代码：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">riot.tag2(<span class="string">'content-demo'</span>, <span class="string">'&lt;h1&gt;&#123;message&#125;&lt;/h1&gt; &lt;ul&gt; &lt;li each="&#123;lists&#125;"&gt;&#123;name&#125;&lt;/li&gt; &lt;/ul&gt;'</span>, <span class="string">'content-demo h1,[data-is="content-demo"] h1&#123; color: pink; &#125;'</span>, <span class="string">''</span>, <span class="function"><span class="keyword">function</span> (<span class="params">opts</span>) </span>&#123;</div><div class="line">	<span class="keyword">this</span>.message = <span class="string">'hello world'</span>;</div><div class="line">	<span class="keyword">this</span>.lists = [&#123;</div><div class="line">	    <span class="string">'name'</span>: <span class="string">'caelumtian'</span></div><div class="line">	&#125;, &#123;</div><div class="line">	    <span class="string">'name'</span>: <span class="string">'hyang'</span></div><div class="line">	&#125;];</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>riot.tag2 函数在 riot.js 源码中的 core.js 文件中，代码如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">tag2</span>(<span class="params">name, tmpl, css, attrs, fn</span>) </span>&#123;</div><div class="line">    <span class="keyword">if</span> (css) styleManager.add(css, name)</div><div class="line">    <span class="comment">// tags implementation cache 标签接口缓存</span></div><div class="line">    __TAG_IMPL[name] = &#123;</div><div class="line">        name,</div><div class="line">        tmpl,</div><div class="line">        attrs,</div><div class="line">        fn</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> name</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>参数含义如下：  </p>
+<ul>
+<li>name: riot 自定义标签的名称</li>
+<li>tmpl: 标签的html内容</li>
+<li>css: <code>&lt;style&gt;</code> 标签中的内容</li>
+<li>attrs: riot 自定义标签的属性</li>
+<li>fn: 用户自定义函数,即 <code>&lt;script&gt;</code> 标签中的内容  </li>
+</ul>
+<p><code>riot.tag2()</code> 函数将 riot tag 注册到了 <code>__TAG_IMP</code> 对象中，方便之后的使用，css部分则被添加到了 <code>byName</code> 变量中，用于之后统一添加到页面中。在源代码中，还有一个 <code>riot.tag()</code>函数，这个函数用于直接直接创建一个 riot tag 实例的接口，而 <code>riot.tag2()</code> 是暴露给编辑器的接口，本质上功能是一样的。</p>
+<h2 id="加载-riot-mount"><a href="#加载-riot-mount" class="headerlink" title="加载 riot.mount()"></a>加载 riot.mount()</h2><p>组件被注册号以后，并没有被渲染，直到我们调用 <code>riot.mount()</code> 函数后，相应的组件才会渲染到页面上。riot.mount 主要用法如下：  </p>
+<ul>
+<li>riot.mount(‘*’, [opts]): 将注册好的所有 riot tag 都渲染到页面上</li>
+<li>riot.mount(customTagSelector, [opts]): 根据标签选择器，渲染指定的 riot tag。 例如：上述示例中，我们也可以这样写 riot.mount(‘content-demo’)。  </li>
+<li>riot.mount(selector, tagName, [opts]): 将 riot tag 渲染到指定的节点中。例如： riot.mount(“div#main”, “content-demo”, api)   将 <code>&lt;my-tag&gt;</code>挂载到 <code>div#main</code> 内。  </li>
+</ul>
+<p>这里面的 opts 为可选参数，是用户设置的标签的其他属性内容。这里就不过多介绍了，之后的文章会有解释。下面为 riot.mount 注释过的源码：      </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">mount</span>(<span class="params">selector, tagName, opts</span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> tags = []</div><div class="line">    <span class="keyword">let</span> elem, allTags</div><div class="line">    <span class="comment">// root &#123;HTMLElement&#125; riot-tag 标签节点</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">pushTagsTo</span>(<span class="params">root</span>) </span>&#123;</div><div class="line">        <span class="keyword">if</span> (root.tagName) &#123;</div><div class="line">            <span class="keyword">let</span> riotTag = getAttr(root, IS_DIRECTIVE),    <span class="comment">// 要么 data-is 要么 root.tagName 本身</span></div><div class="line">                tag</div><div class="line">            <span class="comment">// ① 设置 data-is 属性指向</span></div><div class="line">            <span class="keyword">if</span> (tagName &amp;&amp; riotTag !== tagName) &#123;</div><div class="line">                riotTag = tagName</div><div class="line">                setAttr(root, IS_DIRECTIVE, tagName)</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// ② mountTo 创建一个新的 riot tag 实例</span></div><div class="line">            tag = mountTo(root, riotTag || root.tagName.toLowerCase(), opts)</div><div class="line">            <span class="keyword">if</span> (tag)</div><div class="line">                tags.push(tag)</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (root.length)</div><div class="line">            each(root, pushTagsTo)</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// DOM 注入 style 标签</span></div><div class="line">    styleManager.inject()</div><div class="line">    <span class="keyword">if</span> (isObject(tagName)) &#123;</div><div class="line">        opts = tagName</div><div class="line">        tagName = <span class="number">0</span></div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (isString(selector)) &#123;</div><div class="line">        selector = selector === <span class="string">'*'</span> ?</div><div class="line">            allTags = selectTags() :</div><div class="line">            selector + selectTags(selector.split(<span class="regexp">/, */</span>))</div><div class="line">        <span class="comment">// ③ 利用 $$ 来判断 这些 tag 是否已经挂载在 html 上面</span></div><div class="line">        elem = selector ? $$(selector) : []</div><div class="line">    &#125; <span class="keyword">else</span></div><div class="line">        elem = selector</div><div class="line">    <span class="comment">// 将所有元素挂载在根元素中</span></div><div class="line">    <span class="keyword">if</span> (tagName === <span class="string">'*'</span>) &#123;</div><div class="line">        tagName = allTags || selectTags()</div><div class="line">        <span class="keyword">if</span> (elem.tagName)</div><div class="line">            <span class="comment">// 查找elem下的 tagName</span></div><div class="line">            elem = $$(tagName, elem)</div><div class="line">        <span class="keyword">else</span> &#123;</div><div class="line">            <span class="comment">// 将查找到的所有节点都 放入 nodeList中</span></div><div class="line">            <span class="keyword">var</span> nodeList = []</div><div class="line">            each(elem, _el =&gt; nodeList.push($$(tagName, _el)))</div><div class="line">            elem = nodeList</div><div class="line">        &#125;</div><div class="line">        tagName = <span class="number">0</span></div><div class="line">    &#125;</div><div class="line">    pushTagsTo(elem)</div><div class="line">    <span class="keyword">return</span> tags</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>当调用 riot.mount 后，通过 selector 参数来查找 html 页面上对应的节点。<code>不在 html 上的节点是不会被渲染的</code>。③处代码为查找过程，其中$$为 <code>document.querySelectAll</code>。之后调用 pushTagsTo 函数来渲染 riot tag。<br><code>IS_DIRECTIVE = &#39;data-is&#39;</code> 渲染前，要检查是否含有 tagName 参数，如果有的话即为 上述 riot.mount 的第三个用法。此时需要检测 root 的 data-is 属性值是否和 tagName 相等，如①处。不相等则将 root 设置其 data-is 为 tagName。即 riot.mount(‘div#main’, ‘content-demo’) 渲染出的节点为 :  </p>
+<blockquote>
+<p><code>&lt;div id=&quot;main&quot; data-is=&quot;content-demo&quot;&gt;&lt;content-demo&gt;...&lt;/content-demo&gt;&lt;/div&gt;</code> </p>
+</blockquote>
+<p>最后，通过 mountTo 函数渲染处理好的 riot tag，如②处。mountTo 函数后续会有详解。  </p>
+<blockquote>
+<p>代码中使用了 tagName 而不是 nodeName 原因如下：nodeName是node 接口上的property，而tagName是element 接口上的property，所有的节点（元素节点，属性节点，文本节点等12种）都继承了node接口，而只有元素节点才继承了element节点。  </p>
+</blockquote>
+<h2 id="取消注册-riot-unregister"><a href="#取消注册-riot-unregister" class="headerlink" title="取消注册 riot.unregister()"></a>取消注册 riot.unregister()</h2><p>riot 全局变量上还包含 riot.unregister(name) 函数用户取消注册过的内容，通常我们在测试程序的时候，创建同名标签使用。示例如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 创建一个测试标签</span></div><div class="line">riot.tag(<span class="string">'test-tag'</span>, <span class="string">'&lt;p&gt;&#123; message &#125;&lt;/p&gt;'</span>)</div><div class="line"><span class="comment">// 注册标签</span></div><div class="line"><span class="keyword">var</span> tag = riot.mount(<span class="built_in">document</span>.createElement(<span class="string">'div'</span>), <span class="string">'test-tag'</span>)[<span class="number">0</span>]</div><div class="line">expect(tag.root.querySelector(<span class="string">'p'</span>)).to.be.ok</div><div class="line"><span class="comment">// 取消注册</span></div><div class="line">riot.unregister(<span class="string">'test-tag'</span>)</div><div class="line"><span class="comment">// 重新创建一个同名，但是不一样的标签</span></div><div class="line">riot.tag(<span class="string">'test-tag'</span>, <span class="string">'&lt;div&gt;&#123; message &#125;&lt;/div&gt;'</span>)</div></pre></td></tr></table></figure>
+<p>riot.unregister() 源码十分简单，如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">unregister</span>(<span class="params">name</span>) </span>&#123;</div><div class="line">    __TAG_IMPL[name] = <span class="literal">null</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>暴露在 riot 全局变量上的函数，还包括 <code>riot.update</code> 和 <code>riot.mixin</code> 两个，将在后面的内容介绍。  </p>
+<h1 id="源码目录结构"><a href="#源码目录结构" class="headerlink" title="源码目录结构"></a>源码目录结构</h1><p>riot 的源码目录结构如下：</p>
+<pre><code>|____browser
+| |____common
+| | |____global-variables.js // 使用到的常量
+| | |____util                    
+| | | |____check.js   // 变量类型，属性等检查
+| | | |____dom.js     // dom 操作
+| | | |____misc.js    // 用到的工具类函数
+| | | |____tags.js    // riot tag 操作      
+| |____compiler
+| | |____index.js     // riot tag 模板解析
+| |____tag
+| | |____core.js      // riot 对外暴露函数接口
+| | |____each.js      // riot tag each操作渲染
+| | |____if.js        // riot tag if操作渲染
+| | |____mkdom.js     // 创建 dom 节点
+| | |____parse.js     // riot tag 解析
+| | |____ref.js       // riot tag ref
+| | |____setEventHandler.js  // riot tag 事件绑定
+| | |____styleManager.js     // 样式管理
+| | |____tag.js              // riot tag 标签类
+|___|____update.js           // riot tag 更新操作
+</code></pre><p>本文涉及到的源码，主要出自 <code>core.js</code> 和 <code>styleManager.js</code>。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;Simple and elegant component-based UI library (Riot.js)    &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。&lt;br&gt;目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。&lt;br&gt;本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="前端源码解析" scheme="http://yoursite.com/categories/%E5%89%8D%E7%AB%AF%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/"/>
+    
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+      <category term="前端源码解析" scheme="http://yoursite.com/tags/%E5%89%8D%E7%AB%AF%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/"/>
+    
+      <category term="Riot.js" scheme="http://yoursite.com/tags/Riot-js/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>[译] 使用Web Speech API和Node.js构建简单的AI Chatbot</title>
+    <link href="http://yoursite.com/2017/09/02/%E8%AF%91-%E4%BD%BF%E7%94%A8WebSpeechAPI/"/>
+    <id>http://yoursite.com/2017/09/02/译-使用WebSpeechAPI/</id>
+    <published>2017-09-02T11:55:05.000Z</published>
+    <updated>2017-09-22T07:09:09.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>随着语音技术的普及，越来越多的手机用户开始使用Siri和Cortana等语音助理软件。Amazon Echo和Google Home等语音软件同样走入了我们的日常生活。这些系统基于语音识别软件构建允许用户直接通过语音下达命令。现在，浏览器也已经支持了Web Speech API，它允许用户在web应用程序中集成语音数据。<br>基于现在的web应用程序，我们可以使用多种UI元素来和用户交互。使用Web Speech API，我们可以开发更加自然地小巧的web可视化界面。这样我们就能开发更丰富的web应用程序。此外，该API也可以帮助身体或认知障碍的人更好的访问web信息。<br><a id="more"></a>   </p>
+<blockquote>
+<p>增强用户体验<br>Web Speeh API可以使网站和Web app不仅仅可以交谈还可以聆听。这里有一些关于猪呢个条用户体验的很好的例子。<a href="https://www.smashingmagazine.com/2014/12/enhancing-ux-with-the-web-speech-api/" target="_blank" rel="external">阅读更多</a>  </p>
+</blockquote>
+<p>在本教程中，我们将使用API在浏览器中创建人工智能（AI）语音聊天界面。该应用将听取用户的声音并以合成语音回复。因为Web Speech API依然是实现性的，所以目前仅能支持在有限的浏览器中。本文使用的语音识别和语音合成功能目前仅基于Chromium浏览器，包括Chrome 25+和Opera 27+，而Firefox，Edge和Safari目前仅支持语音合成。    </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/1.png" alt="1.png" title="">  
+<img src="/2017/09/02/译-使用WebSpeechAPI/2.png" alt="2.png" title="">  
+<p>要构建该程序，我们主要采取三个步骤：    </p>
+<ol>
+<li>使用Web Speech API的SpeechRecognition接口来聆听用户的语音  </li>
+<li>将用户消息作为字符串文本发送给商业的自然语言处理API</li>
+<li>一旦API.AI返回响应文本，我们就利用SpeechSynthesis接口返回给用户一个合成声音    </li>
+</ol>
+<img src="/2017/09/02/译-使用WebSpeechAPI/3.png" alt="3.png" title="">
+<p>本教程使用的<a href="https://github.com/girliemac/web-speech-ai" target="_blank" rel="external">完整的源代码</a>在GitHub上。  </p>
+<h2 id="先决条件"><a href="#先决条件" class="headerlink" title="先决条件"></a>先决条件</h2><p>本教程依赖于Node.js,你需要对JavaScript和Node.js有一定的了解并确保您的电脑上已经安装了Noded.js。  </p>
+<h2 id="构建你的Node-js应用"><a href="#构建你的Node-js应用" class="headerlink" title="构建你的Node.js应用"></a>构建你的Node.js应用</h2><p>首先，让我们搭建一个Node.js的应用框架。创建你的应用目录，并设置如下的目录结构：   </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">├── index.js</div><div class="line">├── public</div><div class="line">│   ├── css</div><div class="line">│   │   └── style.css</div><div class="line">│   └── js</div><div class="line">│       └── script.js</div><div class="line">└── views</div><div class="line">    └── index.html</div></pre></td></tr></table></figure>
+<p>之后利用如下命令来初始化你的Node.js应用：  </p>
+<blockquote>
+<p>npm init -f    </p>
+</blockquote>
+<p>我们将使用Express(一个Node.js Web应用框架)来搭建本地服务。为了实现服务器和浏览器之间的双向通信，我们将使用Socket.IO。同时，我们还将使用自然语言处理工具API.AI，来构建可以人工交谈的AI聊天工具。<br>Socket.IO，能够让我们更方便的使用WebSocket。通过在客户端和服务端建立socket连接。当Web Speech API或API.AI 返回文本数据的时候，我们能将聊天信息在浏览器和服务器之间传递。<br>首先，我们创建index.js文件并实例化Express作为服务器：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">'express'</span>);</div><div class="line"><span class="keyword">const</span> app = express();</div><div class="line"></div><div class="line">app.use(express.static(__dirname + <span class="string">'/views'</span>)); <span class="comment">// html</span></div><div class="line">app.use(express.static(__dirname + <span class="string">'/public'</span>)); <span class="comment">// js, css, images</span></div><div class="line"></div><div class="line"><span class="keyword">const</span> server = app.listen(<span class="number">5000</span>);</div><div class="line">app.get(<span class="string">'/'</span>, (req, res) =&gt; &#123;</div><div class="line">  res.sendFile(<span class="string">'index.html'</span>);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>下一步，我们将Web Speech API集成到前端代码。  </p>
+<h2 id="利用-SpeechRecognition-接口接收语音"><a href="#利用-SpeechRecognition-接口接收语音" class="headerlink" title="利用 SpeechRecognition 接口接收语音"></a>利用 SpeechRecognition 接口接收语音</h2><p>Web Speech API具有名为SpeechRecognition的接口，用来从麦克风中获取用户们的讲话并了解他们在说什么。 </p>
+<h3 id="创建用户界面"><a href="#创建用户界面" class="headerlink" title="创建用户界面"></a>创建用户界面</h3><p>该程序的UI界面很简单，仅有一个按钮来触发语音识别。让我们创建一个index.html文件，其中包含js文件和Socket.IO，稍后我们将用它启动实时通讯：  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span>…<span class="tag">&lt;/<span class="name">head</span>&gt;</span></div><div class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line">    …</div><div class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"js/script.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>然后，在页面中加入按钮接口：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">button</span>&gt;</span>Talk<span class="tag">&lt;/<span class="name">button</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>要想查看按钮的样式，你何以查看<a href="https://github.com/girliemac/web-speech-ai" target="_blank" rel="external">源代码</a>中的style.css文件。  </p>
+<h3 id="使用JavaScript捕获语音"><a href="#使用JavaScript捕获语音" class="headerlink" title="使用JavaScript捕获语音"></a>使用JavaScript捕获语音</h3><p>在script.js中，创建SpeechRecognition实例来识别语音： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> SpeechRecognition = <span class="built_in">window</span>.SpeechRecognition || <span class="built_in">window</span>.webkitSpeechRecognition;</div><div class="line"><span class="keyword">const</span> recognition = <span class="keyword">new</span> SpeechRecognition();</div></pre></td></tr></table></figure>
+<p>我们使用了带有前缀和不带的两个对象做判断，因为Chrome当前支持带有前缀的API。<br>同时，我们在本教程中使用了一些ES6语法，包括const，箭头函数等等，他们都可以在支持语音接口的浏览器中使用。<br>你可以设置各种属性，来自定义语音识别：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">recognition.lang = <span class="string">'en-US'</span>;</div><div class="line">recognition.interimResults = <span class="literal">false</span>;</div></pre></td></tr></table></figure>
+<p>之后，监听button UI的DOM节点的点击事件来启动语音识别：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">document</span>.querySelector(<span class="string">'button'</span>).addEventListener(<span class="string">'click'</span>, () =&gt; &#123;</div><div class="line">    recognition.start();</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>一旦语音开始，我们就调用result事件，来获取语音文本：   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">recognition.addEventListener(<span class="string">'result'</span>, (e) =&gt; &#123;</div><div class="line">  <span class="keyword">let</span> last = e.results.length - <span class="number">1</span>;</div><div class="line">  <span class="keyword">let</span> text = e.results[last][<span class="number">0</span>].transcript;</div><div class="line">  <span class="built_in">console</span>.log(<span class="string">'Confidence: '</span> + e.results[<span class="number">0</span>][<span class="number">0</span>].confidence);</div><div class="line">  <span class="comment">// We will use the Socket.IO here later…</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>这将返回一个包含结果的SpeechRecognitionResultList兑现，你可以在数组中检索文字信息。接下来我们使用Socket.IO来传递数据额给我们的服务器。</p>
+<h2 id="Socket-IO做实时通讯"><a href="#Socket-IO做实时通讯" class="headerlink" title="Socket.IO做实时通讯"></a>Socket.IO做实时通讯</h2><p>Socket.IO是一个做实时通讯web应用的库。他可以实现web客户端和服务端之间的双向通讯。我们将使用它将语音结果传递给Node.js，将相应信息传回浏览器。<br>你也许会有疑虑为什么我们不使用简单的HTTP协议或者AJAX。你可以发送POST请求来传奇数据。但是我们通过Socket.IO来创建webscoket，是因为这是最好的实现双向通讯的解决方案。特别是服务器向浏览器发送数据，如果采用AJAX来实现我们就不得不再用轮训的方式： </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/4.png" alt="4.png" title=""> 
+<p>在script.js中实例化Socket.IO：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> socket = io();</div></pre></td></tr></table></figure>
+<p>然后将下面这段代码加入到监听reuslt事件的回调函数中：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">socket.emit(<span class="string">'chat message'</span>, text);</div></pre></td></tr></table></figure>
+<p>我们回到Node.js代码中，来接受这些文本并使用API来回复用户的消息。  </p>
+<h2 id="从AI中获取回复"><a href="#从AI中获取回复" class="headerlink" title="从AI中获取回复"></a>从AI中获取回复</h2><p>许多平台提供的服务可以将带有自然语言处理的AI系统结合到项目中，包括IBM的Watson，微软的LUIS和Wit.ai。为了快速构建一个会话接口，我们使用API.AI。因为它提供了免费的开发者帐户，并允许我们使用其Web界面和Node.js库快速设置一个小型的系统。  </p>
+<h3 id="设置API-AI"><a href="#设置API-AI" class="headerlink" title="设置API.AI"></a>设置API.AI</h3><p>首先创建一个账户和代理。更多内容可以参考<a href="https://docs.api.ai/docs/get-started" target="_blank" rel="external">入门指南</a>中的第一步。<br>然后，创建entities和intents。点击左侧菜单中的”Small Talk”，然后切换开关即可开启服务。  </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/5.png" alt="5.png" title="">
+<p>根据你的喜好，自定义API.AI接口的代理。  </p>
+<h3 id="使用API-AI的Node-js-SDK"><a href="#使用API-AI的Node-js-SDK" class="headerlink" title="使用API.AI的Node.js SDK"></a>使用API.AI的Node.js SDK</h3><p>我们利用Node.js SDK来链接Node.js应用和API.AI。回到你的index.js文件中，利用你的access token来初始化API.AI：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> apiai = <span class="built_in">require</span>(<span class="string">'apiai'</span>)(APIAI_TOKEN);</div></pre></td></tr></table></figure>
+<p>如果您只想在本地运行代码，可以在此处对API密钥进行编码。这里有多种方式来设置环境变量，我通常使用设置 .env 文件来包含变量信息。在GitHub源码中，我将包含凭证的信息文件添加到了.gitignroe中，你可以查看 <a href="https://github.com/girliemac/web-speech-ai/blob/master/.env_test" target="_blank" rel="external">.env-test</a> 文件来查看他是如何设置的。  </p>
+<p>现在我么能使用服务端的Socket.IO来获取浏览器的结果。<br>一旦接收到消息，我们就用API.AI的API来检索并回复用户信息：    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line">io.on(<span class="string">'connection'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">socket</span>) </span>&#123;</div><div class="line">    socket.on(<span class="string">'chat message'</span>, (text) =&gt; &#123;</div><div class="line">        <span class="comment">// Get a reply from API.AI</span></div><div class="line">        <span class="keyword">let</span> apiaiReq = apiai.textRequest(text, &#123;</div><div class="line">            sessionId: APIAI_SESSION_ID</div><div class="line">        &#125;);</div><div class="line">        apiaiReq.on(<span class="string">'response'</span>, (response) =&gt; &#123;</div><div class="line">            <span class="keyword">let</span> aiText = response.result.fulfillment.speech;</div><div class="line">            socket.emit(<span class="string">'bot reply'</span>, aiText); <span class="comment">// Send the result back to the browser!</span></div><div class="line">        &#125;);</div><div class="line">        apiaiReq.on(<span class="string">'error'</span>, (error) =&gt; &#123;</div><div class="line">            <span class="built_in">console</span>.log(error);</div><div class="line">        &#125;);</div><div class="line">        apiaiReq.end();</div><div class="line">    &#125;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>当API.AI返回结果时，使用Socket.IO socket.emit()将其发送回浏览器。  </p>
+<h2 id="利用SpeechSynthesis接口来合成语音"><a href="#利用SpeechSynthesis接口来合成语音" class="headerlink" title="利用SpeechSynthesis接口来合成语音"></a>利用SpeechSynthesis接口来合成语音</h2><p>然我们再次回到script.js中，完成我们的应用！<br>创建一个语音合成器，这次我们使用SpeechSynthesis接口。该函数将接受字符串作为参数，并使浏览器能够说出文本：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">synthVoice</span>(<span class="params">text</span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> synth = <span class="built_in">window</span>.speechSynthesis;</div><div class="line">    <span class="keyword">const</span> utterance = <span class="keyword">new</span> SpeechSynthesisUtterance();</div><div class="line">    utterance.text = text;</div><div class="line">    synth.speak(utterance);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>该函数中，我们首先创建了一个API入口对象，window.speechSynthesis。这次我们没有在使用前缀，该API的支持度更高，许多浏览器已经移除了该前缀。<br>然后，我们创建一个SpeechSynthesisUtterance实例，并设置要合成语音的文本。你也可以设置其他属性，例如voice类型和操作系统支持的语音类型。<br>最后，我们使用SpeechSynthesis.speak()来是浏览器说话。现在，再次从Socket.IO获取服务器的响应。一旦接收到消息，请调用该功能。    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">socket.on(<span class="string">'bot reply'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">replyText</span>) </span>&#123;</div><div class="line">  synthVoice(replyText);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>至此我们完成了全部功能，你可以试试:  </p>
+<img src="/2017/09/02/译-使用WebSpeechAPI/6.gif" alt="6.gif" title="">
+<p>请注意，浏览器在首次的时候会询问你是否使用麦克风。像其他Web API（如Geolocation API和Notification API）一样，除非你授予它，否则浏览器将永远不会访问您的敏感信息，因此你的声音不会在不知情的情况下被秘密记录。<br>API.AI是可配置和可训练的。阅读API.AI文档，使其更加智能。   </p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>本教程仅涵盖了API的核心功能，但该API实际上是非常灵活和可自定义的。您可以改变识别语言，合成语音，包括口音（如美国或英国英语），语音音调和语速。你可以在这里了解有关API的更多信息：   </p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="external">Web Speech API</a> Mozilla Developer Network</li>
+<li><a href="https://dvcs.w3.org/hg/speech-api/raw-file/tip/speechapi.html" target="_blank" rel="external">Web Speech API Specification</a> W3C</li>
+<li><a href="https://docs.microsoft.com/en-us/microsoft-edge/dev-guide/multimedia/web-speech-api" target="_blank" rel="external">Web Speech API: Speech Synthesis</a> (Microsoft Edge documentation) Microsoft  </li>
+</ul>
+<p>自然语言处理工具你可以参考如下：  </p>
+<ul>
+<li><a href="https://api.ai/" target="_blank" rel="external">API.AI</a> Google</li>
+<li><a href="https://wit.ai/" target="_blank" rel="external">Wit.ai</a> Facebook</li>
+<li><a href="https://www.luis.ai/" target="_blank" rel="external">LUIS</a> Microsoft</li>
+<li><a href="https://www.ibm.com/watson/" target="_blank" rel="external">Watson</a> IBM</li>
+<li><a href="https://aws.amazon.com/cn/lex/" target="_blank" rel="external">Lex</a> Amazon</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;随着语音技术的普及，越来越多的手机用户开始使用Siri和Cortana等语音助理软件。Amazon Echo和Google Home等语音软件同样走入了我们的日常生活。这些系统基于语音识别软件构建允许用户直接通过语音下达命令。现在，浏览器也已经支持了Web Speech API，它允许用户在web应用程序中集成语音数据。&lt;br&gt;基于现在的web应用程序，我们可以使用多种UI元素来和用户交互。使用Web Speech API，我们可以开发更加自然地小巧的web可视化界面。这样我们就能开发更丰富的web应用程序。此外，该API也可以帮助身体或认知障碍的人更好的访问web信息。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="翻译文章" scheme="http://yoursite.com/categories/%E7%BF%BB%E8%AF%91%E6%96%87%E7%AB%A0/"/>
+    
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>图片惰性加载 IntersectionObserver</title>
+    <link href="http://yoursite.com/2017/08/28/%E5%9B%BE%E7%89%87%E6%83%B0%E6%80%A7%E5%8A%A0%E8%BD%BD%E7%9A%84%E5%AE%9E%E7%8E%B0/"/>
+    <id>http://yoursite.com/2017/08/28/图片惰性加载的实现/</id>
+    <published>2017-08-28T12:41:11.000Z</published>
+    <updated>2017-09-22T07:14:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="关于惰性加载"><a href="#关于惰性加载" class="headerlink" title="关于惰性加载"></a>关于惰性加载</h2><p>惰性加载又称为延迟加载、懒加载等，’lazyload’，即在长网页中延迟加载图像。当图片未到达可视区域时，不加载图片。如下图所示：  </p>
+<img src="/2017/08/28/图片惰性加载的实现/1.gif" alt="1.gif" title="">  
+<p>优点：提升用户的体验，如果图片数量较大，打开页面的时候要将将页面上所有的图片全部获取加载，很可能会出现卡顿现象，影响用户体验。因此，有选择性地请求图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。<br><a id="more"></a>  </p>
+<h2 id="实现方案"><a href="#实现方案" class="headerlink" title="实现方案"></a>实现方案</h2><p>惰性加载可以说在很久之前就已经出现了，实现方案也很简单。  </p>
+<ul>
+<li>在 HTML 文件中将需要惰性加载的图片的 src 属性置为一个相同的地址（一般设置为一张 loading 图），这样这张图只会加载一次（第二次即会读取缓存），或者干脆置为空（用户体验不好），将真实的图片地址存储在别的属性中（比如 data-src 属性)  </li>
+<li>监听事件（比如 scroll 事件），判断需要惰性加载的图片是否已经在可视区域，如果是，则将 src 属性替换成 data-src 属性值  </li>
+</ul>
+<p>方案中，我们主要实现的功能有：判断图片和视口的位置关系，主要判断函数如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 比较元素位置 d2, 在d1中</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">_compareOffset</span>(<span class="params">d1, d2</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> left = d2.right &gt; d1.left &amp;&amp; d2.left &lt; d1.right;</div><div class="line">    <span class="keyword">let</span> top = d2.bottom &gt; d1.top &amp;&amp; d2.top &lt; d1.bottom;</div><div class="line">    <span class="keyword">return</span> left &amp;&amp; top;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>图片的坐标大小信息我们可以通过 <code>getBoundingClientRect</code> 来获得，浏览器窗口信息则为：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> w = &#123;</div><div class="line">    t = <span class="number">0</span>,</div><div class="line">    l = <span class="number">0</span>,</div><div class="line">    r = l + <span class="built_in">window</span>.innerWidth,</div><div class="line">    b = t + <span class="built_in">window</span>.innerHeight</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>剩下的只要监听 <code>scroll</code> 事件，对所有的 img.lazy-load 元素判断就好了。  </p>
+<h2 id="监听-scroll-存在的性能问题"><a href="#监听-scroll-存在的性能问题" class="headerlink" title="监听 scroll 存在的性能问题"></a>监听 scroll 存在的性能问题</h2><p>当我们监听 scroll 事件的时候，页面滚动会导致该事件频繁出发，这对浏览器的性能产生很大的影响。为此我们可以加入函数节流(throttle)或函数去抖(debounce)来处理  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> _throttle = <span class="function">(<span class="params">func, wait, mustRunDelay = <span class="literal">Infinity</span></span>) =&gt;</span> &#123;</div><div class="line">    <span class="keyword">let</span> timeout = <span class="literal">null</span>;</div><div class="line">    <span class="keyword">let</span> start_time;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">let</span> context = <span class="keyword">this</span>,</div><div class="line">            args = <span class="built_in">arguments</span>,</div><div class="line">            curr_time = +<span class="keyword">new</span> <span class="built_in">Date</span>();</div><div class="line">        clearTimeout(timeout);</div><div class="line">        <span class="keyword">if</span>(!start_time) &#123;</div><div class="line">            start_time = curr_time;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span>(curr_time - start_time &gt;= mustRunDelay) &#123;</div><div class="line">            func.apply(context, args);</div><div class="line">        &#125;<span class="keyword">else</span> &#123;</div><div class="line">            timeout = setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">                func.apply(context, args);</div><div class="line">            &#125;, wait);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p><code>wait</code> 即判断的间隔事件，我们通常设置成 100ms 就可以不影响用户的体验。如果你想进一步提升图片加载性能我们也可以指定的将某些图片，base64 后存入 <code>localStorage</code> 中，等以后打开的时候，首先判断 <code>localStorage</code> 中是否有图片缓存，没有则去请求。这样就可以进一步加快图片的载入速度。  </p>
+<p>完整的代码，可以查看 <a href="https://github.com/T-phantom/si-img" target="_blank" rel="external">si-img 图片优化组件</a>  </p>
+<h2 id="IntersectionObserver-API"><a href="#IntersectionObserver-API" class="headerlink" title="IntersectionObserver API"></a>IntersectionObserver API</h2><p>虽然我们使用了函数节流来降低 scroll 的频率，但是检测函数触发的频率依然很高，这之中的大多数检测都是没有意义的(并没有新的图片进入)。为了更好的解决这类问题，浏览器也提供了 <code>IntersectionObserver</code> API 来帮助我们判断元素是否进入可是区域。</p>
+<p>由于可见（visible）的本质是，目标元素与视口产生一个交叉区，所以这个 API 叫做”交叉观察器”。</p>
+<h3 id="API"><a href="#API" class="headerlink" title="API"></a>API</h3><p>使用方式十分简单：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> io = <span class="keyword">new</span> IntersectionObserver(callback, option);</div></pre></td></tr></table></figure>
+<p>上面代码中，IntersectionObserver是浏览器原生提供的构造函数，接受两个参数：callback是可见性变化时的回调函数，option是配置对象（该参数可选）。<br>构造函数的返回值是一个观察器实例。实例的observe方法可以指定观察哪个 DOM 节点。  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 开始观察</span></div><div class="line">io.observe(<span class="built_in">document</span>.getElementById(<span class="string">'example'</span>));</div><div class="line"></div><div class="line"><span class="comment">// 停止观察</span></div><div class="line">io.unobserve(element);</div><div class="line"></div><div class="line"><span class="comment">// 关闭观察器</span></div><div class="line">io.disconnect();</div></pre></td></tr></table></figure>
+<p>上面代码中，observe的参数是一个 DOM 节点对象。如果要观察多个节点，就要多次调用这个方法。  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">io.observe(elementA);</div><div class="line">io.observe(elementB);</div></pre></td></tr></table></figure>
+<h3 id="callback"><a href="#callback" class="headerlink" title="callback"></a>callback</h3><p>目标元素的可见性变化时，就会调用观察器的回调函数callback。<br>callback一般会触发两次。一次是目标元素刚刚进入视口（开始可见），另一次是完全离开视口（开始不可见）。    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> io = <span class="keyword">new</span> IntersectionObserver(</div><div class="line">  entries =&gt; &#123;</div><div class="line">    <span class="built_in">console</span>.log(entries);</div><div class="line">  &#125;</div><div class="line">);</div></pre></td></tr></table></figure>
+<p>callback函数的参数（entries）是一个数组，每个成员都是一个IntersectionObserverEntry对象。如果同时有两个被观察的对象的可见性发生变化，entries数组就会有两个成员。  </p>
+<h3 id="IntersectionObserverEntry-对象"><a href="#IntersectionObserverEntry-对象" class="headerlink" title="IntersectionObserverEntry 对象"></a>IntersectionObserverEntry 对象</h3><p>IntersectionObserverEntry对象提供目标元素的信息，一共有六个属性：  </p>
+<ul>
+<li>time：可见性发生变化的时间ms</li>
+<li>target：被观察的目标元素，是一个 DOM 节点对象</li>
+<li>rootBounds：根元素的矩形区域的信息，getBoundingClientRect()方法的返回值，如果没有根元素（即直接相对于视口滚动），则返回null</li>
+<li>boundingClientRect：目标元素的矩形区域的信息</li>
+<li>intersectionRect：目标元素与视口（或根元素）的交叉区域的信息</li>
+<li>intersectionRatio：目标元素的可见比例，即intersectionRect占boundingClientRect的比例，完全可见时为1，完全不可见时小于等于0     </li>
+</ul>
+<h3 id="options-参数"><a href="#options-参数" class="headerlink" title="options 参数"></a>options 参数</h3><p>其中，options 整个参数对象以及它的三个属性都是可选的：</p>
+<h4 id="root-属性"><a href="#root-属性" class="headerlink" title="root 属性"></a>root 属性</h4><p>IntersectionObserver API 的适用场景主要是这样的：一个可以滚动的元素，我们叫它根元素，它有很多后代元素，想要做的就是判断它的某个后代元素是否滚动进了自己的可视区域范围。这个 root 参数就是用来指定根元素的，默认值是 null。<br>如果它的值是 null，根元素就不是个真正意义上的元素了，而是这个浏览器窗口了，可以理解成 window。  </p>
+<h4 id="threshold-属性"><a href="#threshold-属性" class="headerlink" title="threshold 属性"></a>threshold 属性</h4><p>当目标元素和根元素相交时，用相交的面积除以目标元素的面积会得到一个 0 到 1（0% 到 100%）的数值：<br>IntersectionObserver API 的基本工作原理就是：当目标元素和根元素相交的面积占目标元素面积的百分比到达或跨过某些指定的临界值时就会触发回调函数。threshold 参数就是用来指定那个临界值的，默认值是 0，表示俩元素刚刚挨上就触发回调。可以指定多个临界值，用数组形式，比如 [0, 0.5, 1]，表示在两个矩形开始相交，相交一半，完全相交这三个时刻都要触发一次回调函数。  </p>
+<h4 id="rootMagin-属性"><a href="#rootMagin-属性" class="headerlink" title="rootMagin 属性"></a>rootMagin 属性</h4><p>rootMargin 可以给根元素添加一个假想的 margin，从而对真实的根元素区域进行缩放。比如当 root 为 null 时设置 rootMargin: “100px”，实际的根元素矩形四条边都会被放大 100px。</p>
+<h2 id="利用-IntersectionObserver-实现高效的图片惰性加载"><a href="#利用-IntersectionObserver-实现高效的图片惰性加载" class="headerlink" title="利用 IntersectionObserver 实现高效的图片惰性加载"></a>利用 IntersectionObserver 实现高效的图片惰性加载</h2><p>首先获取哪儿些图片需要被IntersectionObserver 观测，这里我们认为带有 <code>.lazy-load</code> 类的图片：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 获取所有要观测的图片</span></div><div class="line"><span class="keyword">const</span> images = <span class="built_in">document</span>.querySelectorAll(<span class="string">'.lazy-load'</span>);</div><div class="line"><span class="keyword">const</span> config = &#123;</div><div class="line">   <span class="comment">// 如果图像在Y轴上的50像素内，则开始下载。</span></div><div class="line">    rootMargin: <span class="string">'50px 0px'</span>,</div><div class="line">    threshold: <span class="number">0.01</span></div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">// 观察图片</span></div><div class="line"><span class="keyword">let</span> observer = <span class="keyword">new</span> IntersectionObserver(onIntersection, config);</div><div class="line">    images.forEach(<span class="function"><span class="params">image</span> =&gt;</span> &#123;</div><div class="line">        observer.observe(image);</div><div class="line">    &#125;);</div><div class="line">&#125;</div><div class="line"><span class="string">``</span><span class="string">`  </span></div><div class="line"><span class="string">之后我们在 `</span>onIntersection<span class="string">` 中处理图片加载逻辑：  </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript    </div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">onIntersection</span>(<span class="params">entries</span>) </span>&#123;</div><div class="line">    <span class="comment">// 查看所有观察的图片</span></div><div class="line">    entries.forEach(<span class="function"><span class="params">entry</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">if</span> (entry.intersectionRatio &gt; <span class="number">0</span>) &#123;</div><div class="line">            <span class="comment">// 停止观察，并加载图片</span></div><div class="line">            observer.unobserve(entry.target);</div><div class="line">            preloadImage(entry.target);</div><div class="line">        &#125;</div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这样重写后的惰性加载插件性能将大大的提升，而且逻辑也变得十分简单。  </p>
+<h2 id="浏览器支持"><a href="#浏览器支持" class="headerlink" title="浏览器支持"></a>浏览器支持</h2><p>下图为该API的支持情况：<br><img src="/2017/08/28/图片惰性加载的实现/2.png" alt="2.png" title=""><br>很遗憾safari还不支持该属性，你可以利用下面代码来简单实现降级方案：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (!(<span class="string">'IntersectionObserver'</span> <span class="keyword">in</span> <span class="built_in">window</span>)) &#123;</div><div class="line">    <span class="comment">// 如果不支持，则立刻加载所有图片</span></div><div class="line">    <span class="built_in">Array</span>.from(images).forEach(<span class="function"><span class="params">image</span> =&gt;</span> preloadImage(image));</div><div class="line">&#125; <span class="keyword">else</span> &#123;</div><div class="line">    observer = <span class="keyword">new</span> IntersectionObserver(onIntersection, config);</div><div class="line">    images.forEach(<span class="function"><span class="params">image</span> =&gt;</span> &#123;</div><div class="line">        observer.observe(image);</div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>如果，你真的想在不支持的浏览器下体验该属性，你可以下载下面这个 polyfill。<a href="https://github.com/w3c/IntersectionObserver/tree/gh-pages/polyfill" target="_blank" rel="external">w3c/IntersectionObserver</a>  </p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;关于惰性加载&quot;&gt;&lt;a href=&quot;#关于惰性加载&quot; class=&quot;headerlink&quot; title=&quot;关于惰性加载&quot;&gt;&lt;/a&gt;关于惰性加载&lt;/h2&gt;&lt;p&gt;惰性加载又称为延迟加载、懒加载等，’lazyload’，即在长网页中延迟加载图像。当图片未到达可视区域时，不加载图片。如下图所示：  &lt;/p&gt;
+&lt;img src=&quot;/2017/08/28/图片惰性加载的实现/1.gif&quot; alt=&quot;1.gif&quot; title=&quot;&quot;&gt;  
+&lt;p&gt;优点：提升用户的体验，如果图片数量较大，打开页面的时候要将将页面上所有的图片全部获取加载，很可能会出现卡顿现象，影响用户体验。因此，有选择性地请求图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>[译] 将你的网站改造为PWA</title>
+    <link href="http://yoursite.com/2017/08/23/%E8%AF%91-%E5%B0%86%E4%BD%A0%E7%9A%84%E7%BD%91%E7%AB%99%E5%8D%87%E7%BA%A7%E4%B8%BAPWA/"/>
+    <id>http://yoursite.com/2017/08/23/译-将你的网站升级为PWA/</id>
+    <published>2017-08-23T12:07:14.000Z</published>
+    <updated>2017-09-22T07:16:06.000Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote>
+<p>本文翻译自：<a href="https://www.sitepoint.com/retrofit-your-website-as-a-progressive-web-app/?utm_source=mobilewebweekly&amp;utm_medium=email" target="_blank" rel="external">Retrofit Your Website as a Progressive Web App</a><br>如果原文打不开请移步：<a href="https://www.zybuluo.com/caelumtian/note/860343" target="_blank" rel="external">这里</a>     </p>
+</blockquote>
+<p>最近大家都在讨论渐进增强web应用(Progressive Web Apps 简称PWA)，许多人质疑PWA是否能代表移动web的未来。这里我不会介入navtive app 和 PWA的争论之中，但是有件事是可以确定的-PWA在很大的长度上增强移动端提高了用户的体验。到2018年移动设备的web接入的数量注定要超过其他所有设备总量和，这种趋势是不可忽视的。<br><a id="more"></a><br>好消息是制作PWA程序并不是很困难。实际上，将现有的网站转换成PWA是很有可能的。在本文中，我将会介绍如何将一个网站改造成像native app一样。它可以离线工作，并且拥有自己的应用图标。  </p>
+<h2 id="什么是渐进增强web应用？"><a href="#什么是渐进增强web应用？" class="headerlink" title="什么是渐进增强web应用？"></a>什么是渐进增强web应用？</h2><p>Progressiv Web App (简称PWA)是web上一个令人兴奋的创新。PWA由一系列技术组成，用来是web应用程序更像native应用。对于开发人员和用户来说，它可以突破web和native上面的限制因素：    </p>
+<ol>
+<li>你只需要开发一个符合W3c标准的web程序，不必开发单独的native版本  </li>
+<li>用户可以在安装前就使用你的程序  </li>
+<li>我们不在需要使用 AppStore，忍受那些难懂的规则或付费。应用程序可以自动更新，不再需要用户手动操作  </li>
+<li>网页可以提醒用户是否在主屏幕上添加应用图标    </li>
+<li>当程序启动时，PWA的具有吸引力的展示效果</li>
+<li>如果有必要，可以修改浏览器设置达到全屏浏览的效果   </li>
+<li>基本的文件被缓存在本地因此PWA具有比普通web应用更快的响应速度（他们设置比native app还要快  </li>
+<li>安装更加的轻量，也许只是几百KB的缓存数据  </li>
+<li>PWA处于离线状态可以在连接返回后同步数据  </li>
+</ol>
+<p>现在PWA技术还有些不成熟，但是已经有了积极的案例。印度最大的商务网站Flipkart 通过将native app转换成PWA使得销售增长了70%。全球最大的交易平台Alibaba转换率也达到了70%。<br>PWA技术已经被支持与Firefox,Chrome和其他基于Blink内核的浏览器中。微软的Edge也在努力的实现。尽管Apple在webkit五年计划上发表了很多积极的言论，但是依然没有支持PWA。  </p>
+<h2 id="“渐进增强”-web-应用"><a href="#“渐进增强”-web-应用" class="headerlink" title="“渐进增强” web 应用"></a>“渐进增强” web 应用</h2><p>你的网站有可能依然运行在不支持PWA的浏览器中。这样做仅仅是让用户不能使用离线等功能，网站依然可以像网站一样正常运行。鉴于利益的汇报，我们没有理由不去将PWA技术添加到我们的网站之中。  </p>
+<h2 id="这不仅仅是应用程序"><a href="#这不仅仅是应用程序" class="headerlink" title="这不仅仅是应用程序"></a>这不仅仅是应用程序</h2><p>Google 引领了PWA运动，以至于许多教程都在讲述如何在基于Chrome的基础上从头开始构建PWA应用。然而，你并不一定需要一个单页应用或者遵循界面设计指南。大多数网站都可以在几个小时能升级到PWA。这包括你的WordPress或者静态页面。在编写本文的时候，<code>Smashing</code> 杂志宣布，他们正在支持PWA的建设。  </p>
+<h2 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h2><p>你可以在这里找到示例代码：<a href="https://github.com/sitepoint-editors/pwa-retrofit" target="_blank" rel="external">https://github.com/sitepoint-editors/pwa-retrofit</a><br>demo 提供了一个带有一些图片，一个样式表和一些主要的javascrit文件的四页网站。该网站可以运行在所有的现在浏览器中(IE10+)。如果您的浏览器支持PWA，那么你可以在离线时浏览整个网站。<br>运行代码请确保Node.js环境，在终端中执行下面的命令启动服务器:  </p>
+<blockquote>
+<p>node ./server.js [port]  </p>
+</blockquote>
+<p>打开Chrome或者基于Blik内核的浏览器，访问 <a href="http://localhost:8888/" target="_blank" rel="external">http://localhost:8888/</a> 来查看页面。你可以打开 Developer Tools来查看控制台输出信息。   </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/1.png" alt="1.png" title=""> 
+<p>下面的方案可以帮你离线查看： 关闭 web 服务器，或者在Developer Tools的 Network或Application中点击offline复选框。 重新访问你之前的页面，他们依然会加载。访问你没有看到过的网站，则会显示 <code>您处于离线状态</code>的页面，其中包含了网页列表信息。<br><img src="/2017/08/23/译-将你的网站升级为PWA/2.png" alt="2.png" title=""> </p>
+<h3 id="连接移动设备"><a href="#连接移动设备" class="headerlink" title="连接移动设备"></a>连接移动设备</h3><p>你也可以通过USB线将移动设备连接到PC/MAC上，来查看页面。打开浏览器 More tools选中的Remote devices面板。    </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/3.png" alt="3.png" title="">
+<p>选择左侧的设置，点击 Add rule 添加 localhost:8888。现在你可以在移动设备上打开Chrome浏览器访问 <a href="http://localhost:8888。" target="_blank" rel="external">http://localhost:8888。</a>  </p>
+<p>你可以使用浏览器菜单中的<code>Add to Home screen</code>。几次访问后，浏览器也会提醒你是否安装。上述两种方法都可以将应用程序添加到你的主屏幕。浏览几个页面后关闭Chrome断开设备链接。之后打开你的 PWA 网站，你可以看见启动屏幕并且依然能够查看之前的页面，尽管这时候你处于离线状态。  </p>
+<h2 id="如何使用PWA技术"><a href="#如何使用PWA技术" class="headerlink" title="如何使用PWA技术"></a>如何使用PWA技术</h2><p>将你的网站转换成PWA仅需要一下三个基本步骤：  </p>
+<h3 id="步骤1：设置HTTPS"><a href="#步骤1：设置HTTPS" class="headerlink" title="步骤1：设置HTTPS"></a>步骤1：设置HTTPS</h3><p>PWA需要HTTPS的支持，原因不言而喻。设置HTTPS在不同的主机上有不同的流程，但是HTTPS网站会在 Google 获得更高的 Rank 这使得一切都是值得的。<br>Chrome 允许使用 localhost 或者任何 127.x.x.x 来进行HTTPS测试。你也可以在Chrome启动中添加下面的命令，来使得PWA运行在HTTP中：  </p>
+<blockquote>
+<p>– user-data-dir<br>– unsafety-treat-insecure-origin-as-secure  </p>
+</blockquote>
+<h3 id="步骤2：创建-manifest-文件"><a href="#步骤2：创建-manifest-文件" class="headerlink" title="步骤2：创建 manifest 文件"></a>步骤2：创建 manifest 文件</h3><p>提供一个web应用程序相关的信息，包括名称，描述和配置到主屏幕的图标，启动图片和viewport。实际上，manifest 文件是提供上述信息的文件。<br>manifest 是一个JSON格式的文件。我们必须提供含有 Content-Type: application/manifest+json 或者 Content-Type: applicaiont/json 的HTTP请求头来时使用它。该文件可以随意起名，这里我们叫做 manifest.json：   </p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">"name"</span>              : <span class="string">"PWA Website"</span>,</div><div class="line">  <span class="attr">"short_name"</span>        : <span class="string">"PWA"</span>,</div><div class="line">  <span class="attr">"description"</span>       : <span class="string">"An example PWA website"</span>,</div><div class="line">  <span class="attr">"start_url"</span>         : <span class="string">"/"</span>,</div><div class="line">  <span class="attr">"display"</span>           : <span class="string">"standalone"</span>,</div><div class="line">  <span class="attr">"orientation"</span>       : <span class="string">"any"</span>,</div><div class="line">  <span class="attr">"background_color"</span>  : <span class="string">"#ACE"</span>,</div><div class="line">  <span class="attr">"theme_color"</span>       : <span class="string">"#ACE"</span>,</div><div class="line">  <span class="attr">"icons"</span>: [</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo072.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"72x72"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo152.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"152x152"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo192.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"192x192"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo256.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"256x256"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;,</div><div class="line">    &#123;</div><div class="line">      <span class="attr">"src"</span>           : <span class="string">"/images/logo/logo512.png"</span>,</div><div class="line">      <span class="attr">"sizes"</span>         : <span class="string">"512x512"</span>,</div><div class="line">      <span class="attr">"type"</span>          : <span class="string">"image/png"</span></div><div class="line">    &#125;</div><div class="line">  ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在<code>&lt;head&gt;</code>标签中需要加入下面的内容：  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"manifest"</span> <span class="attr">href</span>=<span class="string">"/manifest.json"</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>这些字段的含义如下：  </p>
+<ul>
+<li>name – 应用名称</li>
+<li>short_name – 应用的缩略名</li>
+<li>description – 应用描述</li>
+<li>start_url – 应用启动的相对路径 (通常为 /)</li>
+<li>scope - 导航范围。例如：/app/会将应用限制在app文件夹下 </li>
+<li>background-color - 启动界面的背景颜色  </li>
+<li>display - 展示方式：fullscreen 全屏，standalong 类似native app，minimal-ui 一个简单的UI空间，browser 传统浏览器界面  </li>
+<li>icons - 定义图片信息的数组，包括图片URL，大小和类型。应该定义一些列图标信息。  </li>
+</ul>
+<p>MDN 定义了完整的列表<a href="https://developer.mozilla.org/en-US/docs/Web/Manifest" target="_blank" rel="external">Web App Manifest properties</a><br>Chrome 浏览器会监听验证你的manifest文件，并且提供<code>add to homescreen</code> 链接：  </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/4.png" alt="4.png" title="">  
+<h3 id="步骤3：创建Service-Worker"><a href="#步骤3：创建Service-Worker" class="headerlink" title="步骤3：创建Service Worker"></a>步骤3：创建Service Worker</h3><p>Service Workers 是一个用来拦截网络请求的Javascript脚本，放在应用程序根目录下即可。<br>下面这段代码（/js/main.js）用来检测当网站支持 Service Worker 后注册service-worker.js脚本:  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (<span class="string">'serviceWorker'</span> <span class="keyword">in</span> navigator) &#123;</div><div class="line">    <span class="comment">// register service worker</span></div><div class="line">    navigator.serviceWorker.register(<span class="string">'/service-worker.js'</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Service workers 可能会让感到迷惑，你可以根据自己的目的来调整demo代码。示例代码是标准的浏览器下载脚本，它单独运行在一个线程上。该脚本无权访问DOM或其他页面的API，但是它可以在网页发生变化的时候拦截网络请求，资源下载和Ajax请求。<br>Service workers也是网站需要采用HTTPS的根本原因。试想一下，如果第三方脚本可有轻易注入你的Service worker中。它就有可能窃取和篡改客户端和服务端之间的通讯信息。<br>Service workers 需要响应下面三个基本事件：install, activate 和 fetch。   </p>
+<h4 id="Install-Event"><a href="#Install-Event" class="headerlink" title="Install Event"></a>Install Event</h4><p>这个事件发生在Service worker注册阶段。它通常用于使用Cache API来创建缓存，放置应用离线时所需要的资源。<br>首先，我们定义一些基础的配置：    </p>
+<ol>
+<li><code>缓存名称（CACHE）和版本号（version）</code> 你的应用可以有多个缓存，但我们只使用一个。因此应用版本号就很有用，当网站有重大的改变后，将使用心得缓存忽略掉之前的缓存。  </li>
+<li><code>离线页面URL(offlineURL)</code> 当用户离线后视图访问之前没有访问过的页面，该页面将被显示。  </li>
+<li><code>一系列提供离线功能的基本文件(installFilesEssential)</code> 这里应该提供一个包含CSS和Javascript的数组，我还向数组中加入了主页(/)和logo。你也应该加入其他的需要文件例如：/ 或者 /index.html。注意offlineURL也要加入这个数组。  </li>
+<li><code>一些可选的文件(installFilesDesirable)</code> 如果有可能，这些内容将会被下载，但不会使安装中断    </li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// configuration</span></div><div class="line"><span class="keyword">const</span></div><div class="line">  version = <span class="string">'1.0.0'</span>,</div><div class="line">  CACHE = version + <span class="string">'::PWAsite'</span>,</div><div class="line">  offlineURL = <span class="string">'/offline/'</span>,</div><div class="line">  installFilesEssential = [</div><div class="line">    <span class="string">'/'</span>,</div><div class="line">    <span class="string">'/manifest.json'</span>,</div><div class="line">    <span class="string">'/css/styles.css'</span>,</div><div class="line">    <span class="string">'/js/main.js'</span>,</div><div class="line">    <span class="string">'/js/offlinepage.js'</span>,</div><div class="line">    <span class="string">'/images/logo/logo152.png'</span></div><div class="line">  ].concat(offlineURL),</div><div class="line">  installFilesDesirable = [</div><div class="line">    <span class="string">'/favicon.ico'</span>,</div><div class="line">    <span class="string">'/images/logo/logo016.png'</span>,</div><div class="line">    <span class="string">'/images/hero/power-pv.jpg'</span>,</div><div class="line">    <span class="string">'/images/hero/power-lo.jpg'</span>,</div><div class="line">    <span class="string">'/images/hero/power-hi.jpg'</span></div><div class="line">  ];</div></pre></td></tr></table></figure>
+<p>installStaticFiles() 函数利用异步的Cache API 来将这些文件添加到缓存。当缓存生成后返回Promise对象：   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// install static assets</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">installStaticFiles</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> caches.open(CACHE)</div><div class="line">    .then(<span class="function"><span class="params">cache</span> =&gt;</span> &#123;</div><div class="line"></div><div class="line">      <span class="comment">// cache desirable files</span></div><div class="line">      cache.addAll(installFilesDesirable);</div><div class="line"></div><div class="line">      <span class="comment">// cache essential files</span></div><div class="line">      <span class="keyword">return</span> cache.addAll(installFilesEssential);</div><div class="line"></div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>最后，我们注册一个 install 监听器。我们必须提供一个waitUntil方法(参数为promise对象)，当oninstall或者onactivate触发时被调用，来执行我们的函数：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// application installation</span></div><div class="line">self.addEventListener(<span class="string">'install'</span>, event =&gt; &#123;</div><div class="line">  <span class="built_in">console</span>.log(<span class="string">'service worker: install'</span>);</div><div class="line">  <span class="comment">// cache core files</span></div><div class="line">  event.waitUntil(</div><div class="line">    installStaticFiles()</div><div class="line">    .then(<span class="function"><span class="params">()</span> =&gt;</span> self.skipWaiting())</div><div class="line">  );</div><div class="line">&#125;); </div><div class="line"><span class="string">``</span><span class="string">` </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">#### Activate Event   </span></div><div class="line"><span class="string">当Service worker安装成功后会被立刻激活该事件。你可能并不总是需要这个处理程序。下面这段代码可以用来删除旧的缓存：  </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript  </div><div class="line"><span class="comment">// clear old caches</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">clearOldCaches</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> caches.keys()</div><div class="line">    .then(<span class="function"><span class="params">keylist</span> =&gt;</span> &#123;</div><div class="line">      <span class="keyword">return</span> <span class="built_in">Promise</span>.all(</div><div class="line">        keylist</div><div class="line">          .filter(<span class="function"><span class="params">key</span> =&gt;</span> key !== CACHE)</div><div class="line">          .map(<span class="function"><span class="params">key</span> =&gt;</span> caches.delete(key))</div><div class="line">      );</div><div class="line">    &#125;);</div><div class="line">&#125;</div><div class="line"><span class="comment">// application activated</span></div><div class="line">self.addEventListener(<span class="string">'activate'</span>, event =&gt; &#123;</div><div class="line">  <span class="built_in">console</span>.log(<span class="string">'service worker: activate'</span>);</div><div class="line">    <span class="comment">// delete old caches</span></div><div class="line">  event.waitUntil(</div><div class="line">    clearOldCaches()</div><div class="line">    .then(<span class="function"><span class="params">()</span> =&gt;</span> self.clients.claim())</div><div class="line">    );</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>注意，最后的 self.clients.claim() 将当前Service worker对象作为所有客户端的活动对象。  </p>
+<h4 id="Fetch-Event"><a href="#Fetch-Event" class="headerlink" title="Fetch Event"></a>Fetch Event</h4><p>当网络产生请求后触发该事件，它通过调用respondWith() 方法来拦截GET请求并返回：  </p>
+<ol>
+<li>缓存中的内容。 </li>
+<li>如果#1没有缓存，则使用Fetch API从网络加载资源(与Service worker的fetch event无关)，然后将资源添加到缓存中。  </li>
+<li>如果#1，#2都失败了，则返回一个适当的结果。  </li>
+</ol>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// application fetch network data</span></div><div class="line">self.addEventListener(<span class="string">'fetch'</span>, event =&gt; &#123;</div><div class="line">  <span class="comment">// abandon non-GET requests</span></div><div class="line">  <span class="keyword">if</span> (event.request.method !== <span class="string">'GET'</span>) <span class="keyword">return</span>;</div><div class="line">  <span class="keyword">let</span> url = event.request.url;</div><div class="line">  event.respondWith(</div><div class="line">    caches.open(CACHE)</div><div class="line">      .then(<span class="function"><span class="params">cache</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">return</span> cache.match(event.request)</div><div class="line">          .then(<span class="function"><span class="params">response</span> =&gt;</span> &#123;</div><div class="line">            <span class="keyword">if</span> (response) &#123;</div><div class="line">              <span class="comment">// return cached file</span></div><div class="line">              <span class="built_in">console</span>.log(<span class="string">'cache fetch: '</span> + url);</div><div class="line">              <span class="keyword">return</span> response;</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// make network request</span></div><div class="line">            <span class="keyword">return</span> fetch(event.request)</div><div class="line">              .then(<span class="function"><span class="params">newreq</span> =&gt;</span> &#123;</div><div class="line">                <span class="built_in">console</span>.log(<span class="string">'network fetch: '</span> + url);</div><div class="line">                <span class="keyword">if</span> (newreq.ok) cache.put(event.request, newreq.clone());</div><div class="line">                <span class="keyword">return</span> newreq;</div><div class="line">              &#125;)</div><div class="line">              <span class="comment">// app is offline</span></div><div class="line">              .catch(<span class="function"><span class="params">()</span> =&gt;</span> offlineAsset(url));</div><div class="line">          &#125;);</div><div class="line">      &#125;)</div><div class="line">  );</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>最后我们调用 offlineAsset(url) 方法返回一个适当的响应：    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// is image URL?</span></div><div class="line"><span class="keyword">let</span> iExt = [<span class="string">'png'</span>, <span class="string">'jpg'</span>, <span class="string">'jpeg'</span>, <span class="string">'gif'</span>, <span class="string">'webp'</span>, <span class="string">'bmp'</span>].map(<span class="function"><span class="params">f</span> =&gt;</span> <span class="string">'.'</span> + f);</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">isImage</span>(<span class="params">url</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> iExt.reduce(<span class="function">(<span class="params">ret, ext</span>) =&gt;</span> ret || url.endsWith(ext), <span class="literal">false</span>);</div><div class="line">&#125;</div><div class="line"><span class="comment">// return offline asset</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">offlineAsset</span>(<span class="params">url</span>) </span>&#123;</div><div class="line">  <span class="keyword">if</span> (isImage(url)) &#123;</div><div class="line">    <span class="comment">// return image</span></div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Response(</div><div class="line">      <span class="string">'&lt;svg role="img" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"&gt;&lt;title&gt;offline&lt;/title&gt;&lt;path d="M0 0h400v300H0z" fill="#eee" /&gt;&lt;text x="200" y="150" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" font-size="50" fill="#ccc"&gt;offline&lt;/text&gt;&lt;/svg&gt;'</span>,</div><div class="line">      &#123; <span class="attr">headers</span>: &#123;</div><div class="line">        <span class="string">'Content-Type'</span>: <span class="string">'image/svg+xml'</span>,</div><div class="line">        <span class="string">'Cache-Control'</span>: <span class="string">'no-store'</span></div><div class="line">      &#125;&#125;</div><div class="line">    );</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">else</span> &#123;</div><div class="line">    <span class="comment">// return page</span></div><div class="line">    <span class="keyword">return</span> caches.match(offlineURL);</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>例子中，offlineAsset()函数用来检测请求是否是一个图片并且返回一个包含”offline”字段的SVG。其他请求则返回离线页面。<br>Chrome开发工具提供了查看Service Worker信息的选项，包含了错误消息，重新加载工具和页面离线等内容：  </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/5.png" alt="5.png" title="">
+<p><code>Cache Storage</code> 列出了当前环境下所有的缓存内容，如果缓存有更新你需要点击刷新按钮来看到他们。  </p>
+<img src="/2017/08/23/译-将你的网站升级为PWA/6.png" alt="6.png" title="">  
+<p>同样Clear storage选项可以删除你的Service worker和缓存。  </p>
+<h3 id="步骤4：创建一个实用的离线页面"><a href="#步骤4：创建一个实用的离线页面" class="headerlink" title="步骤4：创建一个实用的离线页面"></a>步骤4：创建一个实用的离线页面</h3><p>离线页面可以是一个静态页面来提醒用户他们访问的页面不能离线查看。同时，我们还需要提供一个可访问页面的URL列表供用户查看。<br>我们可以再main.js中来使用Cache API。但是，API的异步请求失败的时候会导致浏览器停止运行。为了防止这种情况发生，我们将检测离线元素和Caches API是否可用的代码放在其他的文件中 /js/offlinepage.js（必须放在 installFiledEssential数组前):    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// load script to populate offline page list</span></div><div class="line"><span class="keyword">if</span> (<span class="built_in">document</span>.getElementById(<span class="string">'cachedpagelist'</span>) &amp;&amp; <span class="string">'caches'</span> <span class="keyword">in</span> <span class="built_in">window</span>) &#123;</div><div class="line">  <span class="keyword">var</span> scr = <span class="built_in">document</span>.createElement(<span class="string">'script'</span>);</div><div class="line">  scr.src = <span class="string">'/js/offlinepage.js'</span>;</div><div class="line">  scr.async = <span class="number">1</span>;</div><div class="line">  <span class="built_in">document</span>.head.appendChild(scr);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>/js/offlinepage 通过版本名称来查找最近的缓存，URL列表，删除没有页面的URLs，对列表进行排序并添加到id为cachedpagelist的DOM节点上：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// cache name</span></div><div class="line"><span class="keyword">const</span></div><div class="line">  CACHE = <span class="string">'::PWAsite'</span>,</div><div class="line">  offlineURL = <span class="string">'/offline/'</span>,</div><div class="line">  list = <span class="built_in">document</span>.getElementById(<span class="string">'cachedpagelist'</span>);</div><div class="line"><span class="comment">// fetch all caches</span></div><div class="line"><span class="built_in">window</span>.caches.keys()</div><div class="line">  .then(<span class="function"><span class="params">cacheList</span> =&gt;</span> &#123;</div><div class="line">    <span class="comment">// find caches by and order by most recent</span></div><div class="line">    cacheList = cacheList</div><div class="line">      .filter(<span class="function"><span class="params">cName</span> =&gt;</span> cName.includes(CACHE))</div><div class="line">      .sort(<span class="function">(<span class="params">a, b</span>) =&gt;</span> a - b);</div><div class="line">    <span class="comment">// open first cache</span></div><div class="line">    caches.open(cacheList[<span class="number">0</span>])</div><div class="line">      .then(<span class="function"><span class="params">cache</span> =&gt;</span> &#123;</div><div class="line">        <span class="comment">// fetch cached pages</span></div><div class="line">        cache.keys()</div><div class="line">          .then(<span class="function"><span class="params">reqList</span> =&gt;</span> &#123;</div><div class="line">            <span class="keyword">let</span> frag = <span class="built_in">document</span>.createDocumentFragment();</div><div class="line">            reqList</div><div class="line">              .map(<span class="function"><span class="params">req</span> =&gt;</span> req.url)</div><div class="line">              .filter(<span class="function"><span class="params">req</span> =&gt;</span> (req.endsWith(<span class="string">'/'</span>) || req.endsWith(<span class="string">'.html'</span>)) &amp;&amp; !req.endsWith(offlineURL))</div><div class="line">              .sort()</div><div class="line">              .forEach(<span class="function"><span class="params">req</span> =&gt;</span> &#123;</div><div class="line">                <span class="keyword">let</span></div><div class="line">                  li = <span class="built_in">document</span>.createElement(<span class="string">'li'</span>),</div><div class="line">                  a = li.appendChild(<span class="built_in">document</span>.createElement(<span class="string">'a'</span>));</div><div class="line">                  a.setAttribute(<span class="string">'href'</span>, req);</div><div class="line">                  a.textContent = a.pathname;</div><div class="line">                  frag.appendChild(li);</div><div class="line">              &#125;);</div><div class="line">            <span class="keyword">if</span> (list) list.appendChild(frag);</div><div class="line">          &#125;);</div><div class="line">      &#125;)</div><div class="line">  &#125;);</div></pre></td></tr></table></figure>
+<h2 id="调试工具"><a href="#调试工具" class="headerlink" title="调试工具"></a>调试工具</h2><p>如果你认为调试Serice Workers有困难，Chrome Development Tools中的 Application选项提供了一些列日志消息在控制台中。<br>你应该在隐身模式下开发你的应用程序，这样可以避免文件缓存带来的影响。<br>Firefox也提供了来自Service Workers的JavaScript调试信息，未来也会更加的完善。<br>最后Chrome 扩展程序 Lighthouse 可以提供更加丰富的PWA信息。  </p>
+<h2 id="PWA-的问题"><a href="#PWA-的问题" class="headerlink" title="PWA 的问题"></a>PWA 的问题</h2><p>对于渐进增强web应用的支持需要谨慎，如果改造它花了很长时间那就得不偿失了。毕竟不支持 PWA 也不会造成很大的负面影响。<br>这里我们还有几个问题需要考虑：  </p>
+<h3 id="URL-隐藏"><a href="#URL-隐藏" class="headerlink" title="URL 隐藏"></a>URL 隐藏</h3><p>如何隐藏地址栏我并没有演示，除非你开发了一个单页的游戏这才有必要。manifest的diplay：minimal-ui 或者 display: browser 才是适合大多数网站的。  </p>
+<h3 id="缓存重载"><a href="#缓存重载" class="headerlink" title="缓存重载"></a>缓存重载</h3><p>你可以缓存站点的每一页。这对于小型网站是有好处的，但是对于那些拥有很多页面的网站就不那么可取了。没有人会对你所有的内容感兴趣并且设备缓存是有限度的。及时你只缓存访问过的页面，缓存依旧增长的很明显。<br>你也许该考虑以下建议：  </p>
+<ul>
+<li>只缓存重要的页面如主页，链接，最近的文章等</li>
+<li>不缓存图片，视频和大的文件  </li>
+<li>定期清除旧的缓存文件  </li>
+<li>提供一个”缓存到本地”的按钮，以便用户可以自行选择  </li>
+</ul>
+<h3 id="缓存更新"><a href="#缓存更新" class="headerlink" title="缓存更新"></a>缓存更新</h3><p>缓存同样需要定期更新，不然用户只能看见旧的页面。<br>对于图片和视频这种不经常变化的内容，你可以设置一个持续一年的缓存时间：  </p>
+<blockquote>
+<p>Cache-Control: max-age=31536000    </p>
+</blockquote>
+<p>页面，css和脚本文件有可能频繁更新，你需要设置较短的更新时间例如24小时，确保在线状态服务器对版本的验证:  </p>
+<blockquote>
+<p>Cache-Control: must-revalidate, max-age=86400    </p>
+</blockquote>
+<p>你也可以考虑使用缓存清除技术来确定哪些不适用的旧文件，例如：命名你的CSS文件 styles-abc124.css，每个版本都修改哈希值。<br>缓存是很复杂的这里我建议你阅读 Jake Archibold 的文章 <a href="https://jakearchibald.com/2016/caching-best-practices/" target="_blank" rel="external">Caching best practices &amp; max-age gotchas</a>  </p>
+<h2 id="更多内容"><a href="#更多内容" class="headerlink" title="更多内容"></a>更多内容</h2><p>如果你想了解更多，可以参考一下内容：  </p>
+<ul>
+<li><a href="https://pwa.rocks/" target="_blank" rel="external">PWA.rocks example applications</a></li>
+<li><a href="https://developers.google.com/web/progressive-web-apps/" target="_blank" rel="external">Progressive Web Apps</a></li>
+<li><a href="https://codelabs.developers.google.com/codelabs/your-first-pwapp/" target="_blank" rel="external">Your First PWA</a></li>
+<li><a href="https://serviceworke.rs/" target="_blank" rel="external">Mozilla Service Worker Cookbook</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers" target="_blank" rel="external">MDN Using Service Workers</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;本文翻译自：&lt;a href=&quot;https://www.sitepoint.com/retrofit-your-website-as-a-progressive-web-app/?utm_source=mobilewebweekly&amp;amp;utm_medium=email&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Retrofit Your Website as a Progressive Web App&lt;/a&gt;&lt;br&gt;如果原文打不开请移步：&lt;a href=&quot;https://www.zybuluo.com/caelumtian/note/860343&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;这里&lt;/a&gt;     &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;最近大家都在讨论渐进增强web应用(Progressive Web Apps 简称PWA)，许多人质疑PWA是否能代表移动web的未来。这里我不会介入navtive app 和 PWA的争论之中，但是有件事是可以确定的-PWA在很大的长度上增强移动端提高了用户的体验。到2018年移动设备的web接入的数量注定要超过其他所有设备总量和，这种趋势是不可忽视的。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="翻译文章" scheme="http://yoursite.com/categories/%E7%BF%BB%E8%AF%91%E6%96%87%E7%AB%A0/"/>
+    
+    
+      <category term="移动开发" scheme="http://yoursite.com/tags/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"/>
+    
+      <category term="PWA" scheme="http://yoursite.com/tags/PWA/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>[译] 如何利用 localStorage 来构建更快的应用程序</title>
+    <link href="http://yoursite.com/2017/08/23/%E8%AF%91-%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8-localStorage-%E6%9D%A5%E6%9E%84%E5%BB%BA%E6%9B%B4%E5%BF%AB%E7%9A%84%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F/"/>
+    <id>http://yoursite.com/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/</id>
+    <published>2017-08-23T11:45:13.000Z</published>
+    <updated>2017-08-25T09:03:48.000Z</updated>
+    
+    <content type="html"><![CDATA[<blockquote>
+<p>本文翻译自：<a href="https://medium.freecodecamp.org/how-leverage-local-storage-to-build-lightning-fast-apps-4e8218134e0c" target="_blank" rel="external">How to leverage Local Storage to build lightning-fast apps</a><br>如果原文打不开请移步：<a href="https://www.zybuluo.com/caelumtian/note/857353" target="_blank" rel="external">这里</a>   </p>
+</blockquote>
+<p>用户偏爱快速响应的应用程序。他们并不关心API运行所需要的时间，而仅仅是想立即看到变化。所以我们怎么做才能尽力满足用户的需求？<br>解决方案：本地存储应用的更改，然后不定时的与你的服务器同步这些内容。但是当我们考虑到连接延迟问题的时候，这样做将会变得更加复杂。<br><a id="more"></a><br>让我们以一个媒体网站为例，用户可以通过点击 ❤️ 按钮来推荐一篇文章给他的朋友们。当用于再次点击该按钮后，则取消推荐。  </p>
+<h2 id="上述案例虽然简单，但有一些极端的例子造成了很多问题"><a href="#上述案例虽然简单，但有一些极端的例子造成了很多问题" class="headerlink" title="上述案例虽然简单，但有一些极端的例子造成了很多问题"></a>上述案例虽然简单，但有一些极端的例子造成了很多问题</h2><p>我们并不知道网站内部发生了什么，为了简单起见，我们可以想象在第一次点击的时候，程序将一个项目添加到了推荐列表中，并且在第二次点击的时候移除这个项目。<br>下面让我们看看，如果我们开发这样一个简单的应用功能，会遇到哪儿些问题    </p>
+<ol>
+<li>我们需要考虑如果用户疯狂的点击 ❤️ 按钮，这些行为将会触发一系列响应 事件  </li>
+<li>网速并不总是快的。在一个网速差的环境下，甚至连最简单的API调用都要花上几秒钟才可以完成。在这段时间用户就有可能离开了当前屏幕，然后才会返回  </li>
+<li>有的时候，API调用可能失败，我们的程序应该能够有能力从在状况下正常运行  </li>
+<li>用户有可能使用不同的设备来打开我们的网站，或者同时在移动设备和PC上面访问我们的网站。不管在哪儿种情况下我们都应该有一个策略来和后端同步数据并更新其状态  </li>
+</ol>
+<p>我们在实际中可能遇到更多的问题，但是本文着重来解决上面提到的问题。  </p>
+<h2 id="明确问题"><a href="#明确问题" class="headerlink" title="明确问题"></a>明确问题</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/1.jpeg" alt="1.jpeg" title="">  
+<p>在讨论如何解决问题之前，我们来先定义要开发功能的实现标准。任务是开发一个可以在列表中添加和删除项目的功能，列表数据存储在后端。功能必须满足如下要求：  </p>
+<ol>
+<li>用户界面需要立刻响应用户的操作，让用户看到他们操作的结果。如果之后由于某些原因我们不能同步这些更改内容，我们应该通知用户操作失败。并且回滚到之前的状态。  </li>
+<li>支持多个设备的交互。这并不意味着我们需要支持实时修改的功能，但是我们需要不断地获取整个数据。此外，后端为我们提供了添加和删除项目的API，我们必须使用它们来支持更好的同步效果。  </li>
+<li>保证数据的完整性：无论什么时候一旦数据同步失败，我们的网站都应该从错误中恢复正常状态。  </li>
+</ol>
+<p>幸运的是，我们并不需要实现所有，而是开发一种可以实现它的数据存储机制。让我们来探究不同的实现方案。  </p>
+<h2 id="最直接的方法"><a href="#最直接的方法" class="headerlink" title="最直接的方法"></a>最直接的方法</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/2.jpeg" alt="2.jpeg" title="">   
+<p>第一种解决办法是在 localStorage 中存储一份列表数据的副本，当用户进行操作时，我们也同时更新 localStorage 中的数据。这种解决问题的方案大多数与竞争条件或者API调用失败有关，例如：  </p>
+<ol>
+<li><code>获取并修改列表之间冲突</code> 让我们设想这样一个场景，网站从后端获取列表数据来更新我们的 localStorage。用户这个在更新没有完成之前，修改了数据。这将导致获取到的列表和本地列表之间产生合并冲突。为此我们需要区分那些还没有添加的项目和已经从web中或其他设备上删除的项目。  </li>
+<li><code>API调用失败</code> 用户可能进行快速的大量的修改操作，也有可能是恢复操作。例如，用户可以添加项目到列表，然后删除它们，然后又添加回来。如果第一次操作失败，我们应该复原列表即从列表中删除该项。但是这样会破坏我们数据的完整性，因为该项目实际是应该在列表中的。我们最后一次调用时添加操作，而且它还没有完成。  </li>
+</ol>
+<p>因此，我认为应该保留更多的信息在 localStorage 中，而不仅仅只有最终的预期效果。这样我们才有能力从可能遇到的问题中恢复过来。  </p>
+<h2 id="保留用户的操作历史记录"><a href="#保留用户的操作历史记录" class="headerlink" title="保留用户的操作历史记录"></a>保留用户的操作历史记录</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/3.jpeg" alt="3.jpeg" title="">   
+<p>这里有一个不同的方案：我们保留冲后端获取到的列表，并记录用户的所有操作。每个记录都会匹配一个后端API的调用(分别是’add’和’remove’)。<br>一旦API调用完成，我们更新本地副本数据并从历史记录中删去记录。当我们想和后端同步用户浏览器数据，我们仅仅获取列表的版本然后替换我们的副本。<br>我们不在有任何API调用失败的问题，因为我们明确知道API调用前列表的状态，并且我们可以从历史记录中删除该记录，从而保证数据的完整性。<br>这么做主要会带来性能问题。每次检查一个特性的项目是否在列表中，我们都需要通过所有记录来计算用户期望看到的内容。当然，这些性能都取决于在一定时间内用户进行的交互次数以及数据的存储方式。<br>我认为，这种方案非常利于用户在应用中创建内容的场景，因为它提供了许多解决同步问题的方案。但是我们的问题比这更简单，所以我们应该能够进行一些优化来提升性能。  </p>
+<h2 id="中间地带"><a href="#中间地带" class="headerlink" title="中间地带"></a>中间地带</h2><img src="/2017/08/23/译-如何利用-localStorage-来构建更快的应用程序/4.jpeg" alt="4.jpeg" title="">   
+<p>这种方案有足够的信息从负面情况中恢复。我们需要两个额外的列表，一个用于持续添加另一个用于删除。为了确保数据的完整性，你仅仅需要添加一些规则：  </p>
+<ol>
+<li><code>添加和删除列表优先于主列表</code> 例如：一个项目同时在删除列表中和主列表中时。如果浏览器检查项目是否在列表中，它应该返回 false。  </li>
+<li><code>一个项目不能同时出现在两个列表中如果用户对一个项目进行了多次操作，则最后的修改应该具有优先级</code> 例如，如果用户添加了项目然后删除了它，作为结果它应该出现在删除列表中。项目在不在主列表中反而无关紧要。  </li>
+<li><code>只有某个项目在最后一次调用API完成后，才可以从相应的列表中删除</code> 例如，用户添加了一个项目并删除了它，然后又在第一次调用完成之前添加了它。在这种情况下，该项目应该在添加列表中。但是只有在第二次添加完成后它才应该被删除。我们可以通过为每个条目分配一个ID来实现。在API调用完成后，删除使用这些ID的条目。  </li>
+<li><code>每次API调用完成后，主列表应该被更新</code> 主列表应该反映后端的实际情况。所以在连续的添加和删除的情况下，即使在客户端看起来，项目并不在列表中，在第一次调用后我们应该把它添加到主列表中。  </li>
+</ol>
+<h2 id="关于API调用失败"><a href="#关于API调用失败" class="headerlink" title="关于API调用失败"></a>关于API调用失败</h2><p>调用API失败的原因是有所不同的。有些是临时的，有些不是。他们当中有些是致命的，有些事可以恢复的。无论解决方案是什么，失败的请求都应该返回一些关于失败原因的有用信息。<br>我认为HTTP状态吗是完美的。例如，如果状态吗是504网关超时，重新请求将是个不错的方案。但是如果是400请求错误，那么简单的重新请求将不会有任何效果。其中一些，比如401未经授权，可能需要用户额外的操作。在删除项目的时候，410状态码就可能意味着是用户从不同的设备删除了该项目。  </p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>第一个解决方案是简单的列表，他是快速的，但处理负面情况是困难的  </li>
+<li>第二种方案，我们创建了一个像列表的数据结构，但是保留了所有的更改记录。这有利于解决负面情况，但是速度很慢  </li>
+<li>中间地带解决方案，从外表看依然想一个列表。但是他允许我们平衡性能并且简单快速的从错误中恢复  </li>
+</ul>
+<p>本文提到的问题只是一个方面。还有就是API调用的数量问题。如果用户执行了大量类似的交互，我们可以尝试最小化API调用的数量。此优化也会影响本地存储的结构。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;blockquote&gt;
+&lt;p&gt;本文翻译自：&lt;a href=&quot;https://medium.freecodecamp.org/how-leverage-local-storage-to-build-lightning-fast-apps-4e8218134e0c&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;How to leverage Local Storage to build lightning-fast apps&lt;/a&gt;&lt;br&gt;如果原文打不开请移步：&lt;a href=&quot;https://www.zybuluo.com/caelumtian/note/857353&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;这里&lt;/a&gt;   &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;用户偏爱快速响应的应用程序。他们并不关心API运行所需要的时间，而仅仅是想立即看到变化。所以我们怎么做才能尽力满足用户的需求？&lt;br&gt;解决方案：本地存储应用的更改，然后不定时的与你的服务器同步这些内容。但是当我们考虑到连接延迟问题的时候，这样做将会变得更加复杂。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="翻译文章" scheme="http://yoursite.com/categories/%E7%BF%BB%E8%AF%91%E6%96%87%E7%AB%A0/"/>
+    
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+      <category term="数据交互" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E4%BA%A4%E4%BA%92/"/>
+    
+      <category term="翻译文章" scheme="http://yoursite.com/tags/%E7%BF%BB%E8%AF%91%E6%96%87%E7%AB%A0/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>[译] 为 Web Bluetooth 做好准备</title>
+    <link href="http://yoursite.com/2017/08/21/%E8%AF%91-%E4%B8%BA-Web-Bluetooth-%E5%81%9A%E5%A5%BD%E5%87%86%E5%A4%87/"/>
+    <id>http://yoursite.com/2017/08/21/译-为-Web-Bluetooth-做好准备/</id>
+    <published>2017-08-21T11:43:00.000Z</published>
+    <updated>2017-08-21T11:43:00.000Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>利用javascript搭建富文本编辑器</title>
+    <link href="http://yoursite.com/2017/08/21/%E5%88%A9%E7%94%A8javascript%E6%90%AD%E5%BB%BA%E5%AF%8C%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%99%A8/"/>
+    <id>http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/</id>
+    <published>2017-08-21T11:37:32.000Z</published>
+    <updated>2017-08-21T11:37:32.000Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>数据响应系统原理解析</title>
+    <link href="http://yoursite.com/2017/08/21/%E6%95%B0%E6%8D%AE%E5%93%8D%E5%BA%94%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/"/>
+    <id>http://yoursite.com/2017/08/21/数据响应系统原理解析/</id>
+    <published>2017-08-21T11:36:49.000Z</published>
+    <updated>2017-08-21T11:36:49.000Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>移动端交互手势详解与实现</title>
+    <link href="http://yoursite.com/2016/08/23/%E7%A7%BB%E5%8A%A8%E7%AB%AF%E4%BA%A4%E4%BA%92%E6%89%8B%E5%8A%BF%E8%AF%A6%E8%A7%A3%E4%B8%8E%E5%AE%9E%E7%8E%B0/"/>
+    <id>http://yoursite.com/2016/08/23/移动端交互手势详解与实现/</id>
+    <published>2016-08-23T11:09:51.000Z</published>
+    <updated>2017-09-22T07:17:15.000Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="一丶概述"><a href="#一丶概述" class="headerlink" title="一丶概述"></a>一丶概述</h2><p>如今移动端设备大行其道，前端也走进了移动的领域。在写移动端页面的交互效果的时候，我么难免要接触一些复杂的手势，而不仅仅像pc端那样简单的鼠标事件。手势实际上是一种输入模式。我们现在在直观意义上理解的人机交互是指人与机器之间的互动方式，这种互动方式经历了鼠标、物理硬件、屏幕触控、远距离的体感操作的逐步发展的过程。<br><a id="more"></a></p>
+<h2 id="二丶移动端手势事件"><a href="#二丶移动端手势事件" class="headerlink" title="二丶移动端手势事件"></a>二丶移动端手势事件</h2><p>在浏览器中，为我们提供的手势并不算多，主要有：</p>
+<ul>
+<li>touchstart 当手指触摸屏幕时触发</li>
+<li>touchmove 当手指在屏幕滑动时不断的触发</li>
+<li>touchend 当手指从屏幕上移开时触发</li>
+<li>touchcancel 当系统停止跟踪触摸时触发  </li>
+</ul>
+<p>是不是感觉很少，safari还为我们提供了三个独有的手势事件(用于复杂的手势)，然而也仅仅只能在safari中使用  </p>
+<ul>
+<li>gesturestart 当一个手指已经按在屏幕上，另一个手指也按上时触发</li>
+<li>gesturechange 当触摸屏幕上任何一个手指发生变化时触发</li>
+<li>gestureend 当任何一个手指从屏幕上移开时触发   2</li>
+</ul>
+<img src="/2016/08/23/移动端交互手势详解与实现/1.png" alt="1.png" title="">  
+<p>最后呢，让我们看看移动设备上究竟有哪儿手势需要我们使用<br><img src="/2016/08/23/移动端交互手势详解与实现/2.png" alt="2.png" title=""></p>
+<h2 id="三丶让JS支持这些手势"><a href="#三丶让JS支持这些手势" class="headerlink" title="三丶让JS支持这些手势"></a>三丶让JS支持这些手势</h2><p>目前看来，我们能用的也就只有touchstart，touchmove, touchend, touchcancel这四个手势，那么如何才能利用这四个手势支持众多的交互效果呢？首先我们从最简单的手势开始。简单的手势也就是说是单点触控，我们主要来实现如下几个手势：    </p>
+<ul>
+<li>tap 轻触</li>
+<li>doubletap 连续两次轻触</li>
+<li>press 长按</li>
+<li>pan 平移</li>
+<li>flick 轻拂  </li>
+</ul>
+<p>首先我们要解决如何触发自定义事件(已经了解自定事件的可以跳过)：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//自定义一个事件</span></div><div class="line"><span class="built_in">document</span>.body.addEventListener(<span class="string">"tap"</span>, <span class="function"><span class="keyword">function</span>(<span class="params">event</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">"tap事件触发"</span>)</div><div class="line">&#125;, <span class="literal">false</span>)  </div><div class="line"><span class="comment">//触发自定义事件  </span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">fireEvent</span>(<span class="params">element, type, extra</span>) </span>&#123;</div><div class="line">    <span class="keyword">var</span> event = doc.createEvent(<span class="string">'HTMLEvents'</span>);</div><div class="line">    event.initEvent(type, <span class="literal">true</span>, <span class="literal">true</span>);</div><div class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> extra === <span class="string">'object'</span>) &#123;</div><div class="line">        Util.extends(event, extra);     <span class="comment">//浅拷贝</span></div><div class="line">    &#125;</div><div class="line">    element.dispatchEvent(event);</div><div class="line">&#125;</div><div class="line">fireEvent(<span class="built_in">document</span>.body, <span class="string">"tap"</span>, &#123;&#125;);   <span class="comment">//触发tap事件</span></div></pre></td></tr></table></figure>
+<p>我们在整个事件模拟中定义一个中间状态 <code>evet.status</code> 来表示当前的触摸状态，接下来我们就利用 touchstart，touchmove，touchend 来可以实现自己的触摸事件了:  </p>
+<ul>
+<li>tap事件：当touchstart触发时，我们将event.status状态改为 tapping。在touchend触发时，如果event.status依然为tapping则，触发tap事件。  </li>
+<li>doubletap事件：在触发tap事件的时候，我们用一个变量lastTime记录当前时间。下一次触发tap时，用当前时间和lastTime做对比，如果小于300ms则触发doubletap事件  </li>
+<li>pess事件：当touchstart触发时，我们定义一个setTimeout的函数(500ms)，如果500ms后仍然没有touchend触发，则定时函数将event.staus状态改为pressing。当touchend触发时，检测到状态为pressing则触发press事件。  </li>
+<li>pan事件：我们在touchmove中检测当前状态是tapping和pressing时，并且手指移动距离大于10px则，触发pan平移事件。这个移动距离用event.touches[0].clientX - lastTouch.clientY 来检测就好(利用lastTouch记录，起始手指的event对象)。  </li>
+<li>flick事件：这个事件就是”刷~刷”的划过屏幕的交互效果，在touchend时通过pan事件的移动距离和移动事件算出速度(注意是X和Y轴的合速度)，如果速度大于0.5，并且整个触摸过程时间小于100ms，则触发flick事件。  </li>
+</ul>
+<p>是不是很简单的用最原始的浏览器事件就能实现这些内容。接下来让我们看看两个手指的事件如果实现。  </p>
+<h2 id="四丶实现多指触控"><a href="#四丶实现多指触控" class="headerlink" title="四丶实现多指触控"></a>四丶实现多指触控</h2><p>在实现多指触控的时候，我们需要了解一下触摸过程中event用来保存多个手指信息的三个属性：  </p>
+<ul>
+<li>touches当前屏幕上所有触摸点的集合列表</li>
+<li>targetTouches绑定事件的那个结点上的触摸点的集合列表</li>
+<li>changedTouches触发事件时改变的触摸点的集合    </li>
+</ul>
+<p>这三个有什么区别？举例来说，比如div1, div2只有div2绑定了touchstart事件，第一次放下一个手指在div2上，触发了touchstart事件，这个时候，三个集合的内容是一样的，都包含这个手指的touch，然后，再放下两个手指一个在div1上，一个在div2上，这个时候又会触发事件，但changedTouches里面只包含第二个第三个手指的信息，因为第一个没有发生变化，而targetTouches包含的是在第一个手指和第三个在div2上的手指集合，touches包含屏幕上所有手指的信息，也就是三个手指。这样是不是就很很清楚了。下面我们要根据上面的内容，继续解决一个问题：当两个手指作用在不同的节点上应该触发哪个节点的事件呢？<br>这里我们规定，如果触发在了两个不同节点上，我们去两个节点公有的最近父节点，作为触发的目标。寻找共有最小父节点代码如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//判断节点ele1是否包含ele2</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">contains</span>(<span class="params">ele1, ele2</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> ele1.contains ? ele1 != ele2 &amp;&amp; ele1.contains(ele2) : !!(ele1.compareDocumentPosition(ele2) &amp; <span class="number">16</span>);</div><div class="line">&#125;</div><div class="line"><span class="comment">//获得共有最近的父节点</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">getCommonRootNode</span>(<span class="params">ele1, ele2</span>) </span>&#123;</div><div class="line">    <span class="keyword">while</span> (ele1) &#123;</div><div class="line">        <span class="keyword">if</span> (contains(ele1, ele2) || ele1 === ele2) &#123;</div><div class="line">            <span class="keyword">return</span> ele1;</div><div class="line">        &#125;</div><div class="line">        ele1 = ele1.parentNode;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p> 这样我们解决了，如何找到多个手指信息和触发哪个节点的问题。最后一个问题，当给了我们这些信息我们怎么能用？比如计算旋转手势，缩放手势啊什么的。<br> 这里我们仅考虑两个手指的多点触控。我们设touchstart阶段的两个手指坐标为 A(x1, y1)   B(x2, y2)。touchmove过程中的两个手指的坐标为 C(x3, y3) D(x4, y4)。  </p>
+<ul>
+<li>rotate旋转：计算AB，CD线段与坐标轴的夹角，对角度相减即得到旋转角度。  </li>
+<li>scale 缩放：计算AB线段长度和CD线段长度(勾股定理)，两条线段做比值就好。  </li>
+<li>translate平移： 平移的话我们只计算A点到C点的x坐标变化量。   </li>
+</ul>
+<p>具体代码如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">calcAction</span>(<span class="params">x1, y1, x2, y2, x3, y3, x4, y4</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> rotate = <span class="built_in">Math</span>.atan2(y4 - y3, x4 - x3) - <span class="built_in">Math</span>.atan2(y2 - y1, x2 - x1),</div><div class="line">        scale = <span class="built_in">Math</span>.sqrt((<span class="built_in">Math</span>.pow(y4 - y3, <span class="number">2</span>) + <span class="built_in">Math</span>.pow(x4 - x3, <span class="number">2</span>)) / (<span class="built_in">Math</span>.pow(y2 - y1, <span class="number">2</span>) + <span class="built_in">Math</span>.pow(x2 - x1, <span class="number">2</span>))),</div><div class="line">            translate = [x3 - scale * x1 * <span class="built_in">Math</span>.cos(rotate) + scale * y1 * <span class="built_in">Math</span>.sin(rotate), y3 - scale * y1 * <span class="built_in">Math</span>.cos(rotate) - scale * x1 * <span class="built_in">Math</span>.sin(rotate)];</div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">        rotate: rotate,</div><div class="line">        scale: scale,</div><div class="line">        translate: translate,</div><div class="line">            <span class="comment">/**</span></div><div class="line"><span class="comment">             * |ax + cy + e|</span></div><div class="line"><span class="comment">             * |bx + dy + f|</span></div><div class="line"><span class="comment">             * | 0 +  0 + 1|</span></div><div class="line"><span class="comment">             */</span></div><div class="line">        martrix: [</div><div class="line">            [scale * <span class="built_in">Math</span>.cos(rotate), -scale * <span class="built_in">Math</span>.sin(rotate), translate[<span class="number">0</span>]],</div><div class="line">            [scale * <span class="built_in">Math</span>.sin(rotate), scale * <span class="built_in">Math</span>.cos(rotate), translate[<span class="number">1</span>]],</div><div class="line">            [<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>]</div><div class="line">        ]</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p> 了解这些内容，你就可以在touchmove过程中完成对两个手指的旋转缩放平移等交互效果进行封装了。是不是很简单呢！<br> 当然完整的事件过程要分start，move，end这三种情况，在实现的时候要分别给予对应的实现就可以了。都逃不开对touchstart，touchmove，touchend的利用。  </p>
+<h1 id="五丶实现案例"><a href="#五丶实现案例" class="headerlink" title="五丶实现案例"></a>五丶实现案例</h1><p>基于上面的方案，我实现了一个对移动端手势的封装库，包含以上所有的手势。犹豫这里代码运行不能模拟手机环境，我就不贴代码了。 感兴趣的同学可以访问：<a href="https://github.com/T-phantom/si-gesture" target="_blank" rel="external">https://github.com/T-phantom/si-gesture</a> 上面有具体的使用方法和带有详细注释的源码哦，欢迎start。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;一丶概述&quot;&gt;&lt;a href=&quot;#一丶概述&quot; class=&quot;headerlink&quot; title=&quot;一丶概述&quot;&gt;&lt;/a&gt;一丶概述&lt;/h2&gt;&lt;p&gt;如今移动端设备大行其道，前端也走进了移动的领域。在写移动端页面的交互效果的时候，我么难免要接触一些复杂的手势，而不仅仅像pc端那样简单的鼠标事件。手势实际上是一种输入模式。我们现在在直观意义上理解的人机交互是指人与机器之间的互动方式，这种互动方式经历了鼠标、物理硬件、屏幕触控、远距离的体感操作的逐步发展的过程。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="移动开发" scheme="http://yoursite.com/categories/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"/>
+    
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+      <category term="移动开发" scheme="http://yoursite.com/tags/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>CORS 跨域数据交互</title>
+    <link href="http://yoursite.com/2016/08/22/CORS-%E8%B7%A8%E5%9F%9F%E6%95%B0%E6%8D%AE%E4%BA%A4%E4%BA%92/"/>
+    <id>http://yoursite.com/2016/08/22/CORS-跨域数据交互/</id>
+    <published>2016-08-22T04:09:20.000Z</published>
+    <updated>2017-09-22T07:01:23.000Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="跨域数据交互"><a href="#跨域数据交互" class="headerlink" title="跨域数据交互  "></a>跨域数据交互  </h1><p>在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求<br>跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。<br><a id="more"></a></p>
+<h1 id="什么是-CORS"><a href="#什么是-CORS" class="headerlink" title="什么是 CORS"></a>什么是 CORS</h1><p>CORS是一种允许当前域（domain）的资源（比如html/js/web service）被其他域（domain）的脚本请求访问的机制。使用CORS，可以通过普通的XMLHttpRequest发起请求和获得数据，并且支持各种类型请求。说白了就是利用XMLHttpRequest来实现跨站通信，而不是仅仅遵循同源策略，再也不用为了ajax能跨域写苦逼的jsonp了。  CORS技术现在已经被广泛的支持了。 兼容性如下：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-1.png" alt="js12-1.png" title=""><br>CORS 兼容大部分浏览器， IE8 及其以下就自求多福吧。  </p>
+<h1 id="CORS-使用方法及场景举例"><a href="#CORS-使用方法及场景举例" class="headerlink" title="CORS 使用方法及场景举例"></a>CORS 使用方法及场景举例</h1><p>所谓的跨域请求，从本质上来说并不是浏览器对其他域名的请求不能发送，而是请求可以正常发起，<br>但是浏览器在收到服务器信息后就屏蔽掉了，并向前端报错(跨域)。如图所示，跨域请求结果被屏蔽。<br><img src="/2016/08/22/CORS-跨域数据交互/js12-2.png" alt="js12-2.png" title=""><br>解决方案，服务器在响应HTTP头部加入 <code>Access-Control-Allow-Origin：*</code>即可，这样就表示服务端同意任意域名的请求。<br>一般我们会指定可响应的域名如：<code>Access-Control-Allow-Origin: http://b.com, http://c.com</code>等。这样浏览器在检测到服务端HTTP头部的时候就可以不再拦截响应。<br>请求头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-3.png" alt="js12-3.png" title=""><br>响应头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-4.png" alt="js12-4.png" title=""><br>就在我们以为轻松搞定的时候，我们又遇到了问题。前端要给后端传json格式的数据于是在http头部加入了<br><code>content-type: application/json</code>, <code>access_token</code>等信息。请求再次失败，通过观察控制台信息我们发现，多了一个请求<code>options</code>:<br><img src="/2016/08/22/CORS-跨域数据交互/js12-5.png" alt="js12-5.png" title=""><br>原来在CORS中的请求分为两种：简单请求和复杂请求    </p>
+<h2 id="简单请求"><a href="#简单请求" class="headerlink" title="简单请求"></a>简单请求</h2><ol>
+<li>只使用GET，HEAD或者POST。如果使用POST来发送数据到服务器，那么使用HTTP POST请求发送到服务器的数据的Content-Type为以下几种之一：application/x-www-form-urlencoded，multipart/form-data以及text/plain。  </li>
+<li>不使用HTTP请求发送定制请求头（例如X-Modified等）  </li>
+</ol>
+<p>在简单请求下，我们只需要像上面所说设置Access-Control-Allow-Origin头部即可。  </p>
+<h2 id="复杂请求"><a href="#复杂请求" class="headerlink" title="复杂请求"></a>复杂请求</h2><ol>
+<li>使用了除GET，HEAD和POST以外的方法。如果使用POST方法发送请求数据时的<code>Content-Type</code>不是<code>application/x-www-form-urlencoded，multipart/form-data</code>或者<code>text/plaint</code>。例如，如果POST请求向服务器使用application/xml或者text/xml向服务器发送请求，那么这个请求就是preflighted的。</li>
+<li>设置了定制请求头的请求（例如，请求使用了例如X-PINGOTHER这样的请求头）。这类请求在发送正式请求之前会发送一个<code>Preflighted(预请求)</code>，<code>Preflighted</code>请求首先通过HTTP OPTIONS方法请求其他域上的资源，以确定发送实际的请求是否安全。这样做，是因为跨站请求可能会对目的站点的数据造成破坏。我们第二次发的请求是一个复杂请求，服务端没有响应options的方法，导致预请求失败，之后的请求也就终止了。我们看一下复杂请求下的HTTP报文:  </li>
+</ol>
+<p>Prelignted请求头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-6.png" alt="js12-6.png" title=""><br>可以看到报文头部信息为OPTIONS请求<br>预请求服务端响应报文<br><img src="/2016/08/22/CORS-跨域数据交互/js12-7.png" alt="js12-7.png" title=""><br>预请求响应只要返回一个2xx表示成功的响应信息即可说明服务端同意了跨域请求，<br>这里我们选择204的状态码作为响应状态。因为<code>204</code>表示响应成功，并且没有结果返回的状态。这样节省了传输信息的事件，加快了预请求的处理。<br>预处理结束后，事情并没有就此解决。错误信息再次传来。<br><br>原来我们自定义了头部信息，还要在响应报文中加入<code>Access-Control-Allow-Headers</code>来指出服务端允许的复杂请求需要的自定义头部信息。注意这里不能用*来表示所有，<br>只能一个个添加。例如：<code>&quot;Access-Control-Allow-Methods&quot; : &quot;PUT,POST,GET,DELETE,OPTIONS&quot;</code>。<br>这样就齐活了，总算是数据可以流通了。这里我建议在服务端响应部分也加入 <code>&quot;Access-Control-Allow-Methods&quot; : &quot;PUT,POST,GET,DELETE,OPTIONS&quot;</code>来指出可接受的请求类型。<br>最后我们的服务端响应头部信息：<br> </p>
+<h2 id="附带凭证信息的请求"><a href="#附带凭证信息的请求" class="headerlink" title="附带凭证信息的请求"></a>附带凭证信息的请求</h2><p>我手贱的在xhr中加入了 <code>xhr.withCredentials = true</code> 因为跨源请求默认请求头部中不提供凭据(cookie、HTTP认证及客户端SSL证明等)。<br>为了能把这些信息带上，我们设置了withCredentials为true。浏览器再次报错，通过检查我们发现，<br>如果你设置了withCredentials为true那么 Access-Control-Allow-Origin就不能用 * ，必须使用明确的域名。<br>而且还要为你的响应头加上<code>&quot;Access-Control-Allow-Credentials&quot;:&quot;true&quot;</code>信息。<br>最后我列出CORS中可能使用的头部信息供大家参考：  </p>
+<ul>
+<li><p><strong>HTTP响应头</strong>：Access-Control-Allow-Origin，Access-Control-Expose-Headers，Access-Control-Max-Age，<br>Access-Control-Allow-Credentials，Access-Control-Allow-Methods，Access-Control-Allow-Headers      </p>
+</li>
+<li><p><strong>HTTP请求头</strong>：Origin，Access-Control-Request-Method，Access-Control-Request-Headers   </p>
+</li>
+</ul>
+<p>附上用Node.js跨域请求服务端的简单配置：  </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">"express"</span>),</div><div class="line">    app = express();</div><div class="line">    </div><div class="line"><span class="comment">//统一拦截请求设置头部信息，响应预请求</span></div><div class="line">app.all(<span class="string">'*'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</div><div class="line">    res.set(&#123;</div><div class="line">        <span class="string">"Access-Control-Allow-Origin"</span>: <span class="string">"*"</span>,</div><div class="line">        <span class="string">"Access-Control-Allow-Headers"</span>: <span class="string">"Content-Type,access_token,user_id"</span>,</div><div class="line">        <span class="string">"Access-Control-Allow-Methods"</span>: <span class="string">"PUT,POST,GET,DELETE,OPTIONS"</span></div><div class="line">    &#125;);</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(req.method==<span class="string">"OPTIONS"</span>) &#123;</div><div class="line">        res.send(<span class="number">204</span>);</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        next();</div><div class="line">    &#125;</div><div class="line">&#125;);</div><div class="line"></div><div class="line">app.post(<span class="string">"/data"</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</div><div class="line">    res.json(&#123;</div><div class="line">        status: <span class="string">"success"</span>,</div><div class="line">        text: <span class="string">"返回数据"</span></div><div class="line">    &#125;)</div><div class="line">&#125;);</div><div class="line"></div><div class="line">app.listen(<span class="number">3000</span>, <span class="string">"127.0.0.1"</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">"服务器启动了"</span>);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h1 id="跨域请求的其他方案"><a href="#跨域请求的其他方案" class="headerlink" title="跨域请求的其他方案"></a>跨域请求的其他方案</h1><p>这里列举一下其他常用的跨域方案，仅供参考:    </p>
+<ol>
+<li><code>jsonp</code>：利用 <code>&lt;script&gt;</code> 元素的这个开放策略，网页可以得到从其他来源动态产生的 JSON 资料，而这种使用模式就是所谓的 JSONP。用 JSONP 抓到的资料并不是 JSON，而是任意的JavaScript，用 JavaScript 直译器执行而不是用 JSON 解析器解析。  </li>
+<li><code>postMessage</code>：postMessage()方法允许来自不同源的脚本采用异步方式进行有限的通信，可以实现跨文本档、多窗口、跨域消息传递。  </li>
+<li><code>websocket</code>：WebSocket实现了全双工通信，使WEB上的真正的实时通信成为可能。浏览器和服务器只需要做一个握手的动作，然后，浏览器和服务器之间就形成了一条快速通道。两者之间就直接可以数据互相传送。  </li>
+<li><code>SSE</code>：Server-Sent Events(SSE)功能，允许服务端推送数据到客户端(通常叫数据推送)。已经在浏览器上普遍支持，然而IE和Edge全系列不支持。</li>
+<li><code>ServiceWorker</code>：一个 service worker 是一段运行在浏览器后台进程里的脚本，它独立于当前页面，提供了那些不需要与web页面交互的功能在网页背后悄悄执行的能力。在将来，基于它可以实现消息推送，静默更新以及地理围栏等服务，但是目前它首先要具备的功能是拦截和处理网络请求，包括可编程的响应缓存管理。简而言之，这是让浏览器具有服务器功能的API，有了他还跨域个球球。不过这只是实验中API目前只有chrome和firfox高版本浏览器支持。   </li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h1 id=&quot;跨域数据交互&quot;&gt;&lt;a href=&quot;#跨域数据交互&quot; class=&quot;headerlink&quot; title=&quot;跨域数据交互  &quot;&gt;&lt;/a&gt;跨域数据交互  &lt;/h1&gt;&lt;p&gt;在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求&lt;br&gt;跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="浏览器" scheme="http://yoursite.com/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
+    
+    
+      <category term="浏览器" scheme="http://yoursite.com/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>javascript 类与继承</title>
+    <link href="http://yoursite.com/2015/05/03/javascript-%E7%B1%BB%E4%B8%8E%E7%BB%A7%E6%89%BF/"/>
+    <id>http://yoursite.com/2015/05/03/javascript-类与继承/</id>
+    <published>2015-05-03T10:59:31.000Z</published>
+    <updated>2017-08-22T10:02:33.000Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="类的创建"><a href="#类的创建" class="headerlink" title="类的创建"></a>类的创建</h1><p>在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，Javascript中创建类的方式有很多种：工厂模式，构造函数模式，原形模式，动态原形模式，寄生构造模式，稳妥构造模式。<br><a id="more"></a></p>
+<h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>通过函数把一个类型实例包装起来，这样可以通过函数来实现类型的实例化；但是这只是一种伪装的构造函数，而且instanceof判断会发现创建的对象并不属于自己定义的类而是Object不推荐使用     </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name,age</span>) </span>{
+    <span class="keyword">var</span> o = <span class="keyword">new</span> <span class="built_in">Object</span>();    <span class="comment">//Object创建对象</span>
+    o.name = name;
+    o.age = age;
+    <span class="keyword">return</span> o;
+}
+<span class="keyword">var</span> per1 = Person(<span class="string">"tian"</span>,<span class="number">11</span>);
+per1 <span class="keyword">instanceof</span> Person;   <span class="comment">//false</span>
+per1 <span class="keyword">instanceof</span> <span class="built_in">Object</span>;   <span class="comment">//true</span>
+</code></pre>
+<h2 id="原形模式"><a href="#原形模式" class="headerlink" title="原形模式"></a>原形模式</h2><p>声明一个构造函数，利用构造函数的prototype属性为该构造函数定义原形属性（原形prototype是Javascript核心特性之一，设计的目的就是用来实现继承的，从予以角度分析，prototype就是构造类拥有的原始成员。注意对象是没有原形的，只有构造函数拥有原形)；  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>) </span>{
+
+}
+Person.prototype = {
+        name : <span class="string">"tian"</span>,
+        age : <span class="number">21</span>,
+        run : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+            <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);
+        }                                                                                                                
+}
+<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person(<span class="string">"tian"</span>, <span class="number">12</span>);
+</code></pre>
+<p>一般的我们把定义在原形上的方法叫做原形方法，他们被所有对象共享，也就是只有一份。这样就解决了构造模式的缺点，但是又没有特权方法||属性。于是，我们参考以上这几种方法，就可以得到目前最常用的类的创建方法。  </p>
+<h2 id="组合模式（构造原形模式）"><a href="#组合模式（构造原形模式）" class="headerlink" title="组合模式（构造原形模式）"></a>组合模式（构造原形模式）</h2><p>可以看出这是原型模式和构造模式的组合，构造函数中我们放入特权属性和特权方法，他们每一个实例就是一个副本，互不影响。在内部还可以放入var 声明的变量作为私有属性。把公共的方法给原形，这样就可以通用。  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name, age</span>) </span>{
+        <span class="keyword">this</span>.name = name;        <span class="comment">//特权方法</span>
+        <span class="keyword">this</span>.age = age;
+        <span class="keyword">var</span> _idNum = <span class="number">0</span>;     <span class="comment">//该属性无法被访问到</span>
+}
+Person.prototype = {
+        run : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+                conosole.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);  <span class="comment">//公共方法</span>
+        }
+}
+<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person(<span class="string">"tian"</span>, <span class="number">12</span>);
+</code></pre>
+<p>原形方法和特权方法都属于实例方法，还有一种类方法或者类属性，我们直接在函数上定义就可以：Person.method = function(){}。遵循对象设计原则，类的所有成员都应该封装在类的结构体内，因此优化该模式，产生动态原形模式。</p>
+<h2 id="动态原形模式"><a href="#动态原形模式" class="headerlink" title="动态原形模式"></a>动态原形模式</h2><p>把所有信息放在构造函数中，并且动态的判断是否具有某方法并创建  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name, age</span>) </span>{
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.age = age;
+        <span class="keyword">if</span>(<span class="keyword">typeof</span> <span class="keyword">this</span>.run === <span class="string">'undefined'</span>) {
+                Person.prototype.run = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+                        <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);
+                }
+        }
+}
+</code></pre>
+<h2 id="其他模式"><a href="#其他模式" class="headerlink" title="其他模式"></a>其他模式</h2><p>寄生构造函数：类似工厂模式，将工厂中的对象实例o，换成指定构造器生成，常用来扩展一些JS本身构造函数，又不希望直接修改构造函数时候使用。比如扩展Array构造函数。<br>稳妥构造函数模式：一般用于安全的环境中。最后这两种方法直接十分类似，也不太常用，具体代码就不贴了都和工厂模式长得很像，有兴趣的自行查找。  </p>
+<h1 id="Prototype原形与new操作符"><a href="#Prototype原形与new操作符" class="headerlink" title="Prototype原形与new操作符"></a>Prototype原形与new操作符</h1><p>在讨论继承之前，我们先探索一下原形链和new操作符在创建对象的时候的步骤。<br>首先：我们知道在当我们访问对象的一个属性或方法的时候，那么他会先找特权成员，如果有同名的就返回，没有就查找原形，在没有查找父类原形。我们通过组合模式创建的对象都有父类：Object。这种原形链的查找方式我们看看在修改prototype的时候会发生什么：  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>) </span>{}
+Person.prototype = {
+        name : <span class="string">"tian"</span>
+}
+<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person();
+<span class="built_in">console</span>.log(per1.name) <span class="comment">//tian</span>
+Person.prototype = {
+        name : <span class="string">"hyang"</span>     <span class="comment">//原形链断开，重写</span>
+}
+<span class="built_in">console</span>.log(per1.name) <span class="comment">//tian 不受影响</span>
+<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params"></span>)</span>{}
+Teacher.prototype = {
+       name : <span class="string">"qiqi"</span>
+}
+per1.constructor = Teacher;
+<span class="built_in">console</span>.log(per1.name)  <span class="comment">//tian 依然不受影响</span>
+</code></pre>
+<p>通过上述代码我们发现，当重写类的原形链的时候，已经生成的实例并不受任何影响，修改construct属性（该属性表示对象的构造函数），也没有任何效果。那么究竟什么才是对象回溯的依据呢？其实每个对象都有一个 <code>__proto__</code>属性。该属性保存着对象指向的原形。  </p>
+<pre><code class="javascript"><span class="built_in">console</span>.log(per1.__proto__)   <span class="comment">//Object {name: "tian"}</span>
+per1.__proto__ = Person.prototype;   <span class="comment">//修改__proto__属性</span>
+<span class="built_in">console</span>.log(per1.name)   <span class="comment">//hyang</span>
+per1.__proto__ = Teacher.prototype 
+<span class="built_in">console</span>.log(per1.name)   <span class="comment">//qiqi</span>
+</code></pre>
+<p>在IE11以后和标准浏览器中该属性可以修改访问，之前的该属性不暴露。于是我们得出new操作符在执行的时候过程（参考Person类）：</p>
+<blockquote>
+<p>1）创建一个空对象obj<br>2）obj.<strong>proto</strong> = Person.prototype (引用)<br>3）将构造器中this = obj<br>4）执行构造器里面的代码<br>5）判断有没有返回值，没有返回值默认undefined，有返回值且为复合类型则返回该类型，否则返回this如果通过new生成对象的时候，忘记加上new了，那么属性会保存在哪儿里呢？  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name</span>) </span>{
+        <span class="keyword">this</span>.name = name;
+}
+<span class="keyword">var</span> per = Person(<span class="string">"tian"</span>);
+per   <span class="comment">//'undefined'</span>
+<span class="built_in">console</span>.log(<span class="built_in">window</span>.name) <span class="comment">//'tian'</span>
+</code></pre>
+<p>可以看到没有加new操作符，Person中的this会被解释称window对象，全局变量就很容易受到污染，谨慎使用new操作符。  </p>
+</blockquote>
+<h1 id="继承"><a href="#继承" class="headerlink" title="继承"></a>继承</h1><p>Javascript实现继承，通过上面我们知道只要prototype有什么，那么实例就有什么；如果我们将类prototype置换为另一类的prototype，那么该类就可以轻易得到类的原型成员。但是由于对象是引用类型，所以不能直接替换  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>)</span>{}  <span class="comment">//父类</span>
+Person.prototype = {
+        <span class="string">"name"</span> : <span class="string">"tian"</span>
+}
+<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params"></span>)</span>{}    <span class="comment">//子类</span>
+Teacher.prototype = Person.prototype;
+</code></pre>
+<p>这样Teacher的原形保存的是对Person的引用，修改Teacher会同时修改Person。解决的方法有两个，一个是通过for in把父类原型逐一赋给子类的原形（拷贝继承）；第二种现将父类的原形赋给一个函数，然后将该函数的实例作为子类的原形。<br>方法1：  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">extend</span>(<span class="params">child, super</span>) </span>{
+        <span class="keyword">for</span>(<span class="keyword">var</span> property <span class="keyword">in</span> <span class="keyword">super</span>) {
+                child[property] = <span class="keyword">super</span>[property];
+        }
+        <span class="keyword">return</span> child;
+}
+</code></pre>
+<p>该方法有一个缺陷，就是无法通过instanceof验证。<br>方法2 原型继承：  </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name</span>)</span>{
+        <span class="keyword">this</span>.name = name;
+}
+Person.prototype = {
+        <span class="string">"run"</span> : <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+                <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"跑步"</span>)
+        }
+}
+
+<span class="function"><span class="keyword">function</span> <span class="title">birdge</span>(<span class="params"></span>)</span>{}
+birdge.prototype = Person.prototype;
+
+<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params">name, wage</span>)</span>{
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.wage = wage;
+}
+Teacher.prototype = <span class="keyword">new</span> birdge();
+<span class="keyword">var</span> per = <span class="keyword">new</span> Person(<span class="string">"tian"</span>);
+<span class="keyword">var</span> tea = <span class="keyword">new</span> Teacher(<span class="string">"hyang"</span>,<span class="number">10</span>);
+Person.prototype === Teacher.prototype;  <span class="comment">// false 说明原型已经分离</span>
+Person.prototype.say = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+    <span class="built_in">console</span>.log(<span class="keyword">this</span>.name)
+} <span class="comment">//为父类添加一个方法</span>
+tea.say()    <span class="comment">//hyang  说明子类得到了父类新添加的方法</span>
+Teacher.prototype.getWage = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+    <span class="built_in">console</span>.log(<span class="keyword">this</span>.wage);
+}
+per.getWage;  <span class="comment">//'undefined' 说明子类添加的方法并没有影响到父类</span>
+</code></pre>
+<p>这样我们就完成了类的原型继承，我们给子类原形添加的新方法，其实是保存在了生成的new bridge()那个对象中（Teacher的原型保存的是对new bridge这个对象的引用）  </p>
+<pre><code class="javascript">per.__proto__                  <span class="comment">//Object {run: function, say: function}</span>
+tea.__proto__                  <span class="comment">//birdge {getWage: function, run: function, say: function}</span>
+tea.__proto__.__proto__  <span class="comment">//Object {run: function, say: function}</span>
+</code></pre>
+<p>这里我们可以清除的看到对象各自的原型是什么，中介函数bridge的使用在ES5中有更加简单的方法 Object.create(原型)这样就可以创建出一个具有指定原形的对象。对于不支持Object.create我们可以自己定义该函数   </p>
+<pre><code class="javascript"><span class="keyword">if</span>(!<span class="built_in">Object</span>.create){
+        <span class="built_in">Object</span>.create= (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
+                <span class="function"><span class="keyword">function</span> <span class="title">F</span>(<span class="params"></span>)</span>{}   <span class="comment">//创建中介函数（bridge）</span>
+                <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">obj</span>) </span>{
+                        <span class="keyword">if</span>(<span class="built_in">arguments</span>.length !== <span class="number">1</span>) {
+                                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"仅支持一个参数"</span>);
+                        }
+                        F.prototype = obj;   <span class="comment">//原形绑定</span>
+                        <span class="keyword">return</span> <span class="keyword">new</span> F();      <span class="comment">//返回实例</span>
+                }
+        })()
+}
+</code></pre>
+<p>这样上述继承就可以改写成，Teacher.prototype = Object.create(Person.prototype)。对于特权属性和函并没有在原型链中，我们可以采用借用构造函数来继承，于是上面Teacher子类修改为    </p>
+<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params">name, wage</span>) </span>{
+        Person.call(<span class="keyword">this</span>, name);   <span class="comment">//调用父类的构造方法，实现特权函数继承;</span>
+        <span class="keyword">this</span>.wage = wage;
+}
+</code></pre>
+<p>综上两种当时组合在一起，就是我们常用的类的类的继承方法（组合继承）。  还有其他的继承方式比如寄生式继承，寄生组合式继承，这些方法个人用的比较少，有兴趣的可以自己参考。  </p>
+<h1 id="类工厂"><a href="#类工厂" class="headerlink" title="类工厂"></a>类工厂</h1><p>js作为一个基于对象的语言，本身并没有提供class这一概念，通过上一篇文章Javascript 类工厂Ⅰ - 类与继承我们明白了类的继承原理，为此我们可以实现一个属于的简单的OO原型继承。  </p>
+<pre><code class="javascript"><span class="comment">/**</span>
+<span class="comment"> * 提供简单的OO原型继承</span>
+<span class="comment"> */</span>
+(<span class="function"><span class="keyword">function</span>(<span class="params">global</span>) </span>{
+<span class="meta">    "use strict"</span>
+    global.Class = {
+        <span class="comment">/**</span>
+<span class="comment">         * @param superclass  父类</span>
+<span class="comment">         * @param definition  类的属性设置</span>
+<span class="comment">         * @returns {_Object}  返回生成好的类</span>
+<span class="comment">         */</span>
+        create : <span class="function"><span class="keyword">function</span>(<span class="params">superclass, definition</span>) </span>{
+            <span class="keyword">if</span>(<span class="built_in">arguments</span>.length === <span class="number">1</span>) {
+                definition = superclass;
+                superclass = <span class="built_in">Object</span>;
+            }
+            <span class="keyword">if</span>(<span class="keyword">typeof</span> superclass !== <span class="string">"function"</span>) {
+                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"superclass must be fun"</span>);
+            }
+            <span class="keyword">var</span> _super = superclass.prototype;
+
+            <span class="comment">//删去静态方法（静态方法不能被继承）</span>
+            <span class="keyword">var</span> statics = definition.statics;
+            <span class="keyword">delete</span> definition.statics;
+
+            <span class="comment">// 用于返回的中间类,调去deinition对象中的内容</span>
+            <span class="function"><span class="keyword">function</span> <span class="title">_Object</span>(<span class="params"></span>) </span>{
+                <span class="keyword">this</span>.init.apply(<span class="keyword">this</span>, <span class="built_in">arguments</span>);
+            }
+            _Object.prototype = <span class="built_in">Object</span>.create(_super);
+
+            <span class="comment">//_super 属性保存父类原型</span>
+            _Object.prototype._super = _super;
+            _Object.prototype.constructor = _Object;
+           <span class="comment">//确保一定存在init方法</span>
+            <span class="keyword">if</span>(<span class="keyword">typeof</span> _Object.prototype.init !== <span class="string">'function'</span>) {
+                _Object.prototype.init = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+                    superclass.apply(<span class="keyword">this</span>, <span class="built_in">arguments</span>);
+                }
+            }
+            <span class="comment">//copy对象内容到原型中</span>
+            <span class="keyword">for</span>(<span class="keyword">var</span> name <span class="keyword">in</span> definition) {
+                _Object.prototype[name] = definition[name];
+            }
+
+           <span class="comment">//绑定静态内容</span>
+            _Object.statics = {};
+            <span class="keyword">for</span>(<span class="keyword">var</span> name <span class="keyword">in</span> statics) {
+                _Object.statics[name] = statics[name];
+            }
+
+            <span class="keyword">return</span> _Object;
+        }
+    }
+
+})(<span class="keyword">this</span>);
+</code></pre>
+<h2 id="使用说明"><a href="#使用说明" class="headerlink" title="使用说明"></a>使用说明</h2><p>通过Class.create([properties])创建类，properties为属性对象;<br>init 初始化方法，会在创建实例是被调用<br>statics 类的静态方法，ClassName.fn()   </p>
+<pre><code class="javascript"><span class="keyword">var</span> Person = Class.create({
+    init : <span class="function"><span class="keyword">function</span>(<span class="params">name, age</span>) </span>{
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.age = age;
+    },
+    statics : {
+       <span class="string">"name"</span> : <span class="string">"Person"</span>,
+       <span class="string">"type"</span> : <span class="string">"Class"</span>
+    }
+})
+<span class="keyword">var</span> per = <span class="keyword">new</span> Person(<span class="string">"phantom"</span>, <span class="number">1</span>);
+</code></pre>
+<p>使用Class.create(superClass, properties) 继承父类superClass</p>
+<p>this._super 保存有父类属性，可以用于子类中调用父类方法。  </p>
+<pre><code class="javascript"><span class="keyword">var</span> Teacher = Class.create(Person, {
+    init : <span class="function"><span class="keyword">function</span>(<span class="params">name, age, school</span>) </span>{
+        <span class="keyword">this</span>._super.init.call(<span class="keyword">this</span>, name, age);  <span class="comment">//调用父类init</span>
+        <span class="keyword">this</span>.school = school;
+    },
+    teach : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
+        <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"上课呢"</span>);
+    }
+})
+<span class="keyword">var</span> te = <span class="keyword">new</span> Teacher(<span class="string">"cjk"</span>, <span class="number">30</span>, <span class="string">'t_hot'</span>);
+</code></pre>
+<h1 id="ES6的类扩展"><a href="#ES6的类扩展" class="headerlink" title="ES6的类扩展"></a>ES6的类扩展</h1><p>ES6提供了更接近传统语言的写法，引入了Class（类）这个概念，作为对象的模板。通过class关键字，可以定义类。  </p>
+<pre><code class="javascript"><span class="comment">//定义类</span>
+<span class="class"><span class="keyword">class</span> <span class="title">Point</span> </span>{
+  <span class="keyword">constructor</span>(x, y) {
+    <span class="keyword">this</span>.x = x;
+    <span class="keyword">this</span>.y = y;
+  }
+  toString() {
+    <span class="keyword">return</span> <span class="string">'('</span> + <span class="keyword">this</span>.x + <span class="string">', '</span> + <span class="keyword">this</span>.y + <span class="string">')'</span>;
+  }
+}
+</code></pre>
+<p>上面代码定义了一个“类”，可以看到里面有一个constructor方法，这就是构造方法，而this关键字则代表实例对象。</p>
+<p>继承类:<br>Class之间可以通过extends关键字实现继承，这比ES5的通过修改原型链实现继承，要清晰和方便很多。<br><code>class ColorPoint extends Point {}</code><br>上面代码定义了一个ColorPoint类，该类通过extends关键字，继承了Point类的所有属性和方法。但是由于没有部署任何代码，所以这两个类完全一样，等于复制了一个Point类。下面，我们在ColorPoint内部加上代码。  </p>
+<pre><code class="javascript"><span class="class"><span class="keyword">class</span> <span class="title">ColorPoint</span> <span class="keyword">extends</span> <span class="title">Point</span> </span>{
+  <span class="keyword">constructor</span>(x, y, color) {
+    <span class="keyword">super</span>(x, y); <span class="comment">// 调用父类的constructor(x, y)</span>
+    <span class="keyword">this</span>.color = color;
+  }
+  toString() {
+    <span class="keyword">return</span> <span class="keyword">this</span>.color + <span class="string">' '</span> + <span class="keyword">super</span>.toString(); <span class="comment">// 调用父类的toString()</span>
+  }
+}
+</code></pre>
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><p>参考资料如下：  </p>
+<ul>
+<li><a href="http://product.dangdang.com/1900470931.html" target="_blank" rel="external">javascript高级程序设计第三版</a></li>
+<li>Prototype.js源码</li>
+<li><a href="https://item.jd.com/11436424.html" target="_blank" rel="external">jQuery框架设计</a></li>
+<li><a href="https://github.com/T-phantom" target="_blank" rel="external">PhantomUI组件库</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h1 id=&quot;类的创建&quot;&gt;&lt;a href=&quot;#类的创建&quot; class=&quot;headerlink&quot; title=&quot;类的创建&quot;&gt;&lt;/a&gt;类的创建&lt;/h1&gt;&lt;p&gt;在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，Javascript中创建类的方式有很多种：工厂模式，构造函数模式，原形模式，动态原形模式，寄生构造模式，稳妥构造模式。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
+    
+  </entry>
+  
+</feed>

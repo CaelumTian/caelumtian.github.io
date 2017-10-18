@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="javascript," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="关于惰性加载惰性加载又称为延迟加载、懒加载等，’lazyload’，即在长网页中延迟加载图像。当图片未到达可视区域时，不加载图片。如下图所示：      优点：提升用户的体验，如果图片数量较大，打开页面的时候要将将页面上所有的图片全部获取加载，很可能会出现卡顿现象，影响用户体验。因此，有选择性地请求图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。">
+<meta name="keywords" content="javascript">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图片惰性加载 IntersectionObserver">
+<meta property="og:url" content="http://yoursite.com/2017/08/28/图片惰性加载的实现/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="关于惰性加载惰性加载又称为延迟加载、懒加载等，’lazyload’，即在长网页中延迟加载图像。当图片未到达可视区域时，不加载图片。如下图所示：      优点：提升用户的体验，如果图片数量较大，打开页面的时候要将将页面上所有的图片全部获取加载，很可能会出现卡顿现象，影响用户体验。因此，有选择性地请求图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2017/08/28/图片惰性加载的实现/1.gif">
+<meta property="og:image" content="http://yoursite.com/2017/08/28/图片惰性加载的实现/2.png">
+<meta property="og:updated_time" content="2017-09-22T07:14:26.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="图片惰性加载 IntersectionObserver">
+<meta name="twitter:description" content="关于惰性加载惰性加载又称为延迟加载、懒加载等，’lazyload’，即在长网页中延迟加载图像。当图片未到达可视区域时，不加载图片。如下图所示：      优点：提升用户的体验，如果图片数量较大，打开页面的时候要将将页面上所有的图片全部获取加载，很可能会出现卡顿现象，影响用户体验。因此，有选择性地请求图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。">
+<meta name="twitter:image" content="http://yoursite.com/2017/08/28/图片惰性加载的实现/1.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/08/28/图片惰性加载的实现/"/>
+
+
+
+
+
+  <title>图片惰性加载 IntersectionObserver | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">愿归来时，仍是少年</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/08/28/图片惰性加载的实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">图片惰性加载 IntersectionObserver</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-28T20:41:11+08:00">
+                2017-08-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="关于惰性加载"><a href="#关于惰性加载" class="headerlink" title="关于惰性加载"></a>关于惰性加载</h2><p>惰性加载又称为延迟加载、懒加载等，’lazyload’，即在长网页中延迟加载图像。当图片未到达可视区域时，不加载图片。如下图所示：  </p>
+<img src="/2017/08/28/图片惰性加载的实现/1.gif" alt="1.gif" title="">  
+<p>优点：提升用户的体验，如果图片数量较大，打开页面的时候要将将页面上所有的图片全部获取加载，很可能会出现卡顿现象，影响用户体验。因此，有选择性地请求图片，这样能明显减少了服务器的压力和流量，也能够减小浏览器的负担。<br><a id="more"></a>  </p>
+<h2 id="实现方案"><a href="#实现方案" class="headerlink" title="实现方案"></a>实现方案</h2><p>惰性加载可以说在很久之前就已经出现了，实现方案也很简单。  </p>
+<ul>
+<li>在 HTML 文件中将需要惰性加载的图片的 src 属性置为一个相同的地址（一般设置为一张 loading 图），这样这张图只会加载一次（第二次即会读取缓存），或者干脆置为空（用户体验不好），将真实的图片地址存储在别的属性中（比如 data-src 属性)  </li>
+<li>监听事件（比如 scroll 事件），判断需要惰性加载的图片是否已经在可视区域，如果是，则将 src 属性替换成 data-src 属性值  </li>
+</ul>
+<p>方案中，我们主要实现的功能有：判断图片和视口的位置关系，主要判断函数如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 比较元素位置 d2, 在d1中</span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">_compareOffset</span>(<span class="params">d1, d2</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> left = d2.right &gt; d1.left &amp;&amp; d2.left &lt; d1.right;</div><div class="line">    <span class="keyword">let</span> top = d2.bottom &gt; d1.top &amp;&amp; d2.top &lt; d1.bottom;</div><div class="line">    <span class="keyword">return</span> left &amp;&amp; top;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>图片的坐标大小信息我们可以通过 <code>getBoundingClientRect</code> 来获得，浏览器窗口信息则为：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> w = &#123;</div><div class="line">    t = <span class="number">0</span>,</div><div class="line">    l = <span class="number">0</span>,</div><div class="line">    r = l + <span class="built_in">window</span>.innerWidth,</div><div class="line">    b = t + <span class="built_in">window</span>.innerHeight</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>剩下的只要监听 <code>scroll</code> 事件，对所有的 img.lazy-load 元素判断就好了。  </p>
+<h2 id="监听-scroll-存在的性能问题"><a href="#监听-scroll-存在的性能问题" class="headerlink" title="监听 scroll 存在的性能问题"></a>监听 scroll 存在的性能问题</h2><p>当我们监听 scroll 事件的时候，页面滚动会导致该事件频繁出发，这对浏览器的性能产生很大的影响。为此我们可以加入函数节流(throttle)或函数去抖(debounce)来处理  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> _throttle = <span class="function">(<span class="params">func, wait, mustRunDelay = <span class="literal">Infinity</span></span>) =&gt;</span> &#123;</div><div class="line">    <span class="keyword">let</span> timeout = <span class="literal">null</span>;</div><div class="line">    <span class="keyword">let</span> start_time;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">let</span> context = <span class="keyword">this</span>,</div><div class="line">            args = <span class="built_in">arguments</span>,</div><div class="line">            curr_time = +<span class="keyword">new</span> <span class="built_in">Date</span>();</div><div class="line">        clearTimeout(timeout);</div><div class="line">        <span class="keyword">if</span>(!start_time) &#123;</div><div class="line">            start_time = curr_time;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span>(curr_time - start_time &gt;= mustRunDelay) &#123;</div><div class="line">            func.apply(context, args);</div><div class="line">        &#125;<span class="keyword">else</span> &#123;</div><div class="line">            timeout = setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">                func.apply(context, args);</div><div class="line">            &#125;, wait);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p><code>wait</code> 即判断的间隔事件，我们通常设置成 100ms 就可以不影响用户的体验。如果你想进一步提升图片加载性能我们也可以指定的将某些图片，base64 后存入 <code>localStorage</code> 中，等以后打开的时候，首先判断 <code>localStorage</code> 中是否有图片缓存，没有则去请求。这样就可以进一步加快图片的载入速度。  </p>
+<p>完整的代码，可以查看 <a href="https://github.com/T-phantom/si-img" target="_blank" rel="external">si-img 图片优化组件</a>  </p>
+<h2 id="IntersectionObserver-API"><a href="#IntersectionObserver-API" class="headerlink" title="IntersectionObserver API"></a>IntersectionObserver API</h2><p>虽然我们使用了函数节流来降低 scroll 的频率，但是检测函数触发的频率依然很高，这之中的大多数检测都是没有意义的(并没有新的图片进入)。为了更好的解决这类问题，浏览器也提供了 <code>IntersectionObserver</code> API 来帮助我们判断元素是否进入可是区域。</p>
+<p>由于可见（visible）的本质是，目标元素与视口产生一个交叉区，所以这个 API 叫做”交叉观察器”。</p>
+<h3 id="API"><a href="#API" class="headerlink" title="API"></a>API</h3><p>使用方式十分简单：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> io = <span class="keyword">new</span> IntersectionObserver(callback, option);</div></pre></td></tr></table></figure>
+<p>上面代码中，IntersectionObserver是浏览器原生提供的构造函数，接受两个参数：callback是可见性变化时的回调函数，option是配置对象（该参数可选）。<br>构造函数的返回值是一个观察器实例。实例的observe方法可以指定观察哪个 DOM 节点。  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 开始观察</span></div><div class="line">io.observe(<span class="built_in">document</span>.getElementById(<span class="string">'example'</span>));</div><div class="line"></div><div class="line"><span class="comment">// 停止观察</span></div><div class="line">io.unobserve(element);</div><div class="line"></div><div class="line"><span class="comment">// 关闭观察器</span></div><div class="line">io.disconnect();</div></pre></td></tr></table></figure>
+<p>上面代码中，observe的参数是一个 DOM 节点对象。如果要观察多个节点，就要多次调用这个方法。  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">io.observe(elementA);</div><div class="line">io.observe(elementB);</div></pre></td></tr></table></figure>
+<h3 id="callback"><a href="#callback" class="headerlink" title="callback"></a>callback</h3><p>目标元素的可见性变化时，就会调用观察器的回调函数callback。<br>callback一般会触发两次。一次是目标元素刚刚进入视口（开始可见），另一次是完全离开视口（开始不可见）。    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">var</span> io = <span class="keyword">new</span> IntersectionObserver(</div><div class="line">  entries =&gt; &#123;</div><div class="line">    <span class="built_in">console</span>.log(entries);</div><div class="line">  &#125;</div><div class="line">);</div></pre></td></tr></table></figure>
+<p>callback函数的参数（entries）是一个数组，每个成员都是一个IntersectionObserverEntry对象。如果同时有两个被观察的对象的可见性发生变化，entries数组就会有两个成员。  </p>
+<h3 id="IntersectionObserverEntry-对象"><a href="#IntersectionObserverEntry-对象" class="headerlink" title="IntersectionObserverEntry 对象"></a>IntersectionObserverEntry 对象</h3><p>IntersectionObserverEntry对象提供目标元素的信息，一共有六个属性：  </p>
+<ul>
+<li>time：可见性发生变化的时间ms</li>
+<li>target：被观察的目标元素，是一个 DOM 节点对象</li>
+<li>rootBounds：根元素的矩形区域的信息，getBoundingClientRect()方法的返回值，如果没有根元素（即直接相对于视口滚动），则返回null</li>
+<li>boundingClientRect：目标元素的矩形区域的信息</li>
+<li>intersectionRect：目标元素与视口（或根元素）的交叉区域的信息</li>
+<li>intersectionRatio：目标元素的可见比例，即intersectionRect占boundingClientRect的比例，完全可见时为1，完全不可见时小于等于0     </li>
+</ul>
+<h3 id="options-参数"><a href="#options-参数" class="headerlink" title="options 参数"></a>options 参数</h3><p>其中，options 整个参数对象以及它的三个属性都是可选的：</p>
+<h4 id="root-属性"><a href="#root-属性" class="headerlink" title="root 属性"></a>root 属性</h4><p>IntersectionObserver API 的适用场景主要是这样的：一个可以滚动的元素，我们叫它根元素，它有很多后代元素，想要做的就是判断它的某个后代元素是否滚动进了自己的可视区域范围。这个 root 参数就是用来指定根元素的，默认值是 null。<br>如果它的值是 null，根元素就不是个真正意义上的元素了，而是这个浏览器窗口了，可以理解成 window。  </p>
+<h4 id="threshold-属性"><a href="#threshold-属性" class="headerlink" title="threshold 属性"></a>threshold 属性</h4><p>当目标元素和根元素相交时，用相交的面积除以目标元素的面积会得到一个 0 到 1（0% 到 100%）的数值：<br>IntersectionObserver API 的基本工作原理就是：当目标元素和根元素相交的面积占目标元素面积的百分比到达或跨过某些指定的临界值时就会触发回调函数。threshold 参数就是用来指定那个临界值的，默认值是 0，表示俩元素刚刚挨上就触发回调。可以指定多个临界值，用数组形式，比如 [0, 0.5, 1]，表示在两个矩形开始相交，相交一半，完全相交这三个时刻都要触发一次回调函数。  </p>
+<h4 id="rootMagin-属性"><a href="#rootMagin-属性" class="headerlink" title="rootMagin 属性"></a>rootMagin 属性</h4><p>rootMargin 可以给根元素添加一个假想的 margin，从而对真实的根元素区域进行缩放。比如当 root 为 null 时设置 rootMargin: “100px”，实际的根元素矩形四条边都会被放大 100px。</p>
+<h2 id="利用-IntersectionObserver-实现高效的图片惰性加载"><a href="#利用-IntersectionObserver-实现高效的图片惰性加载" class="headerlink" title="利用 IntersectionObserver 实现高效的图片惰性加载"></a>利用 IntersectionObserver 实现高效的图片惰性加载</h2><p>首先获取哪儿些图片需要被IntersectionObserver 观测，这里我们认为带有 <code>.lazy-load</code> 类的图片：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 获取所有要观测的图片</span></div><div class="line"><span class="keyword">const</span> images = <span class="built_in">document</span>.querySelectorAll(<span class="string">'.lazy-load'</span>);</div><div class="line"><span class="keyword">const</span> config = &#123;</div><div class="line">   <span class="comment">// 如果图像在Y轴上的50像素内，则开始下载。</span></div><div class="line">    rootMargin: <span class="string">'50px 0px'</span>,</div><div class="line">    threshold: <span class="number">0.01</span></div><div class="line">&#125;;</div><div class="line"></div><div class="line"><span class="comment">// 观察图片</span></div><div class="line"><span class="keyword">let</span> observer = <span class="keyword">new</span> IntersectionObserver(onIntersection, config);</div><div class="line">    images.forEach(<span class="function"><span class="params">image</span> =&gt;</span> &#123;</div><div class="line">        observer.observe(image);</div><div class="line">    &#125;);</div><div class="line">&#125;</div><div class="line"><span class="string">``</span><span class="string">`  </span></div><div class="line"><span class="string">之后我们在 `</span>onIntersection<span class="string">` 中处理图片加载逻辑：  </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript    </div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">onIntersection</span>(<span class="params">entries</span>) </span>&#123;</div><div class="line">    <span class="comment">// 查看所有观察的图片</span></div><div class="line">    entries.forEach(<span class="function"><span class="params">entry</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">if</span> (entry.intersectionRatio &gt; <span class="number">0</span>) &#123;</div><div class="line">            <span class="comment">// 停止观察，并加载图片</span></div><div class="line">            observer.unobserve(entry.target);</div><div class="line">            preloadImage(entry.target);</div><div class="line">        &#125;</div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这样重写后的惰性加载插件性能将大大的提升，而且逻辑也变得十分简单。  </p>
+<h2 id="浏览器支持"><a href="#浏览器支持" class="headerlink" title="浏览器支持"></a>浏览器支持</h2><p>下图为该API的支持情况：<br><img src="/2017/08/28/图片惰性加载的实现/2.png" alt="2.png" title=""><br>很遗憾safari还不支持该属性，你可以利用下面代码来简单实现降级方案：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">if</span> (!(<span class="string">'IntersectionObserver'</span> <span class="keyword">in</span> <span class="built_in">window</span>)) &#123;</div><div class="line">    <span class="comment">// 如果不支持，则立刻加载所有图片</span></div><div class="line">    <span class="built_in">Array</span>.from(images).forEach(<span class="function"><span class="params">image</span> =&gt;</span> preloadImage(image));</div><div class="line">&#125; <span class="keyword">else</span> &#123;</div><div class="line">    observer = <span class="keyword">new</span> IntersectionObserver(onIntersection, config);</div><div class="line">    images.forEach(<span class="function"><span class="params">image</span> =&gt;</span> &#123;</div><div class="line">        observer.observe(image);</div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>如果，你真的想在不支持的浏览器下体验该属性，你可以下载下面这个 polyfill。<a href="https://github.com/w3c/IntersectionObserver/tree/gh-pages/polyfill" target="_blank" rel="external">w3c/IntersectionObserver</a>  </p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/23/译-将你的网站升级为PWA/" rel="next" title="[译] 将你的网站改造为PWA">
+                <i class="fa fa-chevron-left"></i> [译] 将你的网站改造为PWA
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/02/译-使用WebSpeechAPI/" rel="prev" title="[译] 使用Web Speech API和Node.js构建简单的AI Chatbot">
+                [译] 使用Web Speech API和Node.js构建简单的AI Chatbot <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">愿归来时，仍是少年</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#关于惰性加载"><span class="nav-number">1.</span> <span class="nav-text">关于惰性加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实现方案"><span class="nav-number">2.</span> <span class="nav-text">实现方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监听-scroll-存在的性能问题"><span class="nav-number">3.</span> <span class="nav-text">监听 scroll 存在的性能问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IntersectionObserver-API"><span class="nav-number">4.</span> <span class="nav-text">IntersectionObserver API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#API"><span class="nav-number">4.1.</span> <span class="nav-text">API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#callback"><span class="nav-number">4.2.</span> <span class="nav-text">callback</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IntersectionObserverEntry-对象"><span class="nav-number">4.3.</span> <span class="nav-text">IntersectionObserverEntry 对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#options-参数"><span class="nav-number">4.4.</span> <span class="nav-text">options 参数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#root-属性"><span class="nav-number">4.4.1.</span> <span class="nav-text">root 属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#threshold-属性"><span class="nav-number">4.4.2.</span> <span class="nav-text">threshold 属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#rootMagin-属性"><span class="nav-number">4.4.3.</span> <span class="nav-text">rootMagin 属性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#利用-IntersectionObserver-实现高效的图片惰性加载"><span class="nav-number">5.</span> <span class="nav-text">利用 IntersectionObserver 实现高效的图片惰性加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#浏览器支持"><span class="nav-number">6.</span> <span class="nav-text">浏览器支持</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>

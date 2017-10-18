@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="javascript,前端源码解析,Riot.js," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="Simple and elegant component-based UI library (Riot.js)      riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了">
+<meta name="keywords" content="javascript,前端源码解析,Riot.js">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Riot.js 源码解析 【一】 基础内容">
+<meta property="og:url" content="http://yoursite.com/2017/09/21/riot-js-源码解析1/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="Simple and elegant component-based UI library (Riot.js)      riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2017/09/21/riot-js-源码解析1/a.png">
+<meta property="og:image" content="http://yoursite.com/2017/09/21/riot-js-源码解析1/b.png">
+<meta property="og:updated_time" content="2017-09-27T06:26:10.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Riot.js 源码解析 【一】 基础内容">
+<meta name="twitter:description" content="Simple and elegant component-based UI library (Riot.js)      riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了">
+<meta name="twitter:image" content="http://yoursite.com/2017/09/21/riot-js-源码解析1/a.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/09/21/riot-js-源码解析1/"/>
+
+
+
+
+
+  <title>Riot.js 源码解析 【一】 基础内容 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">愿归来时，仍是少年</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/21/riot-js-源码解析1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Riot.js 源码解析 【一】 基础内容</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-21T22:36:37+08:00">
+                2017-09-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/前端源码解析/" itemprop="url" rel="index">
+                    <span itemprop="name">前端源码解析</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <blockquote>
+<p>Simple and elegant component-based UI library (Riot.js)    </p>
+</blockquote>
+<p>riot.js 是一个简单优雅的 js UI框架。具有自定义标签，简单语法，API简单，体积小，学习成本低等特点。riot.js 使用Model-View-Presenter (MVP)设计模式来组织代码，这样它能够更模块化、更具可测试性且易于理解。riot.js 仅仅提供了帮助UI渲染相关的基础功能，并不具备其它复杂的功能，因此其体积很小，压缩后仅有 10.39KB (react.min.js 大约 47.6KB )，很适合组件类的业务开发。<br>目前今日头条PC站，百度Hi的JS组件部分都是基于riot.js来开发的。<br>本系列文章，将会在介绍 riot.js 的使用方法的同时，解析其对应的源码内容。<br><a id="more"></a></p>
+<h1 id="Hello-world"><a href="#Hello-world" class="headerlink" title="Hello world"></a>Hello world</h1><p>来一个简单的例子，基于 webpack 构建，依赖 riotjs-loader。<br>自定义标签代码，content-demo.tag   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> riot <span class="keyword">from</span> <span class="string">'riot'</span>;</div><div class="line">&lt;content-demo&gt; </div><div class="line">    &lt;style&gt;</div><div class="line">        h1 &#123;</div><div class="line">            color: pink;</div><div class="line">        &#125;</div><div class="line">    &lt;<span class="regexp">/style&gt;</span></div><div class="line"><span class="regexp">    &lt;h1&gt;&#123; message &#125;&lt;/</span>h1&gt;</div><div class="line">    &lt;ul&gt;</div><div class="line">        &lt;li each=&#123; lists &#125;&gt;&#123; name &#125;&lt;<span class="regexp">/li&gt;</span></div><div class="line"><span class="regexp">        &lt;script&gt;</span></div><div class="line"><span class="regexp">            this.message = 'hello world';</span></div><div class="line"><span class="regexp">            this.lists = [</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'caelumtian'</span></div><div class="line"><span class="regexp">                &#125;,</span></div><div class="line"><span class="regexp">                &#123;</span></div><div class="line"><span class="regexp">                    'name': 'hyang'</span></div><div class="line"><span class="regexp">                &#125;</span></div><div class="line"><span class="regexp">            ]</span></div><div class="line"><span class="regexp">        &lt;/</span>script&gt;</div><div class="line">    &lt;<span class="regexp">/ul&gt;</span></div><div class="line"><span class="regexp">&lt;/</span>content-demo&gt;</div></pre></td></tr></table></figure>
+<p>html 页面代码如下：  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">content-demo</span>&gt;</span><span class="tag">&lt;/<span class="name">content-demo</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"./dist/bundle.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>webpack 入口js文件    </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> riot <span class="keyword">from</span> <span class="string">'riot'</span>;</div><div class="line"><span class="keyword">import</span> <span class="string">'./tags/content-demo.tag'</span>;</div><div class="line">riot.mount(<span class="string">'*'</span>);</div></pre></td></tr></table></figure>
+<p>总体来说，riot.js 采用自定义标签的方式来书写UI组件，组件的生命周期仅有 update,updated,mount,unmount 四个。我们通过调用 riot.mount() 函数来决定页面加载哪些组件。  </p>
+<h1 id="riot-js-运行流程"><a href="#riot-js-运行流程" class="headerlink" title="riot.js 运行流程"></a>riot.js 运行流程</h1><p>在上述 demo 中，我们将 <code>&lt;content-demo&gt;</code> 自定义标签写在了 *.tag 格式的文件中，作为一个组件。然后 webpack 打包时会利用 riot-compiler(官方编译工具)，将其编译成 js 代码 riot.tag2()，然后将其内容注册在<code>__TAG_IMPL</code>变量中。 最后用户调用 <code>riot.mount()</code> 函数来指定渲染哪个组件。运行流程，如下图所示：    </p>
+<img src="/2017/09/21/riot-js-源码解析1/a.png" alt="a.png" title="">  
+<h2 id="自定义标签命名"><a href="#自定义标签命名" class="headerlink" title="自定义标签命名"></a>自定义标签命名</h2><p>riot.js 对自定义标签的书写本身没有任何要求，但是 HTML5 引入了对自定义元素的标准 - <a href="https://w3c.github.io/webcomponents/spec/custom/#custom-elements" target="_blank" rel="external">Custom Elements 标准</a>。标准中对自定义元素名称有了限制：  </p>
+<blockquote>
+<p>“自定义元素的名字必须包含一个破折号（-）所以 <code>&lt;x-tags&gt;</code>、<code>&lt;my-element&gt;</code>和<code>&lt;my-awesome-app&gt;</code>都是正确的名字，而<tabs>和<foo_bar>是不正确的。这样的限制使得 HTML 解析器可以分辨那些是标准元素，哪些是自定义元素。”   </foo_bar></tabs></p>
+</blockquote>
+<p>距离来说，如果你的标签名称不带有破折号，那么浏览器会认为自定义元素是 <code>HTMLUnKnownElement</code>，如图所示：  </p>
+<img src="/2017/09/21/riot-js-源码解析1/b.png" alt="b.png" title="">    
+<p>所以，这里推荐在使用 riot.js 自定义标签的时候，遵守带有破折号的命名方式。  </p>
+<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>编译阶段的主要工作就是将riot语法写的<code>.tag</code>文件转换为可执行的.js文件，这部分主要靠编译器来完成。例子中，content-demo 最终会被编译成如下js代码：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">riot.tag2(<span class="string">'content-demo'</span>, <span class="string">'&lt;h1&gt;&#123;message&#125;&lt;/h1&gt; &lt;ul&gt; &lt;li each="&#123;lists&#125;"&gt;&#123;name&#125;&lt;/li&gt; &lt;/ul&gt;'</span>, <span class="string">'content-demo h1,[data-is="content-demo"] h1&#123; color: pink; &#125;'</span>, <span class="string">''</span>, <span class="function"><span class="keyword">function</span> (<span class="params">opts</span>) </span>&#123;</div><div class="line">	<span class="keyword">this</span>.message = <span class="string">'hello world'</span>;</div><div class="line">	<span class="keyword">this</span>.lists = [&#123;</div><div class="line">	    <span class="string">'name'</span>: <span class="string">'caelumtian'</span></div><div class="line">	&#125;, &#123;</div><div class="line">	    <span class="string">'name'</span>: <span class="string">'hyang'</span></div><div class="line">	&#125;];</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>riot.tag2 函数在 riot.js 源码中的 core.js 文件中，代码如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">tag2</span>(<span class="params">name, tmpl, css, attrs, fn</span>) </span>&#123;</div><div class="line">    <span class="keyword">if</span> (css) styleManager.add(css, name)</div><div class="line">    <span class="comment">// tags implementation cache 标签接口缓存</span></div><div class="line">    __TAG_IMPL[name] = &#123;</div><div class="line">        name,</div><div class="line">        tmpl,</div><div class="line">        attrs,</div><div class="line">        fn</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> name</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>参数含义如下：  </p>
+<ul>
+<li>name: riot 自定义标签的名称</li>
+<li>tmpl: 标签的html内容</li>
+<li>css: <code>&lt;style&gt;</code> 标签中的内容</li>
+<li>attrs: riot 自定义标签的属性</li>
+<li>fn: 用户自定义函数,即 <code>&lt;script&gt;</code> 标签中的内容  </li>
+</ul>
+<p><code>riot.tag2()</code> 函数将 riot tag 注册到了 <code>__TAG_IMP</code> 对象中，方便之后的使用，css部分则被添加到了 <code>byName</code> 变量中，用于之后统一添加到页面中。在源代码中，还有一个 <code>riot.tag()</code>函数，这个函数用于直接直接创建一个 riot tag 实例的接口，而 <code>riot.tag2()</code> 是暴露给编辑器的接口，本质上功能是一样的。</p>
+<h2 id="加载-riot-mount"><a href="#加载-riot-mount" class="headerlink" title="加载 riot.mount()"></a>加载 riot.mount()</h2><p>组件被注册号以后，并没有被渲染，直到我们调用 <code>riot.mount()</code> 函数后，相应的组件才会渲染到页面上。riot.mount 主要用法如下：  </p>
+<ul>
+<li>riot.mount(‘*’, [opts]): 将注册好的所有 riot tag 都渲染到页面上</li>
+<li>riot.mount(customTagSelector, [opts]): 根据标签选择器，渲染指定的 riot tag。 例如：上述示例中，我们也可以这样写 riot.mount(‘content-demo’)。  </li>
+<li>riot.mount(selector, tagName, [opts]): 将 riot tag 渲染到指定的节点中。例如： riot.mount(“div#main”, “content-demo”, api)   将 <code>&lt;my-tag&gt;</code>挂载到 <code>div#main</code> 内。  </li>
+</ul>
+<p>这里面的 opts 为可选参数，是用户设置的标签的其他属性内容。这里就不过多介绍了，之后的文章会有解释。下面为 riot.mount 注释过的源码：      </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">mount</span>(<span class="params">selector, tagName, opts</span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> tags = []</div><div class="line">    <span class="keyword">let</span> elem, allTags</div><div class="line">    <span class="comment">// root &#123;HTMLElement&#125; riot-tag 标签节点</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">pushTagsTo</span>(<span class="params">root</span>) </span>&#123;</div><div class="line">        <span class="keyword">if</span> (root.tagName) &#123;</div><div class="line">            <span class="keyword">let</span> riotTag = getAttr(root, IS_DIRECTIVE),    <span class="comment">// 要么 data-is 要么 root.tagName 本身</span></div><div class="line">                tag</div><div class="line">            <span class="comment">// ① 设置 data-is 属性指向</span></div><div class="line">            <span class="keyword">if</span> (tagName &amp;&amp; riotTag !== tagName) &#123;</div><div class="line">                riotTag = tagName</div><div class="line">                setAttr(root, IS_DIRECTIVE, tagName)</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// ② mountTo 创建一个新的 riot tag 实例</span></div><div class="line">            tag = mountTo(root, riotTag || root.tagName.toLowerCase(), opts)</div><div class="line">            <span class="keyword">if</span> (tag)</div><div class="line">                tags.push(tag)</div><div class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (root.length)</div><div class="line">            each(root, pushTagsTo)</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// DOM 注入 style 标签</span></div><div class="line">    styleManager.inject()</div><div class="line">    <span class="keyword">if</span> (isObject(tagName)) &#123;</div><div class="line">        opts = tagName</div><div class="line">        tagName = <span class="number">0</span></div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (isString(selector)) &#123;</div><div class="line">        selector = selector === <span class="string">'*'</span> ?</div><div class="line">            allTags = selectTags() :</div><div class="line">            selector + selectTags(selector.split(<span class="regexp">/, */</span>))</div><div class="line">        <span class="comment">// ③ 利用 $$ 来判断 这些 tag 是否已经挂载在 html 上面</span></div><div class="line">        elem = selector ? $$(selector) : []</div><div class="line">    &#125; <span class="keyword">else</span></div><div class="line">        elem = selector</div><div class="line">    <span class="comment">// 将所有元素挂载在根元素中</span></div><div class="line">    <span class="keyword">if</span> (tagName === <span class="string">'*'</span>) &#123;</div><div class="line">        tagName = allTags || selectTags()</div><div class="line">        <span class="keyword">if</span> (elem.tagName)</div><div class="line">            <span class="comment">// 查找elem下的 tagName</span></div><div class="line">            elem = $$(tagName, elem)</div><div class="line">        <span class="keyword">else</span> &#123;</div><div class="line">            <span class="comment">// 将查找到的所有节点都 放入 nodeList中</span></div><div class="line">            <span class="keyword">var</span> nodeList = []</div><div class="line">            each(elem, _el =&gt; nodeList.push($$(tagName, _el)))</div><div class="line">            elem = nodeList</div><div class="line">        &#125;</div><div class="line">        tagName = <span class="number">0</span></div><div class="line">    &#125;</div><div class="line">    pushTagsTo(elem)</div><div class="line">    <span class="keyword">return</span> tags</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>当调用 riot.mount 后，通过 selector 参数来查找 html 页面上对应的节点。<code>不在 html 上的节点是不会被渲染的</code>。③处代码为查找过程，其中$$为 <code>document.querySelectAll</code>。之后调用 pushTagsTo 函数来渲染 riot tag。<br><code>IS_DIRECTIVE = &#39;data-is&#39;</code> 渲染前，要检查是否含有 tagName 参数，如果有的话即为 上述 riot.mount 的第三个用法。此时需要检测 root 的 data-is 属性值是否和 tagName 相等，如①处。不相等则将 root 设置其 data-is 为 tagName。即 riot.mount(‘div#main’, ‘content-demo’) 渲染出的节点为 :  </p>
+<blockquote>
+<p><code>&lt;div id=&quot;main&quot; data-is=&quot;content-demo&quot;&gt;&lt;content-demo&gt;...&lt;/content-demo&gt;&lt;/div&gt;</code> </p>
+</blockquote>
+<p>最后，通过 mountTo 函数渲染处理好的 riot tag，如②处。mountTo 函数后续会有详解。  </p>
+<blockquote>
+<p>代码中使用了 tagName 而不是 nodeName 原因如下：nodeName是node 接口上的property，而tagName是element 接口上的property，所有的节点（元素节点，属性节点，文本节点等12种）都继承了node接口，而只有元素节点才继承了element节点。  </p>
+</blockquote>
+<h2 id="取消注册-riot-unregister"><a href="#取消注册-riot-unregister" class="headerlink" title="取消注册 riot.unregister()"></a>取消注册 riot.unregister()</h2><p>riot 全局变量上还包含 riot.unregister(name) 函数用户取消注册过的内容，通常我们在测试程序的时候，创建同名标签使用。示例如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 创建一个测试标签</span></div><div class="line">riot.tag(<span class="string">'test-tag'</span>, <span class="string">'&lt;p&gt;&#123; message &#125;&lt;/p&gt;'</span>)</div><div class="line"><span class="comment">// 注册标签</span></div><div class="line"><span class="keyword">var</span> tag = riot.mount(<span class="built_in">document</span>.createElement(<span class="string">'div'</span>), <span class="string">'test-tag'</span>)[<span class="number">0</span>]</div><div class="line">expect(tag.root.querySelector(<span class="string">'p'</span>)).to.be.ok</div><div class="line"><span class="comment">// 取消注册</span></div><div class="line">riot.unregister(<span class="string">'test-tag'</span>)</div><div class="line"><span class="comment">// 重新创建一个同名，但是不一样的标签</span></div><div class="line">riot.tag(<span class="string">'test-tag'</span>, <span class="string">'&lt;div&gt;&#123; message &#125;&lt;/div&gt;'</span>)</div></pre></td></tr></table></figure>
+<p>riot.unregister() 源码十分简单，如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">unregister</span>(<span class="params">name</span>) </span>&#123;</div><div class="line">    __TAG_IMPL[name] = <span class="literal">null</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>暴露在 riot 全局变量上的函数，还包括 <code>riot.update</code> 和 <code>riot.mixin</code> 两个，将在后面的内容介绍。  </p>
+<h1 id="源码目录结构"><a href="#源码目录结构" class="headerlink" title="源码目录结构"></a>源码目录结构</h1><p>riot 的源码目录结构如下：</p>
+<pre><code>|____browser
+| |____common
+| | |____global-variables.js // 使用到的常量
+| | |____util                    
+| | | |____check.js   // 变量类型，属性等检查
+| | | |____dom.js     // dom 操作
+| | | |____misc.js    // 用到的工具类函数
+| | | |____tags.js    // riot tag 操作      
+| |____compiler
+| | |____index.js     // riot tag 模板解析
+| |____tag
+| | |____core.js      // riot 对外暴露函数接口
+| | |____each.js      // riot tag each操作渲染
+| | |____if.js        // riot tag if操作渲染
+| | |____mkdom.js     // 创建 dom 节点
+| | |____parse.js     // riot tag 解析
+| | |____ref.js       // riot tag ref
+| | |____setEventHandler.js  // riot tag 事件绑定
+| | |____styleManager.js     // 样式管理
+| | |____tag.js              // riot tag 标签类
+|___|____update.js           // riot tag 更新操作
+</code></pre><p>本文涉及到的源码，主要出自 <code>core.js</code> 和 <code>styleManager.js</code>。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+            <a href="/tags/前端源码解析/" rel="tag">前端源码解析</a>
+          
+            <a href="/tags/Riot-js/" rel="tag">Riot.js</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/09/02/译-使用WebSpeechAPI/" rel="next" title="[译] 使用Web Speech API和Node.js构建简单的AI Chatbot">
+                <i class="fa fa-chevron-left"></i> [译] 使用Web Speech API和Node.js构建简单的AI Chatbot
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/09/28/js增量更新算法研究/" rel="prev" title="">
+                 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">愿归来时，仍是少年</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Hello-world"><span class="nav-number">1.</span> <span class="nav-text">Hello world</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#riot-js-运行流程"><span class="nav-number">2.</span> <span class="nav-text">riot.js 运行流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#自定义标签命名"><span class="nav-number">2.1.</span> <span class="nav-text">自定义标签命名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译"><span class="nav-number">2.2.</span> <span class="nav-text">编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#加载-riot-mount"><span class="nav-number">2.3.</span> <span class="nav-text">加载 riot.mount()</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#取消注册-riot-unregister"><span class="nav-number">2.4.</span> <span class="nav-text">取消注册 riot.unregister()</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#源码目录结构"><span class="nav-number">3.</span> <span class="nav-text">源码目录结构</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>
