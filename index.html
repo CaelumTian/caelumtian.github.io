@@ -370,8 +370,7 @@
 
       
         
-          
-            <h1 id="riot-组件"><a href="#riot-组件" class="headerlink" title="riot 组件"></a>riot 组件</h1><p>使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见<a href="">Riot.js 源码解析 【一】 基础内容</a>)。  </p>
+          <h1 id="riot-组件"><a href="#riot-组件" class="headerlink" title="riot 组件"></a>riot 组件</h1><p>使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见<a href="">Riot.js 源码解析 【一】 基础内容</a>)。  </p>
 <h1 id="riot-组件声明周期"><a href="#riot-组件声明周期" class="headerlink" title="riot 组件声明周期"></a>riot 组件声明周期</h1><p>riot组件状态分为以下几个部分：  </p>
 <ul>
 <li>before-mount：标签被加载之前</li>
@@ -381,17 +380,13 @@
 <li>before-unmount：标签实例被卸载之前</li>
 <li>unmount：标签实例被从页面上卸载后    </li>
 </ul>
-<p>riot.js 采用事件驱动的方式来进行通讯，我们可以采用如下函数来监听上面的事件，例如处理 update 事件：  </p>
-<pre><code class="html"><span class="tag">&lt;<span class="name">riot-demo</span>&gt;</span>
-    <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span>
-<span class="javascript">        <span class="keyword">this</span>.on(<span class="string">'update'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{</span>
-<span class="javascript">            <span class="comment">// 标签更新后的处理</span></span>
-<span class="undefined">        })</span>
-<span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>
-<span class="tag">&lt;/<span class="name">riot-demo</span>&gt;</span>
-</code></pre>
-<h2 id="mount-阶段"><a href="#mount-阶段" class="headerlink" title="mount 阶段"></a>mount 阶段</h2>
-          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/10/18/riot-js源码解析2/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -537,6 +532,132 @@
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/09/21/riot-js-源码解析1/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/09/18/js增量更新算法研究/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2017/09/18/js增量更新算法研究/" itemprop="url">js增量更新算法研究</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-18T11:42:55+08:00">
+                2017-09-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="serviceWorker-方案-js增量更新算法研究"><a href="#serviceWorker-方案-js增量更新算法研究" class="headerlink" title="serviceWorker 方案 - js增量更新算法研究"></a>serviceWorker 方案 - js增量更新算法研究</h1><h2 id="调研背景"><a href="#调研背景" class="headerlink" title="调研背景"></a>调研背景</h2><blockquote>
+<p>根据之前 serviceWorker 的调研，当服务端文件更新后，serviceWorker 会做对比，并请求这些新的文件。所有发生变化的文件都会被更新。现在 new-mini 内嵌页面，js 都被压缩成了一个文件。这样每次很小的文件改动，都会导致客户端需要下载整个js文件，这样会造成流量的浪费，同时也对服务器造成过大的流量压力。为此我们需要减少更新文件的体积，来更好的完成 serviceWorker 的架构。  </p>
+</blockquote>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/09/18/js增量更新算法研究/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1340,6 +1461,28 @@
           </span>
 
           
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -1368,9 +1511,14 @@
 
       
         
-          
-            
-          
+          <p>近期项目中需要开发一个兼容PC和移动端的富文本编辑器，其中包含了一些特殊的定制功能。考察了下现有的js富文本编辑器，桌面端的很多，移动端的几乎没有。桌面端以UEditor为代表。但是我们并不打算考虑兼容性，所以没有必要采用UEditor这么重的插件。为此决定自研一个富文本编辑器。本文，主要介绍如何实现富文本编辑器，和解决一些不同浏览器和设备之间的bug。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/08/21/利用javascript搭建富文本编辑器/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1523,152 +1671,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/08/23/移动端交互手势详解与实现/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="CaelumTian">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="CaelumTian的博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2016/08/23/移动端交互手势详解与实现/" itemprop="url">移动端交互手势详解与实现</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2016-08-23T19:09:51+08:00">
-                2016-08-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/移动开发/" itemprop="url" rel="index">
-                    <span itemprop="name">移动开发</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="一丶概述"><a href="#一丶概述" class="headerlink" title="一丶概述"></a>一丶概述</h2><p>如今移动端设备大行其道，前端也走进了移动的领域。在写移动端页面的交互效果的时候，我么难免要接触一些复杂的手势，而不仅仅像pc端那样简单的鼠标事件。手势实际上是一种输入模式。我们现在在直观意义上理解的人机交互是指人与机器之间的互动方式，这种互动方式经历了鼠标、物理硬件、屏幕触控、远距离的体感操作的逐步发展的过程。<br>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2016/08/23/移动端交互手势详解与实现/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1719,7 +1721,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1741,7 +1743,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">9</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>

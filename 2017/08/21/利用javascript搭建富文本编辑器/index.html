@@ -80,7 +80,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="CaelumTian的个人博客" />
+  <meta name="keywords" content="javascript,富文本编辑器," />
 
 
 
@@ -98,18 +98,28 @@
 
 
 
-<meta name="description" content="愿归来时，仍是少年">
-<meta name="keywords" content="CaelumTian 的博客">
+<meta name="description" content="近期项目中需要开发一个兼容PC和移动端的富文本编辑器，其中包含了一些特殊的定制功能。考察了下现有的js富文本编辑器，桌面端的很多，移动端的几乎没有。桌面端以UEditor为代表。但是我们并不打算考虑兼容性，所以没有必要采用UEditor这么重的插件。为此决定自研一个富文本编辑器。本文，主要介绍如何实现富文本编辑器，和解决一些不同浏览器和设备之间的bug。">
+<meta name="keywords" content="javascript,富文本编辑器">
 <meta property="og:type" content="article">
 <meta property="og:title" content="利用javascript搭建富文本编辑器">
 <meta property="og:url" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/index.html">
 <meta property="og:site_name" content="CaelumTian的博客">
-<meta property="og:description" content="愿归来时，仍是少年">
+<meta property="og:description" content="近期项目中需要开发一个兼容PC和移动端的富文本编辑器，其中包含了一些特殊的定制功能。考察了下现有的js富文本编辑器，桌面端的很多，移动端的几乎没有。桌面端以UEditor为代表。但是我们并不打算考虑兼容性，所以没有必要采用UEditor这么重的插件。为此决定自研一个富文本编辑器。本文，主要介绍如何实现富文本编辑器，和解决一些不同浏览器和设备之间的bug。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-08-21T11:37:32.000Z">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/a.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/b.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/c.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/d.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/e.gif">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/f.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/g.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/h.png">
+<meta property="og:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/i.gif">
+<meta property="og:updated_time" content="2017-10-30T12:34:20.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="利用javascript搭建富文本编辑器">
-<meta name="twitter:description" content="愿归来时，仍是少年">
+<meta name="twitter:description" content="近期项目中需要开发一个兼容PC和移动端的富文本编辑器，其中包含了一些特殊的定制功能。考察了下现有的js富文本编辑器，桌面端的很多，移动端的几乎没有。桌面端以UEditor为代表。但是我们并不打算考虑兼容性，所以没有必要采用UEditor这么重的插件。为此决定自研一个富文本编辑器。本文，主要介绍如何实现富文本编辑器，和解决一些不同浏览器和设备之间的bug。">
+<meta name="twitter:image" content="http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/a.png">
 
 
 
@@ -317,6 +327,28 @@
           </span>
 
           
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -344,7 +376,120 @@
       
 
       
-        
+        <p>近期项目中需要开发一个兼容PC和移动端的富文本编辑器，其中包含了一些特殊的定制功能。考察了下现有的js富文本编辑器，桌面端的很多，移动端的几乎没有。桌面端以UEditor为代表。但是我们并不打算考虑兼容性，所以没有必要采用UEditor这么重的插件。为此决定自研一个富文本编辑器。本文，主要介绍如何实现富文本编辑器，和解决一些不同浏览器和设备之间的bug。<br><a id="more"></a></p>
+<h1 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a>准备阶段</h1><p>在现代浏览器中已经为我们准备好了许多API来让 html 支持富文本编辑功能，我们没有必要自己完成全部内容。  </p>
+<h2 id="contenteditable-”true”"><a href="#contenteditable-”true”" class="headerlink" title="contenteditable=”true”"></a>contenteditable=”true”</h2><p>首先我们需要让一个 <code>div</code> 成为可编辑状态，加入<code>contenteditable=&quot;true&quot;</code> 属性即可。  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">contenteditable</span>=<span class="string">"true"</span> <span class="attr">id</span>=<span class="string">"rich-editor"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>在这样的 <code>&lt;div&gt;</code> 中插入任何节点都将默认是可编辑状态的。如果想插入不可编辑的节点，我们就需要指定插入节点的属性为 <code>contenteditable=&quot;false&quot;</code>。  </p>
+<h2 id="光标操作"><a href="#光标操作" class="headerlink" title="光标操作"></a>光标操作</h2><p>作为富文本编辑器，开发者需要有能力控制光标的各种状态信息，位置信息等。浏览器提供了 <code>selection</code> 对象和 <code>range</code> 对象来操作光标。    </p>
+<h3 id="selection-对象"><a href="#selection-对象" class="headerlink" title="selection 对象"></a>selection 对象</h3><p>Selection对象表示用户选择的文本范围或插入符号的当前位置。它代表页面中的文本选区，可能横跨多个元素。文本选区由用户拖拽鼠标经过文字而产生。<br>获得一个 selection 对象  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> selection = <span class="built_in">window</span>.getSelection();</div></pre></td></tr></table></figure>
+<p>通常情况下我们不会直接操作 <code>selection</code> 对象，而是需要操作用 <code>seleciton</code> 对象所对应的用户选择的 <code>ranges</code> (区域)，俗称”拖蓝“。获取方式如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> range = selection.getRangeAt(<span class="number">0</span>);</div></pre></td></tr></table></figure>
+<p>由于浏览器当前可能存在多个文本选取，所以 <code>getRangeAt</code> 函数接受一个索引值。在富文本编辑其中，我们不考虑多选取的可能性。  </p>
+<p>selection 对象还有两个重要的方法， <code>addRange</code> 和 <code>removeAllRanges</code>。分别用于向当前选取添加一个 range 对象和 删除所有 range 对象。之后你会看到他们的用途。  </p>
+<h3 id="range-对象"><a href="#range-对象" class="headerlink" title="range 对象"></a>range 对象</h3><p>通过 selection 对象获得的 range 对象才是我们操作光标的重点。Range表示包含节点和部分文本节点的文档片段。初见 range 对象你有可能会感到陌生又熟悉，在哪儿看见过呢？作为一个前端工程师，想必你一定拜读过《javascript 高级程序设计第三版》 这本书。在第12.4节，作者为我们介绍了 DOM2 级提供的 range 接口，用来更好的控制页面。反正我当时看的一脸？？？？这个有啥用，也没有这种需求啊。这里我们就大量的用到这个对象。对于下面节点：  </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">contenteditable</span>=<span class="string">"true"</span> <span class="attr">id</span>=<span class="string">"rich-editor"</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">p</span>&gt;</span>百度EUX团队<span class="tag">&lt;/<span class="name">p</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></div></pre></td></tr></table></figure>
+<p>光标位置如图所示：<br><img src="/2017/08/21/利用javascript搭建富文本编辑器/a.png" alt="a.png" title=""><br>打印出此时的 range 对象：<br><img src="/2017/08/21/利用javascript搭建富文本编辑器/b.png" alt="b.png" title="">   </p>
+<p>其中属性含义如下：  </p>
+<ul>
+<li>startContainer: range 范围的起始节点。</li>
+<li>endContainer: range 范围的结束节点</li>
+<li>startOffset: range 起点位置的偏移量。</li>
+<li>endOffset: range 终点位置的偏移量。</li>
+<li>commonAncestorContainer: 返回包含 startContainer 和 endContainer 的最深的节点。  </li>
+<li>collapsed: 返回一个用于判断 Range 起始位置和终止位置是否相同的布尔值。  </li>
+</ul>
+<p>这里我们的 startContainer , endContainer, commonAncestorContainer都为 <code>#text</code> 文本节点 ‘百度EUX团队’。因为光标在‘度‘字后面，所以startOffset 和 endOffset 均为 2。且没有产生拖蓝，所以 collapsed 的值为 true。我们再看一个产生拖蓝的例子：  </p>
+<p>光标位置如图所示：<br><img src="/2017/08/21/利用javascript搭建富文本编辑器/c.png" alt="c.png" title=""><br>打印出此时的 range 对象：<br><img src="/2017/08/21/利用javascript搭建富文本编辑器/d.png" alt="d.png" title="">   </p>
+<p>由于产生了拖蓝 startContainer 和 endContainer 不再一致，collapsed 的值变为了 false。startOffset 和 endOffset 正好代表了拖蓝的起终位置。更多的效果大家自己尝试吧。  </p>
+<p>操作一个 range 节点，主要有如下方法：  </p>
+<ul>
+<li>setStart(): 设置 Range 的起点</li>
+<li>setEnd(): 设置 Range 的终点 </li>
+<li>selectNode(): 设定一个包含节点和节点内容的 Range  </li>
+<li>collapse(): 向指定端点折叠该 Range</li>
+<li>insertNode(): 在 Range 的起点处插入节点。</li>
+<li>cloneRange(): 返回拥有和原 Range 相同端点的克隆 Range 对象  </li>
+</ul>
+<p>富文本编辑里面常用的就这么多，还有很多方法就不列举了。  </p>
+<h4 id="修改光标位置"><a href="#修改光标位置" class="headerlink" title="修改光标位置"></a>修改光标位置</h4><p>我们可以通过调用 <code>setStart()</code> 和 <code>setEnd()</code> 方法，来修改一个光标的位置或拖蓝范围。这两个方法接受的参数为各自的起终节点和偏移量。例如我想让光标位置到”百度EUX团队”最末尾，那么可以采用如下方法：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> range = <span class="built_in">window</span>.getSelection().getRangeAt(<span class="number">0</span>),</div><div class="line">    textEle = range.commonAncestorContainer;</div><div class="line">range.setStart(range.startContainer, textEle.length);</div><div class="line">range.setEnd(range.endContainer, textEle.length);</div></pre></td></tr></table></figure>
+<p>我们加入一个定时器来查看效果： </p>
+<img src="/2017/08/21/利用javascript搭建富文本编辑器/e.gif" alt="e.gif" title="">  
+<p>然而这种方式有个局限性，就是当光标所在的节点如果发生了变动。比如被替换或者加入新的节点了，那么再用这种方式就不会有任何效果。为此我们有时候需要一种强制更改光标位置手段, 简要代码如下(实际中你有可能还需要考虑自闭和元素等内容)：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">resetRange</span>(<span class="params">startContainer, startOffset, endContainer, endOffset</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> selection = <span class="built_in">window</span>.getSelection();</div><div class="line">        selection.removeAllRanges();</div><div class="line">    <span class="keyword">let</span> range = <span class="built_in">document</span>.createRange();</div><div class="line">    range.setStart(startContainer, startOffset);</div><div class="line">    range.setEnd(endContainer, endOffset);</div><div class="line">    selection.addRange(range);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们通过重新创造一个 range 对象并且删除原有的 ranges 来保证光标一定会变动到我们想要的位置。 </p>
+<h2 id="修改文本格式"><a href="#修改文本格式" class="headerlink" title="修改文本格式"></a>修改文本格式</h2><p>实现富文本编辑器，我们就要能够有修改文档格式的能力，比如加粗，斜体，文本颜色，列表等内容。DOM 为可编辑区提供了 <code>document.execCommand</code> 方法，该方法允许运行命令来操纵可编辑区域的内容。大多数命令影响文档的选择（粗体，斜体等），而其他命令插入新元素（添加链接）或影响整行（缩进）。当使用 contentEditable时，调用 execCommand() 将影响当前活动的可编辑元素。语法如下：  </p>
+<blockquote>
+<p>bool = document.execCommand(aCommandName, aShowDefaultUI, aValueArgument)  </p>
+</blockquote>
+<ul>
+<li>aCommandName: 一个 DOMString ，命令的名称。可用命令列表请参阅 命令 。</li>
+<li>aShowDefaultUI: 一个 Boolean， 是否展示用户界面，一般为 false。Mozilla 没有实现。</li>
+<li>aValueArgument: 一些命令（例如insertImage）需要额外的参数（insertImage需要提供插入image的url），默认为null。  </li>
+</ul>
+<p>总之浏览器能把大部分我们想到的富文本编辑器需要的功能都实现了，这里我就不一一演示了。感兴趣的同学可以查看 <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Document/execCommand" target="_blank" rel="external">MDN - document.execCommand</a>。  </p>
+<p>到这里，我相信你已经可以做出一个像模像样的富文本编辑器了。想想还挺激动的，但是呢，一切都没有结束，浏览器又一次坑了我们。  </p>
+<h1 id="实战开始，填坑的旅途"><a href="#实战开始，填坑的旅途" class="headerlink" title="实战开始，填坑的旅途"></a>实战开始，填坑的旅途</h1><p>就在我们都以为开发如此简单的时候，实际上手却遇到了许多坑。   </p>
+<h2 id="修正浏览器的默认效果"><a href="#修正浏览器的默认效果" class="headerlink" title="修正浏览器的默认效果"></a>修正浏览器的默认效果</h2><p>浏览器提供的富文本效果并不总是好用的，下面介绍几个遇到的问题。</p>
+<h3 id="回车换行"><a href="#回车换行" class="headerlink" title="回车换行"></a>回车换行</h3><p>当我们在编辑其中输入内容并回车换行继续输入后，可编辑框内容生成的节点和我们预期是不符的。<br><img src="/2017/08/21/利用javascript搭建富文本编辑器/f.png" alt="f.png" title=""><br><img src="/2017/08/21/利用javascript搭建富文本编辑器/g.png" alt="g.png" title=""><br>可以看到最先输入的文字没有被包裹起来，而换行产生的内容，包裹元素是 <code>&lt;div&gt;</code> 标签。为了能够让文字被 <code>&lt;p&gt;</code> 元素包裹起来。<br>我们要在初始化的时候，向<code>&lt;div contenteditable=&quot;true&quot;&gt;</code>默认插入<code>&lt;p&gt;&lt;br&gt;&lt;/p&gt;</code> 元素(<code>&lt;br&gt;</code>标签用来占位，有内容输入后会自动删除)。这样以后每次回车产生的新内容都会被<code>&lt;p&gt;</code> 元素包裹起来(在可编辑状态下，回车换行产生的新结构会默认拷贝之前的内容，包裹节点，类名等各种内容)。<br>我们还需要监听 keyUp 事件下 <code>event.keyCode === 8</code> 删除键。当编辑器中内容全被清空后(delete键也会把<code>&lt;p&gt;</code>标签删除)，要重新加入<code>&lt;p&gt;&lt;br&gt;&lt;/p&gt;</code>标签，并把光标定位在里面。   </p>
+<h3 id="插入-ul-和-ol-位置错误"><a href="#插入-ul-和-ol-位置错误" class="headerlink" title="插入 ul 和 ol 位置错误"></a>插入 ul 和 ol 位置错误</h3><p>当我们调用 <code>document.execCommand(&quot;insertUnorderedList&quot;, false, null)</code> 来插入一个列表的时候，新的列表会被插入<code>&lt;p&gt;</code>标签中。<br><img src="/2017/08/21/利用javascript搭建富文本编辑器/h.png" alt="h.png" title=""><br>为此我们需要每次调用该命令前做一次修正，参考代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">adjustList</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> lists = <span class="built_in">document</span>.querySelectorAll(<span class="string">"ol, ul"</span>);</div><div class="line">     <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; lists.length; i++) &#123;</div><div class="line">        <span class="keyword">let</span> ele = lists[i]; <span class="comment">// ol</span></div><div class="line">        <span class="keyword">let</span> parentNode = ele.parentNode;</div><div class="line">        <span class="keyword">if</span> (parentNode.tagName === <span class="string">'P'</span> &amp;&amp; parentNode.lastChild === parentNode.firstChild) &#123;</div><div class="line">                parentNode.insertAdjacentElement(<span class="string">'beforebegin'</span>, ele);</div><div class="line">                parentNode.remove()</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里有个附带的小问题，我试图在 <code>&lt;li&gt;&lt;p&gt;&lt;/p&gt;&lt;/li&gt;</code> 维护这样的编辑器结构(默认是没有<code>&lt;p&gt;</code>标签的)。效果在 chrome 下运行很好。但是在 safari 中，回车永远不会产生新的 <code>&lt;li&gt;</code> 标签，这样就是去了该有的列表效果。  </p>
+<h3 id="插入分割线"><a href="#插入分割线" class="headerlink" title="插入分割线"></a>插入分割线</h3><p>调用 <code>document.execCommand(&#39;insertHorizontalRule&#39;, false, null);</code> 会插入一个<code>&lt;hr&gt;</code>标签。然而产生的效果却是这样的：<br><img src="/2017/08/21/利用javascript搭建富文本编辑器/i.gif" alt="i.gif" title=""><br>光标和<code>&lt;hr&gt;</code>的效果一致了。为此要判断当前光标是否在 <code>&lt;li&gt;</code> 里面，如果是则在 <code>&lt;hr&gt;</code> 后面追加一个空的文本节点 <code>#text</code> 不是的话追加 <code>&lt;p&gt;&lt;br&gt;&lt;/p&gt;</code>。然后将光标定位在里面，可用如下方式查找。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment">/**</span></div><div class="line"><span class="comment"> * 查找父元素</span></div><div class="line"><span class="comment"> * @param &#123;String&#125; root </span></div><div class="line"><span class="comment"> * @param &#123;String | Array&#125; name </span></div><div class="line"><span class="comment"> */</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">findParentByTagName</span>(<span class="params">root, name</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> parent = root;</div><div class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> name === <span class="string">"string"</span>) &#123;</div><div class="line">        name = [name];</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">while</span> (name.indexOf(parent.nodeName.toLowerCase()) === <span class="number">-1</span> &amp;&amp; parent.nodeName !== <span class="string">"BODY"</span> &amp;&amp; parent.nodeName !== <span class="string">"HTML"</span>) &#123;</div><div class="line">        parent = parent.parentNode;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> parent.nodeName === <span class="string">"BODY"</span> || parent.nodeName === <span class="string">"HTML"</span> ? <span class="literal">null</span> : parent;</div><div class="line">&#125;,</div></pre></td></tr></table></figure>
+<h3 id="插入链接"><a href="#插入链接" class="headerlink" title="插入链接"></a>插入链接</h3><p>调用 <code>document.execCommand(&#39;createLink&#39;, false, url);</code> 方法我们可以插入一个 url 链接，但是该方法不支持插入指定文字的链接。同时对已经有链接的位置可以反复插入新的链接。为此我们需要重写此方法。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">insertLink</span>(<span class="params">url, title</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> selection = <span class="built_in">document</span>.getSelection(),</div><div class="line">        range = selection.getRangeAt(<span class="number">0</span>);</div><div class="line">    <span class="keyword">if</span>(range.collapsed) &#123;</div><div class="line">        <span class="keyword">let</span> start = range.startContainer,</div><div class="line">            parent = Util.findParentByTagName(start, <span class="string">'a'</span>);</div><div class="line">        <span class="keyword">if</span>(parent) &#123;</div><div class="line">            parent.setAttribute(<span class="string">'src'</span>, url);</div><div class="line">        &#125;<span class="keyword">else</span> &#123;</div><div class="line">            <span class="keyword">this</span>.insertHTML(<span class="string">`&lt;a href="<span class="subst">$&#123;url&#125;</span>"&gt;<span class="subst">$&#123;title&#125;</span>&lt;/a&gt;`</span>);</div><div class="line">        &#125;</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        <span class="built_in">document</span>.execCommand(<span class="string">'createLink'</span>, <span class="literal">false</span>, url);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="设置-h1-h6-标题"><a href="#设置-h1-h6-标题" class="headerlink" title="设置 h1 ~ h6 标题"></a>设置 h1 ~ h6 标题</h3><p>浏览器没有现成的方法，但我们可以借助 <code>document.execCommand(&#39;formatBlock&#39;, false, tag)</code>, 来实现，代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">setHeading</span>(<span class="params">heading</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> formatTag = heading,</div><div class="line">        formatBlock = <span class="built_in">document</span>.queryCommandValue(<span class="string">"formatBlock"</span>);</div><div class="line">    <span class="keyword">if</span> (formatBlock.length &gt; <span class="number">0</span> &amp;&amp; formatBlock.toLowerCase() === formatTag) &#123;</div><div class="line">        <span class="built_in">document</span>.execCommand(<span class="string">'formatBlock'</span>, <span class="literal">false</span>, <span class="string">`&lt;<span class="subst">$&#123;<span class="keyword">this</span>.defaultParagraphSeparator&#125;</span>&gt;`</span>);</div><div class="line">    &#125; <span class="keyword">else</span> &#123;</div><div class="line">        <span class="built_in">document</span>.execCommand(<span class="string">'formatBlock'</span>, <span class="literal">false</span>, <span class="string">`&lt;<span class="subst">$&#123;formatTag&#125;</span>&gt;`</span>);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="插入定制内容"><a href="#插入定制内容" class="headerlink" title="插入定制内容"></a>插入定制内容</h3><p>当编辑器上传或加载附件的时候，要插入能够展示附件的 <code>&lt;div&gt;</code> 节点卡片到编辑中。这里我们借助 <code>document.execCommand(&#39;insertHTML&#39;, false, html);</code> 来插入内容。为了防止div被编辑，要设置 <code>contenteditable=&quot;false&quot;</code>哦。</p>
+<h3 id="处理-paste-粘贴"><a href="#处理-paste-粘贴" class="headerlink" title="处理 paste 粘贴"></a>处理 paste 粘贴</h3><p>在富文本编辑器中，粘贴效果默认采用如下规则：   </p>
+<ol>
+<li>如果是带有格式的文本，则保留格式(格式会被转换成html标签的形式)</li>
+<li>粘贴图文混排的内容，图片可以显示，src 为图片真实地址。</li>
+<li>通过复制图片来进行粘贴的时候，不能粘入内容</li>
+<li>粘贴其他格式内容，不能粘入内容  </li>
+</ol>
+<p>为了能够控制粘贴的内容，我们监听 <code>paste</code> 事件。该事件的 event 对象中会包含一个 clipboardData 剪切板对象。我们可以利用该对象的 getData 方法来获得带有格式和不带格式的内容，如下。   </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> plainText = event.clipboardData.getData(<span class="string">'text/plain'</span>);  <span class="comment">// 无格式文本</span></div><div class="line"><span class="keyword">let</span> plainHTML = event.clipboardData.getData(<span class="string">'text/html'</span>);   <span class="comment">// 有格式文本</span></div></pre></td></tr></table></figure>
+<p>之后调用 <code>document.execCommand(&#39;insertText&#39;, false, plainText);</code> 或 <code>document.execCommand(&#39;insertHTML&#39;, false, plainHTML;</code> 来重写编辑上的paste效果。</p>
+<p>然而对于规则 3 ，上述方案就无法处理了。这里我们要引入 <code>event.clipboardData.items</code> 。这是一个数组包含了所有剪切板中的内容对象。比如你复制了一张图片来粘贴，那么 <code>event.clipboardData.items</code> 的长度就为2：<br><code>items[0]</code> 为图片的名称，items[0].kind 为 ‘string’, items[0].type 为 ‘text/plain’ 或 ‘text/html’。获取内容方式如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">items[<span class="number">0</span>].getAsString(<span class="function"><span class="params">str</span> =&gt;</span> &#123;</div><div class="line">    <span class="comment">// 处理 str 即可</span></div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p><code>items[1]</code> 为图片的二进制数据，items[1].kind 为’file’， items[1].type 为图片的格式。想要获取里面的内容，我们就需要创建 <code>FileReader</code> 对象了。示例代码如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> file = items[<span class="number">1</span>].getAsFile();</div><div class="line"><span class="comment">// file.size 为文件大小</span></div><div class="line"><span class="keyword">let</span> reader = <span class="keyword">new</span> FileReader();</div><div class="line">reader.onload = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="comment">// reader.result 为文件内容，就可以做上传操作了</span></div><div class="line">&#125;</div><div class="line"><span class="keyword">if</span>(<span class="regexp">/image/</span>.test(item.type)) &#123;</div><div class="line">    reader.readAsDataURL(file);   <span class="comment">// 读取为 base64 格式</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>处理完图片，那么对于复制粘贴其他格式内容会怎么样呢？在 mac 中，如果你复制一个磁盘文件，event.clipboardData.items 的长度为 2。 items[0] 依然为文件名，然而 items[1] 则为图片了，没错，是文件的缩略图。  </p>
+<h3 id="输入法处理"><a href="#输入法处理" class="headerlink" title="输入法处理"></a>输入法处理</h3><p>当使用输入发的时候，有时候会发生一些意想不到的事情。 比如百度输入法可以输入一张本地图片，为此我们需要监听输入法产生的内容做处理。这里通过如下两个事件处理： </p>
+<ul>
+<li>compositionstart: 当浏览器有非直接的文字输入时, compositionstart事件会以同步模式触发</li>
+<li>compositionend: 当浏览器是直接的文字输入时, compositionend会以同步模式触发</li>
+</ul>
+<h2 id="修复移动端的问题"><a href="#修复移动端的问题" class="headerlink" title="修复移动端的问题"></a>修复移动端的问题</h2><p>在移动端，富文本编辑器的问题主要集中在光标和键盘上面。我这里介绍几个比较大的坑。  </p>
+<h3 id="自动获取焦点"><a href="#自动获取焦点" class="headerlink" title="自动获取焦点"></a>自动获取焦点</h3><p>如果想让我们的编辑器自动获得焦点，弹出软键盘，可以利用 <code>focus()</code> 方法。然而在 ios 下，死活没有结果。这主要是因为 ios safari 中，为了安全考虑不允许代码获得焦点。只能通过用户交互点击才可以。还好，这一限制可以去除： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[self.appWebView setKeyboardDisplayRequiresUserAction:NO]</div></pre></td></tr></table></figure>
+<h3 id="iOS-下回车换行，滚动条不会自动滚动"><a href="#iOS-下回车换行，滚动条不会自动滚动" class="headerlink" title="iOS 下回车换行，滚动条不会自动滚动"></a>iOS 下回车换行，滚动条不会自动滚动</h3><p>在 iOS 下，当我们回车换行的时候，滚动条并不会随着滚动下去。这样光标就可能被键盘挡住，体验不好。为了解决这一问题，我们就需要监听 <code>selectionchange</code> 事件，触发时，计算每次光标编辑器顶端距离，之后再调用 window.scroll() 即可解决。问题在于我们要如何计算当前光标的位置，如果仅是计算光标所在父元素的位置很有可能出现偏差(多行文本计算不准)。我们可以通过创建一个临时 <code>&lt;span&gt;</code> 元素查到光标位置，计算<code>&lt;span&gt;</code>元素的位置即可。代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">getCaretYPosition</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> sel = <span class="built_in">window</span>.getSelection(),</div><div class="line">        range = sel.getRangeAt(<span class="number">0</span>);</div><div class="line">    <span class="keyword">let</span> span = <span class="built_in">document</span>.createElement(<span class="string">'span'</span>);</div><div class="line">    range.collapse(<span class="literal">false</span>);</div><div class="line">    range.insertNode(span);</div><div class="line">    <span class="keyword">var</span> topPosition = span.offsetTop;</div><div class="line">    span.parentNode.removeChild(span);</div><div class="line">    <span class="keyword">return</span> topPosition;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>正当我开心的时候，安卓端反应，编辑器越编辑越卡。什么鬼？我在 chrome 上线检查了一下，发现 <code>selectionchange</code> 函数一直在运行，不管有没有操作。<br>在逐一排查的时候发现了这么一个事实。<code>range.insertNode</code> 函数同样触发 <code>selectionchange</code> 事件。这样就形成了一个死循环。这个死循环在 safari 中就不会产生，只出现在 safari 中，为此我们就需要加上浏览器类型判断了。  </p>
+<h3 id="键盘弹起遮挡输入部分"><a href="#键盘弹起遮挡输入部分" class="headerlink" title="键盘弹起遮挡输入部分"></a>键盘弹起遮挡输入部分</h3><p>网上对于这个问题主要的方案就是，设置定时器。局限与前端，确实只能这采用这样笨笨的解决。最后我们让 iOS 同学在键盘弹出的时候，将 webview 高度减去软键盘高度就解决了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">CGFloat webviewY = 64.0 + self.noteSourceView.height;</div><div class="line">self.appWebView.frame = CGRectMake(0, webviewY, BDScreenWidth, BDScreenHeight - webviewY - height);</div></pre></td></tr></table></figure>
+<h3 id="插入图片失败"><a href="#插入图片失败" class="headerlink" title="插入图片失败"></a>插入图片失败</h3><p>在移动端，通过调用 jsbridge 来唤起相册选择图片。之后调用 <code>insertImage</code> 函数来向编辑器插入图片。然而，插入图片一直失败。最后发现是因为早 safari 下，如果编辑器失去了焦点，那么 <code>selection</code> 和 <code>range</code> 对象将销毁。因此调用 <code>insertImage</code> 时，并不能获得光标所在位置，因此失败。为此需要增加，<code>backupRange()</code> 和 <code>restoreRange()</code> 函数。当页面失去焦点的时候记录 range 信息，插入图片前恢复 range 信息。  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">backupRange() &#123;</div><div class="line">    <span class="keyword">let</span> selection = <span class="built_in">window</span>.getSelection();</div><div class="line">    <span class="keyword">let</span> range = selection.getRangeAt(<span class="number">0</span>);</div><div class="line">    <span class="keyword">this</span>.currentSelection = &#123;</div><div class="line">        <span class="string">"startContainer"</span>: range.startContainer,</div><div class="line">        <span class="string">"startOffset"</span>: range.startOffset,</div><div class="line">        <span class="string">"endContainer"</span>: range.endContainer,</div><div class="line">        <span class="string">"endOffset"</span>: range.endOffset</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line">restoreRange() &#123;</div><div class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.currentSelection) &#123;</div><div class="line">        <span class="keyword">let</span> selection = <span class="built_in">window</span>.getSelection();</div><div class="line">            selection.removeAllRanges();</div><div class="line">        <span class="keyword">let</span> range = <span class="built_in">document</span>.createRange();</div><div class="line">        range.setStart(<span class="keyword">this</span>.currentSelection.startContainer, <span class="keyword">this</span>.currentSelection.startOffset);</div><div class="line">        range.setEnd(<span class="keyword">this</span>.currentSelection.endContainer, <span class="keyword">this</span>.currentSelection.endOffset);</div><div class="line">        <span class="comment">// 向选区中添加一个区域</span></div><div class="line">        selection.addRange(range);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在 chrome 中，失去焦点并不会清除 <code>seleciton</code> 对象和 <code>range</code> 对象，这样我们轻轻松松一个 <code>focus()</code> 就搞定了。  </p>
+<p>重要问题就这么多，限于篇幅限制其他的问题省略了。总体来说，填坑花了开发的大部分时间。  </p>
+<h1 id="其他功能"><a href="#其他功能" class="headerlink" title="其他功能"></a>其他功能</h1><p>基础功能修修补补以后，实际项目中有可能遇到一些其他的需求，比如当前光标所在文字内容状态啊，图片拖拽放大啊，待办列表功能，附件卡片等功能啊，markdown切换等等。在了解了js 富文本的种种坑之后，range 对象的操作之后，相信这些问题你都可以轻松解决。这里最后提几个做扩展功能时候遇到的有去的问题。  </p>
+<h2 id="回车换行带格式"><a href="#回车换行带格式" class="headerlink" title="回车换行带格式"></a>回车换行带格式</h2><p>前面已经说过了，富文本编辑器的机制就是这样，当你回车换行的时候新产生的内容和之前的格式一模一样。如果我们利用 <code>.card</code> 类来定义了一个卡片内容，那么换行产生的新的段落都将含有 <code>.card</code> 类且结构也是直接 copy 过来的。我们想要屏蔽这种机制，于是尝试在 keydown 的阶段做处理(如果在 keyup 阶段处理用户体验不好)。然而，并没有什么用，因为用户自定义的 keydown 事件要在 浏览器富文本的默认 keydown 事件之前触发，这样你就做不了任何处理。<br>为此我们为这类特殊的个体都添加一个 property 属性，添加在 property 上的内容是不会被copy下来的。这样以后就可以区分出来了，从而做对应的处理。  </p>
+<h2 id="获取当前光标所在处样式"><a href="#获取当前光标所在处样式" class="headerlink" title="获取当前光标所在处样式"></a>获取当前光标所在处样式</h2><p>这里主要是考虑 下划线，删除线之类的样式，这些样式都是用标签类描述的，所以要遍历标签层级。直接上代码：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">getCaretStyle</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> selection = <span class="built_in">window</span>.getSelection(),</div><div class="line">        range = selection.getRangeAt(<span class="number">0</span>);</div><div class="line">        aimEle = range.commonAncestorContainer,</div><div class="line">        tempEle = <span class="literal">null</span>;</div><div class="line">    <span class="keyword">let</span> tags = [<span class="string">"U"</span>, <span class="string">"I"</span>, <span class="string">"B"</span>, <span class="string">"STRIKE"</span>],</div><div class="line">        result = [];</div><div class="line">    <span class="keyword">if</span>(aimEle.nodeType === <span class="number">3</span>) &#123;</div><div class="line">        aimEle = aimEle.parentNode;</div><div class="line">    &#125;</div><div class="line">    tempEle = aimEle;</div><div class="line">    <span class="keyword">while</span>(block.indexOf(tempEle.nodeName.toLowerCase()) === <span class="number">-1</span>) &#123;</div><div class="line">        <span class="keyword">if</span>(tags.indexOf(tempEle.nodeName) !== <span class="number">-1</span>) &#123;</div><div class="line">            result.push(tempEle.nodeName);</div><div class="line">        &#125;</div><div class="line">        tempEle = tempEle.parentNode;</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">let</span> viewStyle = &#123;</div><div class="line">        <span class="string">"italic"</span>: result.indexOf(<span class="string">"I"</span>) !== <span class="number">-1</span> ? <span class="literal">true</span> : <span class="literal">false</span>,</div><div class="line">        <span class="string">"underline"</span>: result.indexOf(<span class="string">"U"</span>) !== <span class="number">-1</span> ? <span class="literal">true</span> : <span class="literal">false</span>,</div><div class="line">        <span class="string">"bold"</span>: result.indexOf(<span class="string">"B"</span>) !== <span class="number">-1</span> ? <span class="literal">true</span> : <span class="literal">false</span>,</div><div class="line">        <span class="string">"strike"</span>: result.indexOf(<span class="string">"STRIKE"</span>) !== <span class="number">-1</span> ? <span class="literal">true</span> : <span class="literal">false</span></div><div class="line">    &#125;</div><div class="line">    <span class="keyword">let</span> styles = <span class="built_in">window</span>.getComputedStyle(aimEle, <span class="literal">null</span>);</div><div class="line">    viewStyle.fontSize = styles[<span class="string">"fontSize"</span>],</div><div class="line">    viewStyle.color = styles[<span class="string">"color"</span>],</div><div class="line">    viewStyle.fontWeight = styles[<span class="string">"fontWeight"</span>],</div><div class="line">    viewStyle.fontStyle = styles[<span class="string">"fontStyle"</span>],</div><div class="line">    viewStyle.textDecoration = styles[<span class="string">"textDecoration"</span>];</div><div class="line">    viewStyle.isH1 = Util.findParentByTagName(aimEle, <span class="string">"h1"</span>) ? <span class="literal">true</span> : <span class="literal">false</span>;</div><div class="line">    viewStyle.isH2 = Util.findParentByTagName(aimEle, <span class="string">"h2"</span>) ? <span class="literal">true</span> : <span class="literal">false</span>;</div><div class="line">    viewStyle.isP = Util.findParentByTagName(aimEle, <span class="string">"p"</span>) ? <span class="literal">true</span> : <span class="literal">false</span>;</div><div class="line">    viewStyle.isUl = Util.findParentByTagName(aimEle, <span class="string">"ul"</span>) ? <span class="literal">true</span> : <span class="literal">false</span>;</div><div class="line">    viewStyle.isOl = Util.findParentByTagName(aimEle, <span class="string">"ol"</span>) ? <span class="literal">true</span> : <span class="literal">false</span>;</div><div class="line">    <span class="keyword">return</span> viewStyle;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h1 id="最后说一句"><a href="#最后说一句" class="headerlink" title="最后说一句"></a>最后说一句</h1><p>该项目目前提测中，所以呢，一但发现有意思的坑，我会及时补充的。  </p>
+<h1 id="参考内容"><a href="#参考内容" class="headerlink" title="参考内容"></a>参考内容</h1><ul>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Document/execCommand" target="_blank" rel="external">MDN - document.execCommand</a></li>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Selection" target="_blank" rel="external">MDN - selection</a></li>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/API/Range" target="_blank" rel="external">MDN - range</a>  </li>
+<li><a href="http://frontenddev.org/article/compatible-with-processing-and-chinese-input-method-to-optimize-the-input-events.html" target="_blank" rel="external">input 事件兼容处理以及中文输入法优化</a></li>
+<li><a href="https://segmentfault.com/a/1190000004288686" target="_blank" rel="external">js获取剪切板内容，js控制图片粘贴</a></li>
+<li><a href="http://blog.csdn.net/ll845876425/article/details/51884736" target="_blank" rel="external">iOS UIWebView 全属性详解</a></li>
+</ul>
+
       
     </div>
     
@@ -358,6 +503,14 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/javascript/" rel="tag">javascript</a>
+          
+            <a href="/tags/富文本编辑器/" rel="tag">富文本编辑器</a>
+          
+        </div>
       
 
       
@@ -432,8 +585,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.jpg"
@@ -448,7 +610,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -470,7 +632,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">9</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>
@@ -573,6 +735,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#准备阶段"><span class="nav-number">1.</span> <span class="nav-text">准备阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#contenteditable-”true”"><span class="nav-number">1.1.</span> <span class="nav-text">contenteditable=”true”</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#光标操作"><span class="nav-number">1.2.</span> <span class="nav-text">光标操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#selection-对象"><span class="nav-number">1.2.1.</span> <span class="nav-text">selection 对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#range-对象"><span class="nav-number">1.2.2.</span> <span class="nav-text">range 对象</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#修改光标位置"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">修改光标位置</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#修改文本格式"><span class="nav-number">1.3.</span> <span class="nav-text">修改文本格式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实战开始，填坑的旅途"><span class="nav-number">2.</span> <span class="nav-text">实战开始，填坑的旅途</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#修正浏览器的默认效果"><span class="nav-number">2.1.</span> <span class="nav-text">修正浏览器的默认效果</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#回车换行"><span class="nav-number">2.1.1.</span> <span class="nav-text">回车换行</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入-ul-和-ol-位置错误"><span class="nav-number">2.1.2.</span> <span class="nav-text">插入 ul 和 ol 位置错误</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入分割线"><span class="nav-number">2.1.3.</span> <span class="nav-text">插入分割线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入链接"><span class="nav-number">2.1.4.</span> <span class="nav-text">插入链接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设置-h1-h6-标题"><span class="nav-number">2.1.5.</span> <span class="nav-text">设置 h1 ~ h6 标题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入定制内容"><span class="nav-number">2.1.6.</span> <span class="nav-text">插入定制内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#处理-paste-粘贴"><span class="nav-number">2.1.7.</span> <span class="nav-text">处理 paste 粘贴</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#输入法处理"><span class="nav-number">2.1.8.</span> <span class="nav-text">输入法处理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#修复移动端的问题"><span class="nav-number">2.2.</span> <span class="nav-text">修复移动端的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#自动获取焦点"><span class="nav-number">2.2.1.</span> <span class="nav-text">自动获取焦点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#iOS-下回车换行，滚动条不会自动滚动"><span class="nav-number">2.2.2.</span> <span class="nav-text">iOS 下回车换行，滚动条不会自动滚动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#键盘弹起遮挡输入部分"><span class="nav-number">2.2.3.</span> <span class="nav-text">键盘弹起遮挡输入部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#插入图片失败"><span class="nav-number">2.2.4.</span> <span class="nav-text">插入图片失败</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#其他功能"><span class="nav-number">3.</span> <span class="nav-text">其他功能</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#回车换行带格式"><span class="nav-number">3.1.</span> <span class="nav-text">回车换行带格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取当前光标所在处样式"><span class="nav-number">3.2.</span> <span class="nav-text">获取当前光标所在处样式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#最后说一句"><span class="nav-number">4.</span> <span class="nav-text">最后说一句</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考内容"><span class="nav-number">5.</span> <span class="nav-text">参考内容</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       

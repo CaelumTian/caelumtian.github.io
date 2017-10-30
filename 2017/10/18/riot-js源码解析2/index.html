@@ -106,7 +106,7 @@
 <meta property="og:site_name" content="CaelumTian的博客">
 <meta property="og:description" content="riot 组件使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见Riot.js 源码解析 【一】 基础内容)。   riot 组件声明周期riot组件状态分为以下几个部分：    before-mount：标签被加载之前 mount：标签实例被加载到页面上以后 update：允许在更新之前重新计">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2017-10-18T07:46:36.000Z">
+<meta property="og:updated_time" content="2017-10-30T02:20:11.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Riot.js 源码解析 【二】 组件化">
 <meta name="twitter:description" content="riot 组件使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见Riot.js 源码解析 【一】 基础内容)。   riot 组件声明周期riot组件状态分为以下几个部分：    before-mount：标签被加载之前 mount：标签实例被加载到页面上以后 update：允许在更新之前重新计">
@@ -376,6 +376,7 @@
 <li>before-unmount：标签实例被卸载之前</li>
 <li>unmount：标签实例被从页面上卸载后    </li>
 </ul>
+<a id="more"></a>
 <p>riot.js 采用事件驱动的方式来进行通讯，我们可以采用如下函数来监听上面的事件，例如处理 update 事件：  </p>
 <pre><code class="html"><span class="tag">&lt;<span class="name">riot-demo</span>&gt;</span>
     <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span>
@@ -504,7 +505,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -526,7 +527,7 @@
             
             <div class="site-state-item site-state-tags">
               
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">9</span>
                 <span class="site-state-item-name">标签</span>
               
             </div>
