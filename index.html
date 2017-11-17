@@ -297,7 +297,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2017/10/18/riot-js源码解析2/" itemprop="url">Riot.js 源码解析 【二】 组件化</a></h1>
+                <a class="post-title-link" href="/2017/10/18/riot-js源码解析2/" itemprop="url">Riot.js 源码解析 【二】 组件详解</a></h1>
         
 
         <div class="post-meta">
@@ -370,16 +370,7 @@
 
       
         
-          <h1 id="riot-组件"><a href="#riot-组件" class="headerlink" title="riot 组件"></a>riot 组件</h1><p>使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见<a href="">Riot.js 源码解析 【一】 基础内容</a>)。  </p>
-<h1 id="riot-组件声明周期"><a href="#riot-组件声明周期" class="headerlink" title="riot 组件声明周期"></a>riot 组件声明周期</h1><p>riot组件状态分为以下几个部分：  </p>
-<ul>
-<li>before-mount：标签被加载之前</li>
-<li>mount：标签实例被加载到页面上以后</li>
-<li>update：允许在更新之前重新计算上下文数据</li>
-<li>updated：标签模板更新后</li>
-<li>before-unmount：标签实例被卸载之前</li>
-<li>unmount：标签实例被从页面上卸载后    </li>
-</ul>
+          <h1 id="riot-组件"><a href="#riot-组件" class="headerlink" title="riot 组件"></a>riot 组件</h1><p>使用 riot 编写组件是以 .tag 后缀结尾的文件，我们的 html, css, js 都可以放在里面。这些文件在编译阶段会被编译成对应的js代码(见<a href="">Riot.js 源码解析 【一】 基础内容</a>)。每个组件都是一个 Tag 对象(代码在 /tag/tag.js 里面)，里面包含了对象的各种属性和方法。本文主要介绍，riot 组件的生命周期，更新原理(一个粗粒度的 virtual dom)以及简单更新优化手段。<br>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2017/10/18/riot-js源码解析2/#more" rel="contents">
