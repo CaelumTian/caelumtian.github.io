@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="架构设计,Hybird 开发,微信小程序," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="微信小程序架构设计好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。 微信小程序微信小程序包含下面四种文件：    js  json    配置文件 wxml  小程序专用 xml 文件 wxss   小程序专用 css 文件">
+<meta name="keywords" content="架构设计,Hybird 开发,微信小程序">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微信小程序架构原理">
+<meta property="og:url" content="http://yoursite.com/2018/08/09/微信小程序架构原理/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="微信小程序架构设计好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。 微信小程序微信小程序包含下面四种文件：    js  json    配置文件 wxml  小程序专用 xml 文件 wxss   小程序专用 css 文件">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-a.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-b.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-d.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-e.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-g.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-h.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-i.jpg">
+<meta property="og:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-j.jpg">
+<meta property="og:updated_time" content="2018-08-15T07:21:43.273Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="微信小程序架构原理">
+<meta name="twitter:description" content="微信小程序架构设计好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。 微信小程序微信小程序包含下面四种文件：    js  json    配置文件 wxml  小程序专用 xml 文件 wxss   小程序专用 css 文件">
+<meta name="twitter:image" content="http://yoursite.com/2018/08/09/微信小程序架构原理/tgy-wx-a.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/08/09/微信小程序架构原理/"/>
+
+
+
+
+
+  <title>微信小程序架构原理 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/09/微信小程序架构原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">微信小程序架构原理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-09T15:09:20+08:00">
+                2018-08-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Hybrid-开发/" itemprop="url" rel="index">
+                    <span itemprop="name">Hybrid 开发</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="微信小程序架构设计"><a href="#微信小程序架构设计" class="headerlink" title="微信小程序架构设计"></a>微信小程序架构设计</h1><p>好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。</p>
+<h2 id="微信小程序"><a href="#微信小程序" class="headerlink" title="微信小程序"></a>微信小程序</h2><p>微信小程序包含下面四种文件：  </p>
+<ul>
+<li>js </li>
+<li>json    配置文件</li>
+<li>wxml  小程序专用 xml 文件</li>
+<li>wxss   小程序专用 css 文件     </li>
+</ul>
+<a id="more"></a>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">view</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">text</span> <span class="attr">class</span>=<span class="string">"window"</span>&gt;</span>&#123;&#123; text &#125;&#125;<span class="tag">&lt;/<span class="name">text</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">view</span>&gt;</span></div></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">Page(&#123;</div><div class="line">  data:&#123;</div><div class="line">    text:<span class="string">"这是一个页面"</span></div><div class="line">  &#125;,</div><div class="line">  onLoad:<span class="function"><span class="keyword">function</span>(<span class="params">options</span>)</span>&#123;</div><div class="line">    <span class="comment">// 页面初始化 options为页面跳转所带来的参数</span></div><div class="line">  &#125;,</div><div class="line">  <span class="comment">// ........</span></div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p>微信小程序只能通过其 mvvm 的模板语法来动态改变页面，本身 js 并不支持 BOM 和 DOM 操作。  </p>
+<h2 id="从开发工具看微信小程序架构"><a href="#从开发工具看微信小程序架构" class="headerlink" title="从开发工具看微信小程序架构"></a>从开发工具看微信小程序架构</h2><p> 在 mac 端直接解压应用 发现 app.nw 文件夹，即开发工具源码。可以知道该项目由 nw.js 编写；<br> 在 package.json 文件下找到应用入口：<code>app/html/index.html</code>。入口 js 为 <code>dist/app.js</code> 我们可以看到整个编辑器的大致逻辑。<br> 但我们关心的是构建过程，在 weapp 文件夹下存在 build.js 文件。没有找到有用的信息，只看到了 <code>upload</code> 模块，包括对大小限制，上传包命名。<br> 为此怀疑，微信小程序本身和 RN 类似。是在服务端打包成 native 语言的。但是通过，android 边框测试发现，微信小程序根本不是 native 原生内容。且，我们在开发工具上写 微信语法，竟然可以直接预览。说明一定有问题。<br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-a.jpg" alt="tgy-wx-a.jpg" title=""><br>原生长这样的  </p>
+<h3 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h3><p>继续在 trans 文件夹下发现了编译模板。  </p>
+<ul>
+<li>transWxmlToJs     wxml 转 js</li>
+<li>transWxssToCss    wxss 转 css</li>
+<li>transConfigToPf   模板页配置</li>
+<li>transWxmlToHtml   wxml 转 html</li>
+<li>transManager      管理器  </li>
+</ul>
+<p>用到的内容：  </p>
+<ul>
+<li>发现用到了一个模板：<code>app.nw/app/dist/weapp/tpl/pageFrameTpl.js</code>, <code>app.mw/app.dist.weapp/tpl/appserviceTpl.js</code>  </li>
+<li>wcc 可执行程序，wcc用于转转wxml中的自定义tag为virtual_dom</li>
+<li>wcsc 可执行程序，用于将 wxss 转为 view 模块使用的 css 代码，使用方式为 wcsc xxx.wxss</li>
+</ul>
+<p>在模板中，我们发现使用了 <code>WAWebview.js</code> 文件，<code>WAService.js</code>文件。<br>在 transWxmlToJs 中我们发现一段 generateFuncReady 事件的函数。对比注册该事件的函数在 <code>WAWebview.js</code> 中。<br>我们尝试使用 wcc 对input.xml 文件进行编译。</p>
+<blockquote>
+<p>wcc -d input.xml  </p>
+</blockquote>
+<p>生成了一段脚本：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">window</span>.__wcc_version__ = <span class="string">'v0.6vv_20161230_fbi'</span></div><div class="line"><span class="keyword">var</span> $gwxc</div><div class="line"><span class="keyword">var</span> $gaic = &#123;&#125;</div><div class="line">$gwx = <span class="function"><span class="keyword">function</span> (<span class="params">path, global</span>) </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">_</span>(<span class="params">a, b</span>) </span>&#123;</div><div class="line">        b &amp;&amp; a.children.push(b);</div><div class="line">    &#125;</div><div class="line">    ....</div></pre></td></tr></table></figure>
+<p>通过代码我们发现，调用 $gwx 函数会再生成一个有返回值的函数(前提是 path 填写正确)；于是我们执行如下代码：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$gwx(<span class="string">"input.xml"</span>)(<span class="string">"test"</span>)</div></pre></td></tr></table></figure>
+<p>得出如下内容：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">    <span class="string">"tag"</span>: <span class="string">"wx-page"</span>,</div><div class="line">    <span class="string">"children"</span>: [</div><div class="line">        &#123;</div><div class="line">            <span class="string">"tag"</span>: <span class="string">"wx-view"</span>,</div><div class="line">            <span class="string">"attr"</span>: &#123;</div><div class="line">                <span class="string">"class"</span>: <span class="string">"section"</span></div><div class="line">            &#125;,</div><div class="line">            <span class="string">"children"</span>: [</div><div class="line">                &#123;</div><div class="line">                    <span class="string">"tag"</span>: <span class="string">"wx-input"</span>,</div><div class="line">                    <span class="string">"attr"</span>: &#123;</div><div class="line">                        <span class="string">"autoFocus"</span>: <span class="literal">true</span>,</div><div class="line">                        <span class="string">"placeholder"</span>: <span class="string">"这是一个可以自动聚焦的input"</span></div><div class="line">                    &#125;,</div><div class="line">                    <span class="string">"children"</span>: []</div><div class="line">                &#125;</div><div class="line">            ]</div><div class="line">        &#125;</div><div class="line">    ]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这应该是一个类似 Virtual dom 的对象，交给了 WAWebivew.js 来渲染，标签名为 <code>wx-view</code>, <code>wx-input</code>。  </p>
+<h4 id="WAWebview-js"><a href="#WAWebview-js" class="headerlink" title="WAWebview.js"></a>WAWebview.js</h4><ol>
+<li><p>代码在最一开始提供的是兼容性工具，还有一个 WeixinJSBridge 引入。</p>
+</li>
+<li><p>接下来是一个 Reporter 对象，它的作用就是发送错误和性能统计数据给后台。</p>
+<img src="/2018/08/09/微信小程序架构原理/tgy-wx-b.jpg" alt="tgy-wx-b.jpg" title="">  
+</li>
+<li><p>wx 核心对象，包含了 wx 对象下的 api。但是这里的 api 数量远远少于官方的 api 文档数量。</p>
+  
+<p>我们可以再代码里面发现，wx 下注册的 api 最终都会调用 WeixinJSBridge 方法，这个方法。应该是在打包的时候端上注入的。然而，我们也可以在 WAServeice.js 中找到该方法的定义。  </p>
+<img src="/2018/08/09/微信小程序架构原理/tgy-wx-d.jpg" alt="tgy-wx-d.jpg" title="">    
+<p>所以我们得到了一个结论，WAService.js 是编辑器用来接受 wx 方法回调的代码。</p>
+</li>
+<li>wxparser 对象，提供 dom 到 wx element 对象之间的映射操作，提供元素操作管理和事件管理功能。</li>
+<li><p>接都是对 exparser 对象的处理，包括注册 WeixinJSBridge 全局事件，Virtual dom 算法实现，样式注入等。介绍几个组件重要的内容  </p>
+<ul>
+<li><p>exparser.registerBehavior 注册组件基础行为，供组件继承。</p>
+<img src="/2018/08/09/微信小程序架构原理/tgy-wx-e.jpg" alt="tgy-wx-e.jpg" title="">      
+</li>
+<li><p>exparser.registerElement 为各种内置组件，注册模板，行为，属性，监听器等内容</p>
+</li>
+</ul>
+</li>
+</ol>
+ 
+<p>这里我们观察到，组件：<code>wx-video</code>, <code>wx-canvas</code>, <code>wx-contact-button</code>, <code>wx-map</code>, <code>wx-textarea</code> 等 behaviors 都含有 “wx-native” 属性。这是不是意味着，这类组件都是native 原生实现的呢。我们打开边框检查，发现这类组件确实都时原生的组件。<br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-g.jpg" alt="tgy-wx-g.jpg" title="">   </p>
+<img src="/2018/08/09/微信小程序架构原理/tgy-wx-h.jpg" alt="tgy-wx-h.jpg" title="">   
+<p>综上，微信小程序的界面有部分组件使用原生方式实现的，Native组件层在WebView层之上。大部分还是用前端实现的，这样解释了微信小程序的一个bug。</p>
+<blockquote>
+<p>微信官方文档：<br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-i.jpg" alt="tgy-wx-i.jpg" title="">  </p>
+</blockquote>
+<p>因为 scroll-view 是前端实现，在里面使用 native 组件，这样就无法监听滚动了。  </p>
+<h4 id="WeixinJSBridge"><a href="#WeixinJSBridge" class="headerlink" title="WeixinJSBridge"></a>WeixinJSBridge</h4><p>组件是需要数据来渲染的，查看文档我们知道发送请求的 api 为 <code>wx.request</code>;通过上面分析，我么你知道 wx.request 实际调用的是 <code>WeixinJSBridge</code>。现在我们看看 <code>WeixinJSBridge</code><br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-j.jpg" alt="tgy-wx-j.jpg" title=""><br>WeixinJSBridge 真正发送处理数据请求的时这端代码；如果当前环境是 ios, 那么调用 WKWebview的 window.webkit.messageHandlers.invokeHandler.postMessage。如果所处环境是 android 则调用 WeixinJSCore.invokeHandler(调用的时候，默认会带上当前webviewID)。  </p>
+<h4 id="WAService-js"><a href="#WAService-js" class="headerlink" title="WAService.js"></a>WAService.js</h4><p>在我们看的 WeixinJSBridge.js 分析中，我们并没有发现前端的通讯实现，路由能力，数据绑定等级制。进一步查看找到了一个 <code>WAService.js</code> 文件。<br>查看 <code>WAService.js</code> 文件源码：  </p>
+<ol>
+<li>在代码最开始，跟 WAWebview.js 一样的 WeixinJSBridge 兼容模块</li>
+<li>然后是跟 WAWebview.js 一样的 Reporter 模块。</li>
+<li>比 WAWebview.js 中 wx 功能更为丰富 wx 接口模块。(剩余的那部分 wx api 都在这里)</li>
+<li>appServiceEngine 模块，提供 Page，App，GetApp 接口</li>
+<li>为 window 对象添加 AMD 接口 require define  </li>
+</ol>
+<p>综上，WAService.js 主要实现的功能：  </p>
+<ul>
+<li>App( ) 小程序的入口；Page( ) 页面的入口</li>
+<li>wx API;</li>
+<li>页面有的作用域，提供模块化能力</li>
+<li>数据绑定、事件分发、生命周期管理、路由管理</li>
+</ul>
+<p>到这里我们得出结论，小程序的架构方案：<br>   </p>
+<p>整个小程序由两个 webview 组成，代码分为 UI 层和逻辑层。UI 层运行在第一个 WebView 当中，执行 DOM 操作和交互事件的响应，里面是 WAWebview.js 代码及编译后的内容。逻辑层执行在（第二个webview 中）独立的 JS 引擎中（iOS：JavaScriptCore, android：X5 JS解析器；统称 JSCore；开发工具中，nwjs Chrome 内核），WAService.js 代码和业务逻辑。</p>
+<p>当我们对 view 层进行事件操作后，会通过 WeixinJSBridge 将数据传递到 Native 系统层。Native 系统层决定是否要用 native 处理，然后丢给 逻辑层进行用户的逻辑代码处理。逻辑层处理完毕后会将数据通过 WeixinJSBridge 返给 View 层。View 渲染更新视图。</p>
+<h2 id="架构的讨论"><a href="#架构的讨论" class="headerlink" title="架构的讨论"></a>架构的讨论</h2><p>微信的这种架构，对逻辑和UI进行了完全隔离，小程序逻辑和UI完全运行在2个独立的Webview里面来处理。那么这么做的好处是啥？总感觉更加麻烦了。除了小程序外，还有人采用这种架构设计么？<br>在网上搜索了一下，目前使用这种架构的项目还真有一个：<a href="http://ued.qunar.com/yis/index.html" target="_blank" rel="external">去哪儿最新的 YIS 框架</a>   </p>
+<blockquote>
+<p>YIS 采取了类似小程序的架构，分为逻辑层和UI层。UI 层运行在 WebView 中，而逻辑层运行在独立的 JS 引擎中。相应地，整个应用的代码，也分为两个大的部分，一部分运行在 WebView 中，一部分运行在JS引擎中。JS引擎计算DOM结构输出给WebView，WebView转发用户的点击事件给JS引擎。</p>
+</blockquote>
+<p>该项目做法和小城十分类似，唯一缺少的就是没有 native 的组件吧。然而官方文档上也没有任何介绍，为什么要这么做，只是说更流畅了。  </p>
+<h3 id="一些看法"><a href="#一些看法" class="headerlink" title="一些看法"></a>一些看法</h3><p>传统 web 页面显示需要经历一下几个步骤:  </p>
+<ol>
+<li>webview 初始化</li>
+<li>加载 HTML, CSS, JS</li>
+<li>编译 JS</li>
+<li>Render 计算</li>
+<li>DOM Path</li>
+</ol>
+<p>而利用小程序架构后，我们就可以将上述过程拆解成两部分并行执行：<br>webview 部分：</p>
+<ol>
+<li>webview 初始化</li>
+<li>加载HTML，CSS, JS (经过拆分后，体积大幅度减小)</li>
+<li>编译JS</li>
+<li>等待页面需要的数据</li>
+<li>反序列化数据</li>
+<li>执行Patch</li>
+<li>渲染页面</li>
+<li>等待更多消息</li>
+</ol>
+<p>jscore 部分：</p>
+<ol>
+<li>初始化</li>
+<li>加载框架 js 代码</li>
+<li>编译 js</li>
+<li>加载业务逻辑 js 代码</li>
+<li>编译 js</li>
+<li>计算首屏虚拟 DOM 结构</li>
+<li>序列化数据，传输</li>
+<li>等待 webview 消息，或者 Native 消息  </li>
+</ol>
+<p>这样渲染进程和逻辑进程分离，并行处理：加速首屏渲染速度；避免单线程模型下，js 运算时间过长，UI 出现卡顿。<br>完全采用数据驱动的方式，不能直接操作 DOM，避免低质量的代码。<br>webview 和 jscore 可以预</p>
+<p>当然这种架构方案也有这一定的缺点：  </p>
+<ol>
+<li>不能灵活操作 DOM，无法实现较为复杂的爱的暖效果</li>
+<li>部分和NA相关的视图有使用限制，如微信的 scrollView 内不能有 textarea。</li>
+<li>页面大小、打开页面数量都受到限制</li>
+<li>需要单独开发适配，不能复用现有代码资源。</li>
+</ol>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
+<li><a href="https://www.zhihu.com/question/50920642" target="_blank" rel="external">微信小程序底层的实现原理是怎样的</a></li>
+<li><a href="http://www.bbs0101.com/archives/1495.html" target="_blank" rel="external">微信小程序架构解析，工作原理解析</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/22754296" target="_blank" rel="external">微信小程序架构分析</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/架构设计/" rel="tag">架构设计</a>
+          
+            <a href="/tags/Hybird-开发/" rel="tag">Hybird 开发</a>
+          
+            <a href="/tags/微信小程序/" rel="tag">微信小程序</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/18/riot-js源码解析2/" rel="next" title="Riot.js 源码解析 【二】 组件详解">
+                <i class="fa fa-chevron-left"></i> Riot.js 源码解析 【二】 组件详解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#微信小程序架构设计"><span class="nav-number">1.</span> <span class="nav-text">微信小程序架构设计</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#微信小程序"><span class="nav-number">1.1.</span> <span class="nav-text">微信小程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从开发工具看微信小程序架构"><span class="nav-number">1.2.</span> <span class="nav-text">从开发工具看微信小程序架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#编译过程"><span class="nav-number">1.2.1.</span> <span class="nav-text">编译过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#WAWebview-js"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">WAWebview.js</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WeixinJSBridge"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">WeixinJSBridge</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WAService-js"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">WAService.js</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#架构的讨论"><span class="nav-number">1.3.</span> <span class="nav-text">架构的讨论</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一些看法"><span class="nav-number">1.3.1.</span> <span class="nav-text">一些看法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考资料"><span class="nav-number">2.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>
