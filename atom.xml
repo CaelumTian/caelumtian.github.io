@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-08-15T07:21:43.273Z</updated>
+  <updated>2018-09-12T09:10:12.771Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,13 +16,93 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>微信小程序架构原理</title>
-    <link href="http://yoursite.com/2018/08/09/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%9E%B6%E6%9E%84%E5%8E%9F%E7%90%86/"/>
-    <id>http://yoursite.com/2018/08/09/微信小程序架构原理/</id>
-    <published>2018-08-09T07:09:20.000Z</published>
-    <updated>2018-08-15T07:21:43.273Z</updated>
+    <title>从 javascript 角度看 Dart (一)</title>
+    <link href="http://yoursite.com/2018/09/10/%E4%BB%8Ejs%E8%A7%92%E5%BA%A6%E7%9C%8Bdart/"/>
+    <id>http://yoursite.com/2018/09/10/从js角度看dart/</id>
+    <published>2018-09-10T04:09:50.000Z</published>
+    <updated>2018-09-12T09:10:12.771Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="微信小程序架构设计"><a href="#微信小程序架构设计" class="headerlink" title="微信小程序架构设计"></a>微信小程序架构设计</h1><p>好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。</p>
+    <content type="html"><![CDATA[<p>最近准备尝试下谷歌的 Flutter 开发，因此需要学习一下 dart 语言。本文主要将 javascript 和 dart 进行对比，从而帮助我们快速入门 dart 语言。  </p>
+<h2 id="Dart-简介"><a href="#Dart-简介" class="headerlink" title="Dart 简介"></a>Dart 简介</h2><blockquote>
+<p>Dart是谷歌开发的计算机编程语言，后来被Ecma (ECMA-408)认定为标准。它被用于web、服务器、移动应用和物联网等领域的开发。它是宽松开源许可证（修改的BSD证书）下的开源软件。Dart是面向对象的、类定义的、单继承的语言。它的语法类似C语言，可以转译为JavaScript，支持接口(interfaces)、混入(mixins)、抽象类(abstract classes)、具体化泛型(reified generics)、可选类型(optional typing)和 sound type system。     </p>
+</blockquote>
+<a id="more"></a> 
+<h3 id="Dart-应用"><a href="#Dart-应用" class="headerlink" title="Dart 应用"></a>Dart 应用</h3><p>Dart 语言最早提出的目的就是来做为浏览器开发语言， Google 本来打算将 Dart 的虚拟机放入浏览器中。后来没有实现，目前 Dart 可以被看做类似 typescript 一样。<br>在移动开发中，Google 开发的移动端 UI 框架 Flutter 采用的就是 Dart 语言。  </p>
+<h2 id="Dart-语法"><a href="#Dart-语法" class="headerlink" title="Dart 语法"></a>Dart 语法</h2><h3 id="Dart-的几个基本概念"><a href="#Dart-的几个基本概念" class="headerlink" title="Dart 的几个基本概念"></a>Dart 的几个基本概念</h3><p>关于 Dart 语法有下面几个概念需要注意：  </p>
+<ul>
+<li>每个变量都是一个对象，。甚至数字，函数，和null都是对象。所有对象都继承自Object 类。这一点和 js 保持一致。  </li>
+<li>Dart 的变量可以指定静态类型，也可以不指定，这里建议所有变量都要指明其类型。  </li>
+<li>与Java不同，Dart不具备关键字public，protected和private。如果一个标识符以下划线（_） 开始，那么它和它的库都是私有的。  </li>
+</ul>
+<h3 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h3><p>对比如下：  </p>
+<img src="/2018/09/10/从js角度看dart/a.png" alt="a.png" title="">     
+<p>总的来说 Numbers, String 差异不多，这里仅仅列出一些不同点。  </p>
+<p>在 dart 定义常量用关键字: <code>final</code>, <code>const</code> 两个，区别在于：  </p>
+<ol>
+<li>final 要求变量只能初始化一次，并不要求赋的值一定是编译时常量，可以是常量也可以不是。而 const 要求在声明时初始化，并且赋值必需为编译时常量。</li>
+<li>final 是惰性初始化，即在运行时第一次使用前才初始化。而 const 是在编译时就确定值了。<br>(<code>编译时常量</code>指的是：字面量（如数字、bool、字符串、List的字面量形式）、其它常量 或者 常量的算术运算，也可以是这些的组合形式（递归要求），简单地说常量就是可以在编译时确定的值)</li>
+</ol>
+<p>注意： </p>
+<ul>
+<li>字符串的其他操作也和 js 一致(dart 中字符串没有 slice 方法)。 </li>
+<li>在 dart 中字符串模板使用的是 单引号 ‘ ，而不是反引号 ` </li>
+<li>我们可以用（’’’）来包含换行文本内容   </li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">String str = &apos;&apos;&apos;</div><div class="line">换行文本内容&apos;&apos;&apos;;</div></pre></td></tr></table></figure>
+<p>对于 List 和 Maps 上的操作，不同的地方如下。  </p>
+<h4 id="List-的差别"><a href="#List-的差别" class="headerlink" title="List 的差别"></a>List 的差别</h4><h5 id="添加"><a href="#添加" class="headerlink" title="添加"></a>添加</h5><figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">List</span>&lt;<span class="built_in">int</span>&gt; arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>];</div><div class="line"><span class="comment">// 添加一个元素，类似 arr.push(5)</span></div><div class="line">arr.add(<span class="number">5</span>);  </div><div class="line"><span class="comment">// 一次添加多项, 类似 arr.concat(5, 6, 7, 8)</span></div><div class="line">arr.addAll([<span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>]);</div><div class="line"><span class="comment">// 指定位置添加元素, 类似 arr.splice(0, 0, 0);</span></div><div class="line">arr.insert(<span class="number">0</span>, <span class="number">0</span>);</div><div class="line"><span class="comment">// 指定位置添加多个元素，类似 arr.splice(0, 0, -1, -2);</span></div><div class="line">arr.insertAll(<span class="number">0</span>, [<span class="number">-1</span>, <span class="number">-2</span>])</div></pre></td></tr></table></figure>
+<h5 id="删除"><a href="#删除" class="headerlink" title="删除"></a>删除</h5><figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 删除第一个匹配到的元素  </span></div><div class="line">arr.remove(<span class="number">3</span>);</div><div class="line"><span class="comment">// 删除第几个元素，类似 arr.splice(1, 1);</span></div><div class="line">arr.removeAt(<span class="number">1</span>);</div><div class="line"><span class="comment">// 删除所有元素  </span></div><div class="line">arr.clear(); </div><div class="line"><span class="comment">// 移除开始下标（包括）至结束下标（不包括）内的元素  </span></div><div class="line">arr.removeRange(<span class="number">1</span>, <span class="number">4</span>);</div><div class="line"><span class="comment">// 移除并替换开始下标（包括）至结束下标（不包括）内的元素  </span></div><div class="line">arr.replaceRange(<span class="number">1</span>, <span class="number">4</span>, [<span class="number">6</span>, <span class="number">7</span>]);</div></pre></td></tr></table></figure>
+<h5 id="查询-amp-排序"><a href="#查询-amp-排序" class="headerlink" title="查询 &amp; 排序"></a>查询 &amp; 排序</h5><figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 返回从开始下标（包括）到结束下标（不包括）元素的列表; 类似： arr.slice(1, 3)  </span></div><div class="line">arr.sublist(<span class="number">1</span>, <span class="number">2</span>);  </div><div class="line"><span class="comment">// 数组随机排序  </span></div><div class="line">arr.shuffle();</div></pre></td></tr></table></figure>
+<p>List 的操作 和 Set 操作几乎一致，这里就不在列出 Set 了。 </p>
+<h4 id="Maps-的差别"><a href="#Maps-的差别" class="headerlink" title="Maps 的差别"></a>Maps 的差别</h4><h5 id="所有属性"><a href="#所有属性" class="headerlink" title="所有属性"></a>所有属性</h5><figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">Map</span>&lt;<span class="built_in">String</span>, <span class="built_in">int</span>&gt; map = &#123;<span class="string">"a"</span>:<span class="number">1</span>, <span class="string">"b"</span>:<span class="number">2</span>, <span class="string">"c"</span>:<span class="number">3</span>&#125;;</div><div class="line"><span class="comment">// 返回映射的哈希码</span></div><div class="line">map.hashCode  </div><div class="line"><span class="comment">// 映射上是否没有键值对  </span></div><div class="line">map.isEmpty</div><div class="line"><span class="comment">// 映射上是否有键值对  </span></div><div class="line">map.isNotEmpty  </div><div class="line"><span class="comment">// 返回映射的所有键, 类似 Object.keys(map)</span></div><div class="line">map.keys    </div><div class="line"><span class="comment">// 返回对象运行时的类型  </span></div><div class="line">map.runtimeType</div></pre></td></tr></table></figure>
+<h4 id="常用方法"><a href="#常用方法" class="headerlink" title="常用方法"></a>常用方法</h4><figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 按顺序迭代映射    </span></div><div class="line">map.forEach((key, value)&#123;</div><div class="line">    <span class="built_in">print</span>(key + <span class="string">" : "</span> + value.toString());</div><div class="line">&#125;);  </div><div class="line"><span class="comment">// 添加其他键值对到映射中  </span></div><div class="line">map.addAll(&#123;<span class="string">"d"</span>:<span class="number">4</span>, <span class="string">"e"</span>:<span class="number">5</span>&#125;);  </div><div class="line"><span class="comment">// 映射是否包含指定键  </span></div><div class="line">map.containsKey(<span class="string">"d"</span>);  </div><div class="line"><span class="comment">// 映射是否包含指定值  </span></div><div class="line">map.containsValue(<span class="number">5</span>);  </div><div class="line"><span class="comment">// 删除指定键值对  </span></div><div class="line">map.remove(<span class="string">"a"</span>);</div><div class="line"><span class="comment">// 删除所有键值对</span></div><div class="line">map.clear();  </div><div class="line"><span class="comment">// 如果想在 key 不存在的时候 才设置该值，则可以用 putIfAbsent() 函数。该函数 的参数为返回设置的值的方法  </span></div><div class="line">m.putIfAbsent(<span class="string">"d"</span>, () =&gt; <span class="number">4</span>);</div></pre></td></tr></table></figure>
+<h3 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h3><p>在 Dart 中函数的基本语法和 JavaScript 类似，但是不需要输入 function 关键字，定义一个函数：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> printNumber(<span class="built_in">int</span> <span class="built_in">num</span>) &#123;</div><div class="line">    <span class="built_in">print</span>(<span class="built_in">num</span>);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="可选参数"><a href="#可选参数" class="headerlink" title="可选参数"></a>可选参数</h4><p>在 dart 中，比 js 多一个 可选参数的概念；可选参数可以是 <code>命名参数</code> 或者 <code>位置参数</code>，但是不能同时使用两种类型。</p>
+<h5 id="可选-命名参数"><a href="#可选-命名参数" class="headerlink" title="可选 - 命名参数"></a>可选 - 命名参数</h5><p>用 {param1, param2, …} 来定义方法的 命名参数：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> text(&#123;<span class="built_in">int</span> a, <span class="built_in">int</span> b&#125;) &#123;</div><div class="line">    <span class="built_in">print</span>(a);</div><div class="line">    <span class="built_in">print</span>(b);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>注意</code>：对于这种方式如果想要设置参数默认值，需要用 <code>:</code> ; 其他的情况，我们可以采用 <code>=</code> 来设置默认值。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> text(&#123;<span class="built_in">int</span> a: <span class="number">1</span>, <span class="built_in">int</span> b&#125;) &#123;</div><div class="line">    <span class="comment">//...</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>当我们想给参数 b 设置内容的时候，调用如下： </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">text(b: <span class="number">5</span>);    <span class="comment">// 输出 null, 5</span></div></pre></td></tr></table></figure>
+<h5 id="可选-位置参数"><a href="#可选-位置参数" class="headerlink" title="可选 - 位置参数"></a>可选 - 位置参数</h5><p>位于 [] 中间的参数为可选位置 参数：  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> setPersonInfo(<span class="built_in">String</span> name, <span class="built_in">int</span> age, [<span class="built_in">String</span> addr]) &#123;</div><div class="line">    <span class="comment">//....</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="main-函数"><a href="#main-函数" class="headerlink" title="main 函数"></a>main 函数</h4><p>每一个应用都必须有一个顶级函数main() ，这个函数就是整个应用的入口函数。main() 函数返回值类型为 void 并且有一个可选参数List<string> ，这点也是和 js 完全不同的。  </string></p>
+<h4 id="语法作用域"><a href="#语法作用域" class="headerlink" title="语法作用域"></a>语法作用域</h4><p>Dart 是一种语法作用域语言，也就是说 变量的作用域 是根据代码布局静态判断的。 可以根据“变量位于花括号内外”来判断一个变量是否在作用域中。  </p>
+<h4 id="语法闭包"><a href="#语法闭包" class="headerlink" title="语法闭包"></a>语法闭包</h4><p>一个 closure（闭包） 是一个可以 访问位于其语法作用域内变量的方法对象，即时该方法用在其定义的作用域之外，也可以访问这些变量。方法可以覆盖定义在附近作用域的变量。</p>
+<h4 id="匿名函数"><a href="#匿名函数" class="headerlink" title="匿名函数"></a>匿名函数</h4><p>对于只有一个表达式的方法，你可以用缩写形式：<br>printNumber(number) =&gt; print(‘The number is $number.’);  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">printNumber(<span class="built_in">num</span> number) =&gt; <span class="built_in">print</span>(<span class="string">'The number is $number.'</span>);</div></pre></td></tr></table></figure>
+<p>但是请注意，和 js 不同，dart 只有简写的时候 <code>=&gt;</code> 才是函数，如果不是简写，不能用这个 <code>=&gt;</code> 来表示一个函数。在 Dart 中，匿名函数是没有 <code>=&gt;</code> 的形式。 例如，匿名函数:  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// IIFE </span></div><div class="line"><span class="comment">// 在 javascript 这是正确的  </span></div><div class="line">(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="number">1</span>);</div><div class="line">&#125;)()  </div><div class="line"></div><div class="line"><span class="comment">// 在 Dart 中  </span></div><div class="line"></div><div class="line">() &#123;</div><div class="line">    print(<span class="number">1</span>);</div><div class="line">&#125;();</div><div class="line"></div><div class="line">lists.forEach((item) &#123;</div><div class="line">    <span class="comment">//....</span></div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文介绍了，Dart 的基础语法部分。对于运算符，循环，判断等就不介绍了，因为和 js 一样。总的来看，Dart 和 js 语法相似度还是很高的。下篇，讲介绍 类与泛型。  </p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;最近准备尝试下谷歌的 Flutter 开发，因此需要学习一下 dart 语言。本文主要将 javascript 和 dart 进行对比，从而帮助我们快速入门 dart 语言。  &lt;/p&gt;
+&lt;h2 id=&quot;Dart-简介&quot;&gt;&lt;a href=&quot;#Dart-简介&quot; class=&quot;headerlink&quot; title=&quot;Dart 简介&quot;&gt;&lt;/a&gt;Dart 简介&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;Dart是谷歌开发的计算机编程语言，后来被Ecma (ECMA-408)认定为标准。它被用于web、服务器、移动应用和物联网等领域的开发。它是宽松开源许可证（修改的BSD证书）下的开源软件。Dart是面向对象的、类定义的、单继承的语言。它的语法类似C语言，可以转译为JavaScript，支持接口(interfaces)、混入(mixins)、抽象类(abstract classes)、具体化泛型(reified generics)、可选类型(optional typing)和 sound type system。     &lt;/p&gt;
+&lt;/blockquote&gt;
+    
+    </summary>
+    
+      <category term="Flutter" scheme="http://yoursite.com/categories/Flutter/"/>
+    
+    
+      <category term="Dart 语言" scheme="http://yoursite.com/tags/Dart-%E8%AF%AD%E8%A8%80/"/>
+    
+      <category term="移动开发" scheme="http://yoursite.com/tags/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>微信小程序架构原理</title>
+    <link href="http://yoursite.com/2018/09/03/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F%E6%9E%B6%E6%9E%84%E5%8E%9F%E7%90%86/"/>
+    <id>http://yoursite.com/2018/09/03/微信小程序架构原理/</id>
+    <published>2018-09-03T07:09:20.000Z</published>
+    <updated>2018-09-12T08:25:22.827Z</updated>
+    
+    <content type="html"><![CDATA[<p>好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。本文主要从源码方面介绍微信小程序的架构原理，并简单总结下这么做的好处。</p>
 <h2 id="微信小程序"><a href="#微信小程序" class="headerlink" title="微信小程序"></a>微信小程序</h2><p>微信小程序包含下面四种文件：  </p>
 <ul>
 <li>js </li>
@@ -34,7 +114,7 @@
 <figure class="highlight html"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="tag">&lt;<span class="name">view</span>&gt;</span></div><div class="line">    <span class="tag">&lt;<span class="name">text</span> <span class="attr">class</span>=<span class="string">"window"</span>&gt;</span>&#123;&#123; text &#125;&#125;<span class="tag">&lt;/<span class="name">text</span>&gt;</span></div><div class="line"><span class="tag">&lt;/<span class="name">view</span>&gt;</span></div></pre></td></tr></table></figure>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">Page(&#123;</div><div class="line">  data:&#123;</div><div class="line">    text:<span class="string">"这是一个页面"</span></div><div class="line">  &#125;,</div><div class="line">  onLoad:<span class="function"><span class="keyword">function</span>(<span class="params">options</span>)</span>&#123;</div><div class="line">    <span class="comment">// 页面初始化 options为页面跳转所带来的参数</span></div><div class="line">  &#125;,</div><div class="line">  <span class="comment">// ........</span></div><div class="line">&#125;)</div></pre></td></tr></table></figure>
 <p>微信小程序只能通过其 mvvm 的模板语法来动态改变页面，本身 js 并不支持 BOM 和 DOM 操作。  </p>
-<h2 id="从开发工具看微信小程序架构"><a href="#从开发工具看微信小程序架构" class="headerlink" title="从开发工具看微信小程序架构"></a>从开发工具看微信小程序架构</h2><p> 在 mac 端直接解压应用 发现 app.nw 文件夹，即开发工具源码。可以知道该项目由 nw.js 编写；<br> 在 package.json 文件下找到应用入口：<code>app/html/index.html</code>。入口 js 为 <code>dist/app.js</code> 我们可以看到整个编辑器的大致逻辑。<br> 但我们关心的是构建过程，在 weapp 文件夹下存在 build.js 文件。没有找到有用的信息，只看到了 <code>upload</code> 模块，包括对大小限制，上传包命名。<br> 为此怀疑，微信小程序本身和 RN 类似。是在服务端打包成 native 语言的。但是通过，android 边框测试发现，微信小程序根本不是 native 原生内容。且，我们在开发工具上写 微信语法，竟然可以直接预览。说明一定有问题。<br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-a.jpg" alt="tgy-wx-a.jpg" title=""><br>原生长这样的  </p>
+<h2 id="从开发工具看微信小程序架构"><a href="#从开发工具看微信小程序架构" class="headerlink" title="从开发工具看微信小程序架构"></a>从开发工具看微信小程序架构</h2><p> 在 mac 端直接解压应用 发现 app.nw 文件夹，即开发工具源码。可以知道该项目由 nw.js 编写；<br> 在 package.json 文件下找到应用入口：<code>app/html/index.html</code>。入口 js 为 <code>dist/app.js</code> 我们可以看到整个编辑器的大致逻辑。<br> 但我们关心的是构建过程，在 weapp 文件夹下存在 build.js 文件。没有找到有用的信息，只看到了 <code>upload</code> 模块，包括对大小限制，上传包命名。<br>为此怀疑，微信小程序本身和 RN 类似。是在服务端打包成 native 语言的。但是通过 android 边框测试发现，微信小程序根本不是 native 原生内容。<br>原生界面效果<br><img src="/2018/09/03/微信小程序架构原理/tgy-wx-a.jpg" alt="tgy-wx-a.jpg" title=""> </p>
 <h3 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h3><p>继续在 trans 文件夹下发现了编译模板。  </p>
 <ul>
 <li>transWxmlToJs     wxml 转 js</li>
@@ -46,7 +126,7 @@
 <p>用到的内容：  </p>
 <ul>
 <li>发现用到了一个模板：<code>app.nw/app/dist/weapp/tpl/pageFrameTpl.js</code>, <code>app.mw/app.dist.weapp/tpl/appserviceTpl.js</code>  </li>
-<li>wcc 可执行程序，wcc用于转转wxml中的自定义tag为virtual_dom</li>
+<li>wcc 可执行程序，wcc 用于转换 wxml 中的自定义 tag 为 virtual_dom</li>
 <li>wcsc 可执行程序，用于将 wxss 转为 view 模块使用的 css 代码，使用方式为 wcsc xxx.wxss</li>
 </ul>
 <p>在模板中，我们发现使用了 <code>WAWebview.js</code> 文件，<code>WAService.js</code>文件。<br>在 transWxmlToJs 中我们发现一段 generateFuncReady 事件的函数。对比注册该事件的函数在 <code>WAWebview.js</code> 中。<br>我们尝试使用 wcc 对input.xml 文件进行编译。</p>
@@ -64,19 +144,19 @@
 <li><p>代码在最一开始提供的是兼容性工具，还有一个 WeixinJSBridge 引入。</p>
 </li>
 <li><p>接下来是一个 Reporter 对象，它的作用就是发送错误和性能统计数据给后台。</p>
-<img src="/2018/08/09/微信小程序架构原理/tgy-wx-b.jpg" alt="tgy-wx-b.jpg" title="">  
+<img src="/2018/09/03/微信小程序架构原理/tgy-wx-b.jpg" alt="tgy-wx-b.jpg" title="">  
 </li>
 <li><p>wx 核心对象，包含了 wx 对象下的 api。但是这里的 api 数量远远少于官方的 api 文档数量。</p>
   
-<p>我们可以再代码里面发现，wx 下注册的 api 最终都会调用 WeixinJSBridge 方法，这个方法。应该是在打包的时候端上注入的。然而，我们也可以在 WAServeice.js 中找到该方法的定义。  </p>
-<img src="/2018/08/09/微信小程序架构原理/tgy-wx-d.jpg" alt="tgy-wx-d.jpg" title="">    
+<p>我们可以在代码里面发现，wx 下注册的 api 最终都会调用 WeixinJSBridge 方法，这个方法。应该是在打包的时候端上注入的。然而，我们也可以在 WAServeice.js 中找到该方法的定义。  </p>
+<img src="/2018/09/03/微信小程序架构原理/tgy-wx-d.jpg" alt="tgy-wx-d.jpg" title="">    
 <p>所以我们得到了一个结论，WAService.js 是编辑器用来接受 wx 方法回调的代码。</p>
 </li>
 <li>wxparser 对象，提供 dom 到 wx element 对象之间的映射操作，提供元素操作管理和事件管理功能。</li>
-<li><p>接都是对 exparser 对象的处理，包括注册 WeixinJSBridge 全局事件，Virtual dom 算法实现，样式注入等。介绍几个组件重要的内容  </p>
+<li><p>之后代码是对 exparser 对象的处理，包括注册 WeixinJSBridge 全局事件，Virtual dom 算法实现，样式注入等。介绍几个组件重要的内容  </p>
 <ul>
 <li><p>exparser.registerBehavior 注册组件基础行为，供组件继承。</p>
-<img src="/2018/08/09/微信小程序架构原理/tgy-wx-e.jpg" alt="tgy-wx-e.jpg" title="">      
+<img src="/2018/09/03/微信小程序架构原理/tgy-wx-e.jpg" alt="tgy-wx-e.jpg" title="">      
 </li>
 <li><p>exparser.registerElement 为各种内置组件，注册模板，行为，属性，监听器等内容</p>
 </li>
@@ -84,15 +164,15 @@
 </li>
 </ol>
  
-<p>这里我们观察到，组件：<code>wx-video</code>, <code>wx-canvas</code>, <code>wx-contact-button</code>, <code>wx-map</code>, <code>wx-textarea</code> 等 behaviors 都含有 “wx-native” 属性。这是不是意味着，这类组件都是native 原生实现的呢。我们打开边框检查，发现这类组件确实都时原生的组件。<br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-g.jpg" alt="tgy-wx-g.jpg" title="">   </p>
-<img src="/2018/08/09/微信小程序架构原理/tgy-wx-h.jpg" alt="tgy-wx-h.jpg" title="">   
-<p>综上，微信小程序的界面有部分组件使用原生方式实现的，Native组件层在WebView层之上。大部分还是用前端实现的，这样解释了微信小程序的一个bug。</p>
+<p>这里我们观察到，组件：<code>wx-video</code>, <code>wx-canvas</code>, <code>wx-contact-button</code>, <code>wx-map</code>, <code>wx-textarea</code> 等 behaviors 都含有 “wx-native” 属性。这是不是意味着，这类组件都是 native 原生实现的呢。我们打开边框检查，发现这类组件确实都是原生的组件。<br><img src="/2018/09/03/微信小程序架构原理/tgy-wx-g.jpg" alt="tgy-wx-g.jpg" title="">   </p>
+<img src="/2018/09/03/微信小程序架构原理/tgy-wx-h.jpg" alt="tgy-wx-h.jpg" title="">   
+<p>综上，微信小程序的界面有部分组件使用原生方式实现的，native 组件层在 WebView 层之上。大部分还是用前端实现的，这样解释了微信小程序的一个bug。</p>
 <blockquote>
-<p>微信官方文档：<br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-i.jpg" alt="tgy-wx-i.jpg" title="">  </p>
+<p>微信官方文档：<br><img src="/2018/09/03/微信小程序架构原理/tgy-wx-i.jpg" alt="tgy-wx-i.jpg" title="">  </p>
 </blockquote>
 <p>因为 scroll-view 是前端实现，在里面使用 native 组件，这样就无法监听滚动了。  </p>
-<h4 id="WeixinJSBridge"><a href="#WeixinJSBridge" class="headerlink" title="WeixinJSBridge"></a>WeixinJSBridge</h4><p>组件是需要数据来渲染的，查看文档我们知道发送请求的 api 为 <code>wx.request</code>;通过上面分析，我么你知道 wx.request 实际调用的是 <code>WeixinJSBridge</code>。现在我们看看 <code>WeixinJSBridge</code><br><img src="/2018/08/09/微信小程序架构原理/tgy-wx-j.jpg" alt="tgy-wx-j.jpg" title=""><br>WeixinJSBridge 真正发送处理数据请求的时这端代码；如果当前环境是 ios, 那么调用 WKWebview的 window.webkit.messageHandlers.invokeHandler.postMessage。如果所处环境是 android 则调用 WeixinJSCore.invokeHandler(调用的时候，默认会带上当前webviewID)。  </p>
-<h4 id="WAService-js"><a href="#WAService-js" class="headerlink" title="WAService.js"></a>WAService.js</h4><p>在我们看的 WeixinJSBridge.js 分析中，我们并没有发现前端的通讯实现，路由能力，数据绑定等级制。进一步查看找到了一个 <code>WAService.js</code> 文件。<br>查看 <code>WAService.js</code> 文件源码：  </p>
+<h4 id="WeixinJSBridge"><a href="#WeixinJSBridge" class="headerlink" title="WeixinJSBridge"></a>WeixinJSBridge</h4><p>组件是需要数据来渲染的，查看文档我们知道发送请求的 api 为 <code>wx.request</code>;通过上面分析，我么你知道 wx.request 实际调用的是 <code>WeixinJSBridge</code>。现在我们看看 <code>WeixinJSBridge</code><br><img src="/2018/09/03/微信小程序架构原理/tgy-wx-j.jpg" alt="tgy-wx-j.jpg" title=""><br>WeixinJSBridge 真正发送处理数据请求的是这端代码；如果当前环境是 ios, 那么调用 WKWebview的 window.webkit.messageHandlers.invokeHandler.postMessage。如果所处环境是 android 则调用 WeixinJSCore.invokeHandler(调用的时候，默认会带上当前webviewID)。  </p>
+<h4 id="WAService-js"><a href="#WAService-js" class="headerlink" title="WAService.js"></a>WAService.js</h4><p>在对 WeixinJSBridge.js 分析中，我们并没有发现前端的通讯功能，路由能力，数据绑定等内容。进一步查看找到了一个 <code>WAService.js</code> 文件。<br>查看 <code>WAService.js</code> 文件源码：  </p>
 <ol>
 <li>在代码最开始，跟 WAWebview.js 一样的 WeixinJSBridge 兼容模块</li>
 <li>然后是跟 WAWebview.js 一样的 Reporter 模块。</li>
@@ -102,7 +182,7 @@
 </ol>
 <p>综上，WAService.js 主要实现的功能：  </p>
 <ul>
-<li>App( ) 小程序的入口；Page( ) 页面的入口</li>
+<li>App() 小程序的入口；Page( ) 页面的入口</li>
 <li>wx API;</li>
 <li>页面有的作用域，提供模块化能力</li>
 <li>数据绑定、事件分发、生命周期管理、路由管理</li>
@@ -114,7 +194,7 @@
 <blockquote>
 <p>YIS 采取了类似小程序的架构，分为逻辑层和UI层。UI 层运行在 WebView 中，而逻辑层运行在独立的 JS 引擎中。相应地，整个应用的代码，也分为两个大的部分，一部分运行在 WebView 中，一部分运行在JS引擎中。JS引擎计算DOM结构输出给WebView，WebView转发用户的点击事件给JS引擎。</p>
 </blockquote>
-<p>该项目做法和小城十分类似，唯一缺少的就是没有 native 的组件吧。然而官方文档上也没有任何介绍，为什么要这么做，只是说更流畅了。  </p>
+<p>该项目做法和小程序十分类似，唯一缺少的就是没有 native 的组件吧。然而官方文档上也没有任何介绍，为什么要这么做，只是说更流畅了。  </p>
 <h3 id="一些看法"><a href="#一些看法" class="headerlink" title="一些看法"></a>一些看法</h3><p>传统 web 页面显示需要经历一下几个步骤:  </p>
 <ol>
 <li>webview 初始化</li>
@@ -145,13 +225,15 @@
 <li>序列化数据，传输</li>
 <li>等待 webview 消息，或者 Native 消息  </li>
 </ol>
-<p>这样渲染进程和逻辑进程分离，并行处理：加速首屏渲染速度；避免单线程模型下，js 运算时间过长，UI 出现卡顿。<br>完全采用数据驱动的方式，不能直接操作 DOM，避免低质量的代码。<br>webview 和 jscore 可以预</p>
+<p>这样渲染进程和逻辑进程分离，并行处理：加速首屏渲染速度；避免单线程模型下，js 运算时间过长，UI 出现卡顿。<br>完全采用数据驱动的方式，不能直接操作 DOM，避免低质量的代码。</p>
 <p>当然这种架构方案也有这一定的缺点：  </p>
 <ol>
-<li>不能灵活操作 DOM，无法实现较为复杂的爱的暖效果</li>
+<li>不能灵活操作 DOM，无法实现较为复杂的效果。</li>
 <li>部分和NA相关的视图有使用限制，如微信的 scrollView 内不能有 textarea。</li>
-<li>页面大小、打开页面数量都受到限制</li>
+<li>页面大小、打开页面数量都受到限制。</li>
 <li>需要单独开发适配，不能复用现有代码资源。</li>
+<li>在 jscore 中JS 体积比较大的情况下，其初始化时间会产生影响。</li>
+<li>传输数据中，序列化和反序列化耗时需要考虑</li>
 </ol>
 <h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><ul>
 <li><a href="https://www.zhihu.com/question/50920642" target="_blank" rel="external">微信小程序底层的实现原理是怎样的</a></li>
@@ -162,7 +244,7 @@
     
     <summary type="html">
     
-      &lt;h1 id=&quot;微信小程序架构设计&quot;&gt;&lt;a href=&quot;#微信小程序架构设计&quot; class=&quot;headerlink&quot; title=&quot;微信小程序架构设计&quot;&gt;&lt;/a&gt;微信小程序架构设计&lt;/h1&gt;&lt;p&gt;好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。&lt;/p&gt;
+      &lt;p&gt;好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。本文主要从源码方面介绍微信小程序的架构原理，并简单总结下这么做的好处。&lt;/p&gt;
 &lt;h2 id=&quot;微信小程序&quot;&gt;&lt;a href=&quot;#微信小程序&quot; class=&quot;headerlink&quot; title=&quot;微信小程序&quot;&gt;&lt;/a&gt;微信小程序&lt;/h2&gt;&lt;p&gt;微信小程序包含下面四种文件：  &lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;js &lt;/li&gt;
@@ -181,6 +263,20 @@
       <category term="Hybird 开发" scheme="http://yoursite.com/tags/Hybird-%E5%BC%80%E5%8F%91/"/>
     
       <category term="微信小程序" scheme="http://yoursite.com/tags/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>immer.js 源码分析</title>
+    <link href="http://yoursite.com/2018/08/16/immer-js%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
+    <id>http://yoursite.com/2018/08/16/immer-js源码分析/</id>
+    <published>2018-08-16T09:28:12.000Z</published>
+    <updated>2018-08-16T09:28:20.674Z</updated>
+    
+    <summary type="html">
+    
+    </summary>
+    
     
   </entry>
   
@@ -1139,9 +1235,9 @@
       <category term="浏览器" scheme="http://yoursite.com/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
     
     
-      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
-    
       <category term="浏览器" scheme="http://yoursite.com/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
+    
+      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
     
   </entry>
   
