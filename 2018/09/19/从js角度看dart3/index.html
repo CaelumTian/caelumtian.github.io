@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Dart 语言,移动开发," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="前两篇文章，已经介绍了 Dart 的基础语法部分，并适当的结合 js 来进行对比。总的来看，Dart 设计的还是和 JS 很像的。本文，是最后一篇介绍 Dart 语言的。本文将着重介绍一下，Dart 的一些基础库。">
+<meta name="keywords" content="Dart 语言,移动开发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从 javascript 角度看 Dart【三】">
+<meta property="og:url" content="http://yoursite.com/2018/09/19/从js角度看dart3/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="前两篇文章，已经介绍了 Dart 的基础语法部分，并适当的结合 js 来进行对比。总的来看，Dart 设计的还是和 JS 很像的。本文，是最后一篇介绍 Dart 语言的。本文将着重介绍一下，Dart 的一些基础库。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-09-19T07:55:43.953Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从 javascript 角度看 Dart【三】">
+<meta name="twitter:description" content="前两篇文章，已经介绍了 Dart 的基础语法部分，并适当的结合 js 来进行对比。总的来看，Dart 设计的还是和 JS 很像的。本文，是最后一篇介绍 Dart 语言的。本文将着重介绍一下，Dart 的一些基础库。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/09/19/从js角度看dart3/"/>
+
+
+
+
+
+  <title>从 javascript 角度看 Dart【三】 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/19/从js角度看dart3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">从 javascript 角度看 Dart【三】</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-19T14:06:54+08:00">
+                2018-09-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Flutter/" itemprop="url" rel="index">
+                    <span itemprop="name">Flutter</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>前两篇文章，已经介绍了 Dart 的基础语法部分，并适当的结合 js 来进行对比。总的来看，Dart 设计的还是和 JS 很像的。本文，是最后一篇介绍 Dart 语言的。本文将着重介绍一下，Dart 的一些基础库。  </p>
+<a id="more"></a>
+<h2 id="库"><a href="#库" class="headerlink" title="库"></a>库</h2><p>使用import 和 library 机制可以方便的创建一个模块或分享代码。一个Dart 库不仅能够提供相应的API，还可以包含一些以_开头的变量用于在库内部使用。</p>
+<h3 id="引入"><a href="#引入" class="headerlink" title="引入"></a>引入</h3><p>用 <code>import</code> 来引入一个定义好的库。例如：  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">'dart:html'</span>;</div></pre></td></tr></table></figure>
+<p>在import语句后面需要接上库文件的 URI。</p>
+<ul>
+<li>对Dart 语言提供的库文件以dart:xx 格式</li>
+<li>其它第三方的库文件使用package:xx格式</li>
+</ul>
+<h4 id="设置库的前缀"><a href="#设置库的前缀" class="headerlink" title="设置库的前缀"></a>设置库的前缀</h4><p>如果两个库具有同样的标识符，则会出现命名冲突，可以用库前缀解决命名冲突。  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">'package:lib1/lib1.dart'</span>;</div><div class="line"><span class="keyword">import</span> <span class="string">'package:lib2/lib2.dart'</span> <span class="keyword">as</span> lib2;</div><div class="line"><span class="comment">// ...</span></div><div class="line"><span class="keyword">var</span> element1 = <span class="keyword">new</span> <span class="built_in">Element</span>();      <span class="comment">// 用 lib1 的 Element</span></div><div class="line"><span class="keyword">var</span> element2 = <span class="keyword">new</span> lib2.<span class="built_in">Element</span>(); <span class="comment">// 用 lib2 的 Element</span></div></pre></td></tr></table></figure>
+<h4 id="只导入库的一部分"><a href="#只导入库的一部分" class="headerlink" title="只导入库的一部分"></a>只导入库的一部分</h4><p>如果你只使用库的一部分，可以导入只使用的功能 <code>show</code>, <code>hide</code>  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">'package:lib1/lib1.dart'</span> show foo; <span class="comment">// 仅导入 foo</span></div><div class="line"><span class="keyword">import</span> <span class="string">'package:lib2/lib2.dart'</span> hide foo; <span class="comment">// 除了 foo 外都导出</span></div></pre></td></tr></table></figure>
+<h4 id="延迟加载库"><a href="#延迟加载库" class="headerlink" title="延迟加载库"></a>延迟加载库</h4><p>延迟加载机制，可以在需要使用的时候再加载库。关键字 <code>deferred as</code>  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> <span class="string">'package:deferred/hello.dart'</span> deferred <span class="keyword">as</span> hello;</div></pre></td></tr></table></figure>
+<p>然后在需要使用的时候调用loadLibrary()方法。  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">hello.loadLibrary();</div></pre></td></tr></table></figure>
+<p>可以在代码中多次调用loadLibrary()方法。但是实际上它只会被执行一次。</p>
+<h3 id="实现一个库"><a href="#实现一个库" class="headerlink" title="实现一个库"></a>实现一个库</h3><p>使用 <code>library</code> 加上一个标示符定义当前库的名字:  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">library</span> point; <span class="comment">// 定义这个库的名字是 point</span></div></pre></td></tr></table></figure>
+<h4 id="part-amp-part-of"><a href="#part-amp-part-of" class="headerlink" title="part &amp; part of"></a>part &amp; part of</h4><p>如果一个库的所有代码都写在一个文件中，会导致文件太大不好维护。Dart 允许你把代码写在多个文件中，并使用类似 include 的机制把多个文件包含到库的主文件中。库的主文件就是定义 library 语句所在的文件，在这个文件中可以使用 part 语句包含其它文件。part 语句的语法是 part 加上字符串形式的 fileUri 。与 part 语句相对应的是 part of 语句，需要在被包含的文件的顶部使用 part of 语句声明这个文件属于哪个库。  </p>
+<p>library 语句所在的主文件中可以使用 import 和 part 语句，但 part of 所在的实现文件中不能使用任何 import、library 和 part 语句。库使用的所有 import 和 part 语句都必需放在主文件中声明。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 主文件 定义一个 math 库。它由 base，random 两部分组成</span></div><div class="line"><span class="keyword">library</span> math;</div><div class="line"><span class="keyword">part</span> <span class="string">'base.dart'</span>;</div><div class="line"><span class="keyword">part</span> <span class="string">'random.dart'</span>;</div></pre></td></tr></table></figure>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 在 base.dart 文件的开头</span></div><div class="line"><span class="keyword">part</span> of math</div></pre></td></tr></table></figure>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 在 random.dart 文件的开头</span></div><div class="line"><span class="keyword">part</span> of math;</div></pre></td></tr></table></figure>
+<h4 id="export"><a href="#export" class="headerlink" title="export"></a>export</h4><p>你可以使用 export 语句重新导出库，比如：把多个较小的库组合为一个较大的库或者重新导出库的一部分作为一个新的库。既可以导出库的全部，也可以导出库的一部分（使用 show 和 hide）。</p>
+<h2 id="dart-async-异步编程"><a href="#dart-async-异步编程" class="headerlink" title="dart:async - 异步编程"></a>dart:async - 异步编程</h2><h3 id="Future"><a href="#Future" class="headerlink" title="Future"></a>Future</h3><p>Future 通常座位异步函数得返回值出现，一个 Future 对象保证在未来的某个时间返回一个结果， 当一个 future 完成的时候，返回的值就可以使用了。这个东西，类似于 js 中的 Promise。利用 Dart 异步读取文件如下：  </p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">File f = <span class="keyword">new</span> File(<span class="string">"..."</span>);</div><div class="line">f.readAsString().then((<span class="built_in">String</span> str) &#123;</div><div class="line">    <span class="comment">// ...</span></div><div class="line">&#125;).catchError((e) &#123;</div><div class="line">    <span class="comment">// ...</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>对比一下 js 的 Promise  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">readFile</span>(<span class="params">path</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</div><div class="line">        fs.readFile(path, (err, data) =&gt; &#123;</div><div class="line">            <span class="keyword">if</span>(err) &#123;</div><div class="line">                reject(err);</div><div class="line">            &#125;<span class="keyword">else</span> &#123;</div><div class="line">                resolve(err);</div><div class="line">            &#125;</div><div class="line">        &#125;)</div><div class="line">    &#125;)</div><div class="line">&#125;</div><div class="line"></div><div class="line">readFile(<span class="string">'...'</span>).then(<span class="function"><span class="params">data</span> =&gt;</span> &#123;</div><div class="line">    <span class="comment">// ...</span></div><div class="line">&#125;).catch(<span class="function"><span class="params">err</span> =&gt;</span> &#123;</div><div class="line">    <span class="comment">// ...</span></div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p>可以看到，Future 和 Promise 本质是一个概念的。<br>使用 Future.wait() 静态函数来管理多个 Future 并等待所有 Future 一起完成。这一点类似 Promis.all。 </p>
+<h3 id="async-amp-await"><a href="#async-amp-await" class="headerlink" title="async &amp; await"></a>async &amp; await</h3><p>和 js 一样， Dart 中 async 与 await 都是用来生命异步功能的，且 Dart 和 js 中关于这部分的用法几乎一样。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">void</span> readAllFile() <span class="keyword">async</span> &#123;</div><div class="line">    File f1 = <span class="keyword">new</span> File(<span class="string">"..."</span>);</div><div class="line">    File f2 = <span class="keyword">new</span> File(<span class="string">"..."</span>);</div><div class="line">    <span class="built_in">String</span> str1 = <span class="keyword">await</span> f1.readAsString();</div><div class="line">    <span class="comment">// ...</span></div><div class="line">    <span class="built_in">String</span> str2 = <span class="keyword">await</span> f2.readAsString();</div><div class="line">    <span class="comment">// ...</span></div><div class="line">&#125;</div><div class="line">readAllFile();</div></pre></td></tr></table></figure>
+<h2 id="dart-convert-编解码"><a href="#dart-convert-编解码" class="headerlink" title="dart:convert 编解码"></a>dart:convert 编解码</h2><p>dart:convert 库 提供了 JSON 和 UTF-8 编码的转换器，还支持创建自定义转换器。 JSON 是一个用来表达结构化对象和集合的文本格式。 UTF-8 是一个常用的 Unicode 字符编码。<br>web 应用和命令行应用都可以使用 dart:convert 库。 import dart:convert 即可使用。</p>
+<ul>
+<li>编解码JSON：JSON.decode(), JSON.encode()</li>
+<li>编解码UTF-8： UTF8.decode(),  UTF8.encode() </li>
+</ul>
+<p>其他的还有类似操作 dom 的 <code>dart:html</code> 库，命令行应用的 I/O 操作 <code>dart:io</code>，数学库 <code>dart:math</code> 等。就不多介绍了。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Dart-语言/" rel="tag">Dart 语言</a>
+          
+            <a href="/tags/移动开发/" rel="tag">移动开发</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/13/从js角度看dart2/" rel="next" title="从 javascript 角度看 Dart【二】">
+                <i class="fa fa-chevron-left"></i> 从 javascript 角度看 Dart【二】
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">18</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#库"><span class="nav-number">1.</span> <span class="nav-text">库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#引入"><span class="nav-number">1.1.</span> <span class="nav-text">引入</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#设置库的前缀"><span class="nav-number">1.1.1.</span> <span class="nav-text">设置库的前缀</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#只导入库的一部分"><span class="nav-number">1.1.2.</span> <span class="nav-text">只导入库的一部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#延迟加载库"><span class="nav-number">1.1.3.</span> <span class="nav-text">延迟加载库</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#实现一个库"><span class="nav-number">1.2.</span> <span class="nav-text">实现一个库</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#part-amp-part-of"><span class="nav-number">1.2.1.</span> <span class="nav-text">part & part of</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#export"><span class="nav-number">1.2.2.</span> <span class="nav-text">export</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dart-async-异步编程"><span class="nav-number">2.</span> <span class="nav-text">dart:async - 异步编程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Future"><span class="nav-number">2.1.</span> <span class="nav-text">Future</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#async-amp-await"><span class="nav-number">2.2.</span> <span class="nav-text">async & await</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dart-convert-编解码"><span class="nav-number">3.</span> <span class="nav-text">dart:convert 编解码</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>
