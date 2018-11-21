@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+<meta name="description" content="CaelumTian 的博客 Blog">
+<link rel="manifest" href="/manifest.json">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="react," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="单页面代码分割目前单页应用的 bundle.js 一般都会很大，这样的话会对启动时间造成影响。为此我们需要合理拆分 js 文件，然后在需要使用的时候才动态记在。拆分 js 文件，我们通常会采用手段：   基于业务逻辑和依赖库分割 基于路由分割   基于组件分割">
+<meta name="keywords" content="react">
+<meta property="og:type" content="article">
+<meta property="og:title" content="单页应用代码分割">
+<meta property="og:url" content="http://yoursite.com/2018/11/19/单页应用代码分割/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="单页面代码分割目前单页应用的 bundle.js 一般都会很大，这样的话会对启动时间造成影响。为此我们需要合理拆分 js 文件，然后在需要使用的时候才动态记在。拆分 js 文件，我们通常会采用手段：   基于业务逻辑和依赖库分割 基于路由分割   基于组件分割">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-21T06:38:53.629Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="单页应用代码分割">
+<meta name="twitter:description" content="单页面代码分割目前单页应用的 bundle.js 一般都会很大，这样的话会对启动时间造成影响。为此我们需要合理拆分 js 文件，然后在需要使用的时候才动态记在。拆分 js 文件，我们通常会采用手段：   基于业务逻辑和依赖库分割 基于路由分割   基于组件分割">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"right","display":"always","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/11/19/单页应用代码分割/"/>
+
+
+
+
+
+  <title>单页应用代码分割 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/19/单页应用代码分割/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">单页应用代码分割</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-19T21:52:17+08:00">
+                2018-11-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="单页面代码分割"><a href="#单页面代码分割" class="headerlink" title="单页面代码分割"></a>单页面代码分割</h2><p>目前单页应用的 bundle.js 一般都会很大，这样的话会对启动时间造成影响。为此我们需要合理拆分 js 文件，然后在需要使用的时候才动态记在。<br>拆分 js 文件，我们通常会采用手段： </p>
+<ul>
+<li>基于业务逻辑和依赖库分割</li>
+<li>基于路由分割  </li>
+<li>基于组件分割  </li>
+</ul>
+<a id="more"></a>
+
+<p>左图所示是基于路由进行分割，有图为基于组件进行分割。基于路由分割的力度比较大，一个路由里会嵌套很多组件。每个路由 react 组件还是有很多，但并不是每个组件都会被立刻使用。同时，多个路由之间还有可能会产生很多重复的组件代码。这显然不如基于组件进行分割效果较好。  </p>
+<h2 id="代码分割案例"><a href="#代码分割案例" class="headerlink" title="代码分割案例"></a>代码分割案例</h2><p>假如，我们有个页面，页面的额外信息 extra 组件是不需要的，只有点击查看额外信息按钮后才会出现。我们对 extra 进行惰性加载。代码如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> React, &#123;Component&#125; <span class="keyword">from</span> <span class="string">'react'</span>;</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</div><div class="line">    <span class="keyword">constructor</span>(prop) &#123;</div><div class="line">        <span class="keyword">super</span>(prop);</div><div class="line">        <span class="keyword">this</span>.state = &#123;</div><div class="line">            showExtra: <span class="literal">false</span>,</div><div class="line">            CExtra: &#123;&#125;</div><div class="line">        &#125;;</div><div class="line">    &#125;</div><div class="line">    handleOpenExtra() &#123;</div><div class="line">        <span class="keyword">import</span>(<span class="string">'./components/extra'</span>).then(<span class="function"><span class="params">res</span> =&gt;</span> &#123;</div><div class="line">            <span class="keyword">this</span>.setState(&#123;</div><div class="line">                showExtra: <span class="literal">true</span>,</div><div class="line">                CExtra: res.default</div><div class="line">            &#125;)</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;React.Fragment&gt;</div><div class="line">                &#123;<span class="keyword">this</span>.state.showExtra ? &lt;this.state.CExtra /&gt; : null&#125;</div><div class="line">                &lt;div&gt;...&lt;/div&gt;</div><div class="line">                &lt;div onClick=&#123;this.handleOpenExtra.bind(this)&#125;&gt;点击查看额外信息&lt;/div&gt;</div><div class="line">            &lt;/React.Fragment&gt;</div><div class="line">        );</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line">export default App;</div></pre></td></tr></table></figure>
+<p>demo 中我们利用了 webpack 分包加载功能，当点击按钮时利用 import 来加载 extra 组件，而不是在开头直接引入。  </p>
+<h3 id="动态导入-dynamic-imports"><a href="#动态导入-dynamic-imports" class="headerlink" title="动态导入(dynamic imports)"></a>动态导入(dynamic imports)</h3><p>上述案例，我们借助 import 函数来引入 extra 包。webpack 在打包的时候会自动检测这样的 import 引入的文件，为其单独生成一个打包 js 文件。如图所示：  </p>
+  
+<p>当我们点击加载按钮后，红线处的 js 包会被异步载入   </p>
+ 
+<p>webpack 实现动态导如的代码如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div></pre></td><td class="code"><pre><div class="line">__webpack_require__.e = <span class="function"><span class="keyword">function</span> <span class="title">requireEnsure</span>(<span class="params">chunkId</span>) </span>&#123;</div><div class="line">	<span class="keyword">var</span> promises = [];</div><div class="line">	<span class="comment">// JSONP chunk loading for javascript</span></div><div class="line">	<span class="keyword">var</span> installedChunkData = installedChunks[chunkId];</div><div class="line">	<span class="keyword">if</span>(installedChunkData !== <span class="number">0</span>) &#123; <span class="comment">// 0 means "already installed".</span></div><div class="line">		<span class="comment">// a Promise means "currently loading".</span></div><div class="line">		<span class="keyword">if</span>(installedChunkData) &#123;</div><div class="line">			promises.push(installedChunkData[<span class="number">2</span>]);</div><div class="line">		&#125; <span class="keyword">else</span> &#123;</div><div class="line">			<span class="comment">// 每次需要进行异步加载chunk时，会将这个chunk的加载状态进行初始化为一个数组,并以key/value的形式保存在installedChunks里</span></div><div class="line">			<span class="keyword">var</span> promise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve, reject</span>) </span>&#123;</div><div class="line">				installedChunkData = installedChunks[chunkId] = [resolve, reject];</div><div class="line">			&#125;);</div><div class="line">			promises.push(installedChunkData[<span class="number">2</span>] = promise);</div><div class="line">			<span class="comment">// 开始异步 chunk 加载</span></div><div class="line">			<span class="keyword">var</span> head = <span class="built_in">document</span>.getElementsByTagName(<span class="string">'head'</span>)[<span class="number">0</span>];</div><div class="line">			<span class="keyword">var</span> script = <span class="built_in">document</span>.createElement(<span class="string">'script'</span>);</div><div class="line">			<span class="keyword">var</span> onScriptComplete;</div><div class="line">			script.charset = <span class="string">'utf-8'</span>;</div><div class="line">			script.timeout = <span class="number">120</span>;</div><div class="line">			<span class="keyword">if</span> (__webpack_require__.nc) &#123;</div><div class="line">				script.setAttribute(<span class="string">"nonce"</span>, __webpack_require__.nc);</div><div class="line">			&#125;</div><div class="line">			script.src = jsonpScriptSrc(chunkId);   <span class="comment">// js 文件名</span></div><div class="line">			onScriptComplete = <span class="function"><span class="keyword">function</span> (<span class="params">event</span>) </span>&#123;   <span class="comment">// 加载完毕回调</span></div><div class="line">				<span class="comment">// avoid mem leaks in IE.</span></div><div class="line">				script.onerror = script.onload = <span class="literal">null</span>;</div><div class="line">				clearTimeout(timeout);</div><div class="line">				<span class="keyword">var</span> chunk = installedChunks[chunkId];</div><div class="line">				<span class="keyword">if</span>(chunk !== <span class="number">0</span>) &#123;</div><div class="line">					<span class="keyword">if</span>(chunk) &#123;</div><div class="line">						<span class="keyword">var</span> errorType = event &amp;&amp; (event.type === <span class="string">'load'</span> ? <span class="string">'missing'</span> : event.type);</div><div class="line">						<span class="keyword">var</span> realSrc = event &amp;&amp; event.target &amp;&amp; event.target.src;</div><div class="line">						<span class="keyword">var</span> error = <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Loading chunk '</span> + chunkId + <span class="string">' failed.\n('</span> + errorType + <span class="string">': '</span> + realSrc + <span class="string">')'</span>);</div><div class="line">						error.type = errorType;</div><div class="line">						error.request = realSrc;</div><div class="line">						chunk[<span class="number">1</span>](error);</div><div class="line">					&#125;</div><div class="line">					installedChunks[chunkId] = <span class="literal">undefined</span>;</div><div class="line">				&#125;</div><div class="line">			&#125;;</div><div class="line">			<span class="keyword">var</span> timeout = setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</div><div class="line">				onScriptComplete(&#123; <span class="attr">type</span>: <span class="string">'timeout'</span>, <span class="attr">target</span>: script &#125;);</div><div class="line">			&#125;, <span class="number">120000</span>);</div><div class="line">			script.onerror = script.onload = onScriptComplete;</div><div class="line">			head.appendChild(script);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	<span class="keyword">return</span> <span class="built_in">Promise</span>.all(promises);</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>注意，使用 import 导入这种形式的话，我们需要使用 dynamic-import 包：  </p>
+<blockquote>
+<p>npm install –save-dev @babel/plugin-syntax-dynamic-import  </p>
+</blockquote>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">&#123;</div><div class="line">  <span class="attr">"plugins"</span>: [<span class="string">"@babel/plugin-syntax-dynamic-import"</span>]</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>或者你也可以使用 webpack 提供的 require.ensure 来代替。</p>
+<h2 id="react-loadable"><a href="#react-loadable" class="headerlink" title="react-loadable"></a>react-loadable</h2><p>上述代码，我们粗略的实现了一个分包加载的demo，业务上我们还要有很多问题来处理。比如：import 失败怎么办？加载前需要 loading 占位怎么做？服务端渲染怎么做？<br>这里介绍一个库 react-loadable。他会把我们要异步加载的组件封装成一个高阶组件供我们使用<br>例如，我们异步加载 extra 组件，并且引入一个 loading 作为加载占位，代码如下： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> LoadableComponent = Loadable(&#123;</div><div class="line">     loader: <span class="function"><span class="params">()</span> =&gt;</span> <span class="keyword">import</span>(<span class="string">'./components/extra'</span>),</div><div class="line">     loading: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;div&gt;组件加载中&lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">        );</span></div><div class="line"><span class="regexp">     &#125;</span></div><div class="line"><span class="regexp">&#125;);</span></div></pre></td></tr></table></figure>
+<p>使用的时候我们直接在恰当的时机渲染 LoadableComponent 组件即可。<br>除此之外，react-loadable 还提供了预加载，服务端渲染等功能。这里就不详细介绍使用了，主要我们看一下源码实现的过程。</p>
+<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><h4 id="函数入口"><a href="#函数入口" class="headerlink" title="函数入口"></a>函数入口</h4><p><code>react-loadable</code> 本质上就是一个高阶组件封装的过程。代码入口如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">Loadable</span>(<span class="params">opts</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> createLoadableComponent(load, opts);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Loadable 接受我们传入的参数 opts, 再调用了createLoadableComponent函数，传入了 <code>load</code> 函数和 opts。 </p>
+<h4 id="load-函数"><a href="#load-函数" class="headerlink" title="load 函数"></a>load 函数</h4><p>这里我们先来看一下 <code>load</code> 函数：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">load</span>(<span class="params">loader</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> promise = loader();</div><div class="line">    <span class="keyword">let</span> state = &#123;</div><div class="line">        loading: <span class="literal">true</span>,</div><div class="line">        loaded: <span class="literal">null</span>,    <span class="comment">// 组件实例</span></div><div class="line">        error: <span class="literal">null</span></div><div class="line">    &#125;;</div><div class="line">    state.promise = promise</div><div class="line">        .then(<span class="function"><span class="params">loaded</span> =&gt;</span> &#123;</div><div class="line">            state.loading = <span class="literal">false</span>;</div><div class="line">            state.loaded = loaded;</div><div class="line">            <span class="keyword">return</span> loaded;</div><div class="line">        &#125;)</div><div class="line">        .catch(<span class="function"><span class="params">err</span> =&gt;</span> &#123;</div><div class="line">            state.loading = <span class="literal">false</span>;</div><div class="line">            state.error = err;</div><div class="line">            <span class="keyword">throw</span> err;</div><div class="line">        &#125;);</div><div class="line">    <span class="keyword">return</span> state;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>load</code> 函数里初始化了一个state对象，执行 loader 方法(即我们传入的 loader 参数 (import(…))) 来加载异步组件。之后将返回结果保存在 state 的 loaded 属性中，加载状态保存在其他属性上。返回这个 state 供后续使用。 </p>
+<h4 id="createLoadableComponent"><a href="#createLoadableComponent" class="headerlink" title="createLoadableComponent"></a>createLoadableComponent</h4><p>接下来，开始分析整个代码的主体部分 <code>createLoadableComponent</code> 函数。其作用就是包装加载后的异步组件，返回一个高阶组件供我们使用。代码如下：</p>
+
+<p>首先检测必须含有 loading 组件，给参数添加默认值等。然后初始化一个 init 方法，用于执行上文的 <code>load</code> 函数以加载异步组件，并记录状态给 res 变量。之后就是返回 LoadableComponent 组件的过程。<br>在 LoadableComponent 中，发生如下情况：</p>
+<ol>
+<li><code>constructor</code> 阶段：调用 init 方法，保存状态到 state 上</li>
+<li><code>componentWillMount</code> 阶段：<ul>
+<li>设置 this._mounted 状态默认为 ture 表示加载完成</li>
+<li>进行一些判断，如果 res.loading 为 false，说明之前的 init 执行出错，直接return</li>
+<li>如果opts.delay 和 opts.timeout有值，且为number属性的话，就加个定时器用来延迟显示 loading 组件（避免闪烁）</li>
+<li>声明 update 函数，用来根据异步组件加载的结果更新 state 值</li>
+<li>如果 this.state.loading 或者 this.state.error 为 true，就是整体状态是正在加载或者出错了，就用 React.createElement 生成出loading的过渡组件</li>
+<li>如果 this.state.loaded 有值了，说明传入的loader的promise异步操作执行完成，就开始渲染真正的组件，调用opts.render方法</li>
+</ul>
+</li>
+</ol>
+<p>大致过程就是这样，不贴代码了。还有一些细节，对 webpack 等处理，preload 静态方法等，也就一两句话，看看就知道了。</p>
+<h2 id="异步加载时机"><a href="#异步加载时机" class="headerlink" title="异步加载时机"></a>异步加载时机</h2><p>想这么一个问题，如果 extra 包很大，我们点击打开 open 按钮后，要花很长一段时间才能看到组件内容。这样同样也不是什么好的体验。甚至，如果我们加载的包里面逻辑复杂，js 运行时间过长会阻塞掉用户的交互。这样要如何处理呢？</p>
+<h3 id="Idle-Until-Urgent-（空闲等待-amp-紧急优先）"><a href="#Idle-Until-Urgent-（空闲等待-amp-紧急优先）" class="headerlink" title="Idle Until Urgent （空闲等待 &amp; 紧急优先）"></a>Idle Until Urgent （空闲等待 &amp; 紧急优先）</h3><p>点击 extra 肯定是延后操作，我们希望在主要任务都完成后，如果浏览器有空闲时间就来预加载组件(空闲等待)。如果我们点击打开按钮，这时候组件还没有加载完毕，那么我们就立刻加载组件(紧急优先)。<br>实现该操作，我们可以借助 requestIdleCallback 函数。改造代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> React, &#123;Component&#125; <span class="keyword">from</span> <span class="string">'react'</span>;</div><div class="line"></div><div class="line"><span class="keyword">let</span> rIc = <span class="built_in">window</span>.requestIdleCallback;</div><div class="line"><span class="keyword">let</span> cIc = <span class="built_in">window</span>.cancelIdleCallback;</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</div><div class="line">    <span class="keyword">constructor</span>(prop) &#123;</div><div class="line">        <span class="keyword">super</span>(prop);</div><div class="line">        <span class="keyword">this</span>.state = &#123;</div><div class="line">            showExtra: <span class="literal">false</span></div><div class="line">        &#125;;</div><div class="line">        <span class="comment">// 开始空闲加载</span></div><div class="line">        <span class="keyword">this</span>.idleHandle = rIC(<span class="keyword">this</span>.loadComponent.bind(<span class="keyword">this</span>));</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 打开 extra 列表</span></div><div class="line">    <span class="keyword">async</span> handleOpenExtra() &#123;</div><div class="line">        <span class="keyword">if</span> (!<span class="keyword">this</span>.CExtra) &#123;</div><div class="line">            <span class="comment">// 如果没有加载好，则取消空闲加载，直接进入加载阶段</span></div><div class="line">            cIC(<span class="keyword">this</span>.idleHandle);</div><div class="line">            <span class="keyword">await</span> <span class="keyword">this</span>.loadComponent();</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">this</span>.setState(&#123;</div><div class="line">            showExtra: <span class="literal">true</span>;</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 异步加载内容</span></div><div class="line">    <span class="keyword">async</span> loadComponent() &#123;</div><div class="line">        <span class="keyword">let</span> result = <span class="keyword">await</span> <span class="keyword">import</span>(<span class="string">'./components/extra'</span>).then();</div><div class="line">        <span class="keyword">this</span>.CExtra = result;</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;React.Fragment&gt;</div><div class="line">                &#123;<span class="keyword">this</span>.state.showExtra ? &lt;this.CExtra.default /&gt; : null&#125;</div><div class="line">                &lt;div&gt;...&lt;/div&gt;</div><div class="line">                &lt;div onClick=&#123;this.handleOpenExtra.bind(this)&#125;&gt;点击查看额外信息&lt;/div&gt;</div><div class="line">            &lt;/React.Fragment&gt;</div><div class="line">        );</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line">export default App;</div></pre></td></tr></table></figure>
+<p>当然，你也可以用 react-loadable 来实现该例子，简要改动如下： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> LoadableMyComponent = Loadable(&#123;</div><div class="line">    loader: <span class="function"><span class="params">()</span> =&gt;</span> <span class="keyword">import</span>(<span class="string">'./components/extra'</span>),</div><div class="line">    ...</div><div class="line">&#125;)</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">Component</span></span>&#123;</div><div class="line">    <span class="keyword">constructor</span>() &#123;</div><div class="line">        <span class="comment">//...</span></div><div class="line">        <span class="keyword">this</span>.idleHandle = rIC(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">            LoadableMyComponent.preload()</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line">    <span class="comment">//...</span></div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这种空闲执行的方案，同样使用于执行那些不是很紧急但是耗时很长的函数。例如处理大量数据集，localStorage 中获取数据等等。合理利用 requestIdleCallback 可以减少网页的阻塞，提高效果。</p>
+<h4 id="空闲任务队列"><a href="#空闲任务队列" class="headerlink" title="空闲任务队列"></a>空闲任务队列</h4><p>上面技术适用于可以通过单个函数计算出来的属性，但在某些情况下，逻辑可能无法写到单个函数里，或者，即使技术上可行，您仍然希望将其拆分为更小的一些函数，以免其长时间阻塞主线程。 这里提供一个 <a href="https://github.com/GoogleChromeLabs/idlize" target="_blank" rel="external">IdleQueue</a> 你可以在里面找到利用 requestIdleCallback 的姿势。</p>
+<h2 id="mobx-是否需要拆分"><a href="#mobx-是否需要拆分" class="headerlink" title="mobx 是否需要拆分"></a>mobx 是否需要拆分</h2><p>通常我们在写业务的时候，会把 store 写在 <code>&lt;Provider&gt;</code> 上直直接注入。那我们需要对 mobx 的 store 也异步加载呢？理论上没有这个必要，因为 store 里面的内容确实一般不会很大并不是造成包体积过大的原因。优化效果不太明显。<br>当然如果非要异步加载的话，我这里有个想法，我们将 store 和 action 拆分出来。store 里面只包含数据：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">IndexStore</span> </span>&#123;</div><div class="line">    @observable list = [];</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExtraStore</span> </span>&#123;</div><div class="line">    @observable extra = [];</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>store 依然在全局在 Provider 注入，每个业务的 action 单独抽离成一个文件： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">IndexAction</span> </span>&#123;</div><div class="line">    <span class="keyword">constructor</span>(store) &#123;</div><div class="line">        <span class="keyword">this</span>.store = store;</div><div class="line">    &#125;</div><div class="line">    @action getList() &#123;</div><div class="line">        <span class="keyword">this</span>.store.list = [</div><div class="line">            <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span></div><div class="line">        ];</div><div class="line">    &#125;</div><div class="line">    @action addItem() &#123;</div><div class="line">        <span class="keyword">this</span>.store.list.push(<span class="keyword">this</span>.list.length + <span class="number">1</span>);</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>action 们单独在一个全局变量中维护，需要异步加载的时候如下：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// actions 为一个全局变量</span></div><div class="line"><span class="keyword">import</span>(<span class="string">'../../actions/extra'</span>).then(<span class="function"><span class="params">res</span> =&gt;</span> &#123;</div><div class="line">    <span class="keyword">let</span> ExtraAction = res &amp;&amp; res.__esModule ? res.default : res;</div><div class="line">    actions.extra = <span class="keyword">new</span> ExtraAction(self.props.rootStore.extraStore);</div><div class="line">    <span class="comment">// ....</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://webpack.docschina.org/guides/code-splitting/#%E5%8A%A8%E6%80%81%E5%AF%BC%E5%85%A5-dynamic-imports-" target="_blank" rel="external">webpack 动态导入</a></li>
+<li><a href="https://juejin.im/post/5bdec712e51d4505525b0fba" target="_blank" rel="external">[译] Google 工程师提升网页性能的新策略：空闲执行，紧急优先</a></li>
+<li><a href="https://book.douban.com/subject/30290509/" target="_blank" rel="external">React状态管理与同构实战</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/react/" rel="tag">react</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/19/从js角度看dart3/" rel="next" title="从 javascript 角度看 Dart【三】">
+                <i class="fa fa-chevron-left"></i> 从 javascript 角度看 Dart【三】
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="CaelumTian" />
+          <p class="site-author-name" itemprop="name">CaelumTian</p>
+           
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">19</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">标签</span>
+              
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                  
+                    <i class="fa fa-fw fa-linkedin-square"></i>
+                  
+                    
+                      LinkIn
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                  
+                    <i class="fa fa-fw fa-envelope"></i>
+                  
+                    
+                      E-Mail
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                    
+                      Weibo
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                    
+                      Twitter
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              友情链接
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#单页面代码分割"><span class="nav-number">1.</span> <span class="nav-text">单页面代码分割</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码分割案例"><span class="nav-number">2.</span> <span class="nav-text">代码分割案例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#动态导入-dynamic-imports"><span class="nav-number">2.1.</span> <span class="nav-text">动态导入(dynamic imports)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#react-loadable"><span class="nav-number">3.</span> <span class="nav-text">react-loadable</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#源码解析"><span class="nav-number">3.1.</span> <span class="nav-text">源码解析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#函数入口"><span class="nav-number">3.1.1.</span> <span class="nav-text">函数入口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#load-函数"><span class="nav-number">3.1.2.</span> <span class="nav-text">load 函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#createLoadableComponent"><span class="nav-number">3.1.3.</span> <span class="nav-text">createLoadableComponent</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异步加载时机"><span class="nav-number">4.</span> <span class="nav-text">异步加载时机</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Idle-Until-Urgent-（空闲等待-amp-紧急优先）"><span class="nav-number">4.1.</span> <span class="nav-text">Idle Until Urgent （空闲等待 & 紧急优先）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#空闲任务队列"><span class="nav-number">4.1.1.</span> <span class="nav-text">空闲任务队列</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mobx-是否需要拆分"><span class="nav-number">5.</span> <span class="nav-text">mobx 是否需要拆分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">6.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="author" itemprop="copyrightHolder"> CaelumTian的个人博客</span>
+</div>
+
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  <script>
+      if('serviceWorker' in navigator) {
+            navigator.serviceWorker.register("/js/main.js");
+      }
+  </script>
+</body>
+</html>
