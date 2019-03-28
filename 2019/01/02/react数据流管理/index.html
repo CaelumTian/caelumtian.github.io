@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="react,redux," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="react 的范式为 UI = render(state)，用户的界面完全取决于数据层。react 中通过管理状态（state）来实现对组件的管理，当 state 发生变更后，react 就会重新渲染界面，组件与组件之间也经常需要共享状态。如果缺乏一个好的状态管理方案，那么共享数据将变得麻烦，同时状态不受控的话会让我们很难跟踪调试程序。">
+<meta name="keywords" content="react,redux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="前端数据流管理">
+<meta property="og:url" content="http://yoursite.com/2019/01/02/react数据流管理/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="react 的范式为 UI = render(state)，用户的界面完全取决于数据层。react 中通过管理状态（state）来实现对组件的管理，当 state 发生变更后，react 就会重新渲染界面，组件与组件之间也经常需要共享状态。如果缺乏一个好的状态管理方案，那么共享数据将变得麻烦，同时状态不受控的话会让我们很难跟踪调试程序。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2019/01/02/react数据流管理/a3.png">
+<meta property="og:image" content="http://yoursite.com/2019/01/02/react数据流管理/a4.png">
+<meta property="og:image" content="http://yoursite.com/2019/01/02/react数据流管理/a5.png">
+<meta property="og:image" content="http://yoursite.com/2019/01/02/react数据流管理/flow.png">
+<meta property="og:updated_time" content="2019-03-26T08:26:17.930Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="前端数据流管理">
+<meta name="twitter:description" content="react 的范式为 UI = render(state)，用户的界面完全取决于数据层。react 中通过管理状态（state）来实现对组件的管理，当 state 发生变更后，react 就会重新渲染界面，组件与组件之间也经常需要共享状态。如果缺乏一个好的状态管理方案，那么共享数据将变得麻烦，同时状态不受控的话会让我们很难跟踪调试程序。">
+<meta name="twitter:image" content="http://yoursite.com/2019/01/02/react数据流管理/a3.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/01/02/react数据流管理/"/>
+
+
+
+
+
+  <title>前端数据流管理 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/02/react数据流管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">前端数据流管理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-02T14:19:28+08:00">
+                2019-01-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>react 的范式为 <code>UI = render(state)</code>，用户的界面完全取决于数据层。react 中通过管理状态（state）来实现对组件的管理，当 state 发生变更后，react 就会重新渲染界面，组件与组件之间也经常需要共享状态。如果缺乏一个好的状态管理方案，那么共享数据将变得麻烦，同时状态不受控的话会让我们很难跟踪调试程序。</p>
+<a id="more"></a>
+<p>react 本身采用的时自上而下的单向组件数据流，我们通常将代码抽成 Smart Component 组件和 Dumb Component 组件。通过 proprs 来连接，来完成功能。针对小的项目，这就足够了，但是项目大了以后会出现如下几个问题：</p>
+<ol>
+<li>如何跨组件实现状态同步<br>react 16 提供新的的 context 可以解决这一问题，但是 context 一般会放顶级组件上，一旦有改变将触发所有组件的re-render，这将带来损耗。</li>
+<li>如何让状态变得可预知，甚至可回溯</li>
+<li>如何避免组件臃肿，Model 和 View 都混在了一起</li>
+</ol>
+<p>为此前端提出了一个通用解决思路：把组件之间需要共享的状态抽取出来，遵循特定的约定，统一来管理，让状态的变化可以预测。针对这个思路，我们来看下都有哪些实现。 (隔离变化，约定大于配置，其实不管是 Vue，还是 React 都对其状态管理有着同样的要求)</p>
+<h2 id="单向数据流体系"><a href="#单向数据流体系" class="headerlink" title="单向数据流体系"></a>单向数据流体系</h2><h3 id="Store-模式"><a href="#Store-模式" class="headerlink" title="Store 模式"></a>Store 模式</h3><p>我们将状态存在一个全局变量 <code>store</code> 里面，store 里面设置一些方法来控制 state 的改变。<br><code>约定</code>：组件只能通过调用 store 上的方法来改变数据，而不能直接操作 store 里面的 state。这样就保证了数据的可追溯。 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> store = &#123;</div><div class="line">    state: &#123;</div><div class="line">        data: &#123;&#125;</div><div class="line">    &#125;,</div><div class="line">    setDataAction(newValue) &#123;</div><div class="line">        <span class="keyword">this</span>.state.data = newValue;</div><div class="line">    &#125;,</div><div class="line">    clearDataAction() &#123;</div><div class="line">        <span class="keyword">this</span>.state.data = &#123;&#125;;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>进一步，为了方便管理 view 层调用相应的 store 方法，我们包装一个 <code>dispatcher</code> 来映射 view 层的一个动作 action 到 store 上。这样一个 flux 架构就诞生了。</p>
+<h3 id="Flux"><a href="#Flux" class="headerlink" title="Flux"></a>Flux</h3><p>Flux 本身是一种思想，一种约定。Flux 把一个应用分成 4 个部分：View, Action, Dispatcher, Store</p>
+<img src="/2019/01/02/react数据流管理/a3.png" alt="a3.png" title="">   
+<p>View 层用来展示数据，当用户操作UI上的某个操作，就会触发 Dispatcher。<br>Dispatcher 就像一个请求中转站一样会 dispatch 一个 action 给 Store。Store 根据这个 action 来改变数据。当然 Action 也可以由其他地方触发。<br>一旦 Store 发生了变化，就会往外面发送一个事件，比如 change，来通知所有的订阅者。View 会监听这个事件，从而触发自身的 re-render。（实现：发布订阅模式）<br>Dispatcher 的作用是接收所有的 Action，然后发给所有的 Store。 Store 的改变只能通过 Action，不能通过其他方式。</p>
+<p>改写上面的例子：</p>
+<p>store 部分加入发布订阅</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> store = assign((), EventEmitter.prototype, store, &#123;</div><div class="line">    emitChange: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.emit(<span class="string">'change'</span>);</div><div class="line">    &#125;</div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p>Dispatcher 部分</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> store <span class="keyword">from</span> <span class="string">'../store'</span>;</div><div class="line"></div><div class="line">AppDispatcher.regiseter(<span class="function">(<span class="params">action</span>) =&gt;</span> &#123;</div><div class="line">    <span class="keyword">switch</span>(action.type) &#123;</div><div class="line">        <span class="keyword">case</span> <span class="string">'setData'</span>:</div><div class="line">            store.setData(action.data);</div><div class="line">            <span class="comment">// 触发变更</span></div><div class="line">            store.emitChange();</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> <span class="string">'clear'</span>:</div><div class="line">            store.clearData();</div><div class="line">    &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>View 层</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> store <span class="keyword">from</span> <span class="string">'../store'</span>;</div><div class="line"><span class="keyword">import</span> AppDispatcher <span class="keyword">from</span> <span class="string">'...'</span>;</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    componentDidMount: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        store.addChangeListener(<span class="keyword">this</span>._onChange);</div><div class="line">    &#125;</div><div class="line">    componentWillUnmount: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        store.removeChangeListener(<span class="keyword">this</span>._onChange);</div><div class="line">    &#125;</div><div class="line">    _onChange: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">this</span>.setState(&#123;</div><div class="line">            items: ListStore.getAll()</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line">    handleClick: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        AppDispatcher(&#123;</div><div class="line">            type: <span class="string">'setData'</span>,</div><div class="line">            data: data</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="comment">// ...</span></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看出，Flux 核心思想就是数据都是单向流动的。<br>Flux 本身会有很多个 store 来存储引用数据，并在各自的 store 里面执行更新逻辑。那么当多个store之间有依赖关系的时候，就不太好处理。同时 store 里面不仅封装了数据，还有处理数据的逻辑。</p>
+<h3 id="Redux"><a href="#Redux" class="headerlink" title="Redux"></a>Redux</h3><p>在 Flux 的基础上，Redux 对其进行了一些改进增强。  </p>
+<img src="/2019/01/02/react数据流管理/a4.png" alt="a4.png" title=""> 
+<p>在 Redux 中没有 Dispatcher 的概念，它使用 reducer 来进行事件处理。<br>reducer 是一个纯函数，每个 reducer 负责维护应用整体 state 树中的某一部分，多个 reducer 可以通过 combineReducers 方法合成一个根reducer，这个根reducer负责维护完整的 state。<br><code>约定</code>: reducer 必须为纯函数（此函数在相同的输入值时，需产生相同的输出。函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O 设备产生的外部输出无关，例如 Ajax）。<br>由于有这样的规定，redux 成功副作用隔离。我们很容易判断出数据的变化的原因，数据流清晰可回朔。同时 Redux 引入的 immutable 进一步隔离了对象引用的问题。</p>
+<h4 id="对比-Flux"><a href="#对比-Flux" class="headerlink" title="对比 Flux"></a>对比 Flux</h4><p>Redux 和 Flux 之间最大的区别就是对 store/reducer 的抽象，Flux 中 store 是各自为战的，每个 store 只对对应的 controller-view 负责，每次更新都只通知对应的 controller-view；而 Redux 中各子 reducer 都是由根reducer统一管理的，每个子reducer的变化都要经过根reducer的整合。</p>
+<img src="/2019/01/02/react数据流管理/a5.png" alt="a5.png" title=""> 
+<p>综上：Redux有三大原则：</p>
+<ol>
+<li>单一数据源：Flux 的数据源可以是多个。 </li>
+<li>State 是只读的：Flux 的 State 可以随便改。</li>
+<li>使用纯函数来执行修改：Flux 执行修改的不一定是纯函数。</li>
+</ol>
+<h4 id="Redux-异步"><a href="#Redux-异步" class="headerlink" title="Redux 异步"></a>Redux 异步</h4><p>在 Redux 中，每当我们发出一个 Action，Reducer 就会立即算出 State。那么我们想支持异步呢？在哪儿加入异步操作呢？<br>Reducer ？ 纯函数，不能引入IO，不适合。Action ? 一个纯对象，没有位置。所以只能通过包装 dispatch 加上中间件的动能。例如：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> next = store.dispatch;</div><div class="line">store.dispatch = <span class="function"><span class="keyword">function</span> <span class="title">dispatchAndLog</span>(<span class="params">action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'dispatching'</span>, action);</div><div class="line">    next(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'next state'</span>, store.getState());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Redux 提供了一个 applyMiddleware 方法来应用中间件：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> store = createStore(</div><div class="line">    reducer,</div><div class="line">    applyMiddleware(thunk, promise, logger)</div><div class="line">);</div></pre></td></tr></table></figure>
+<p>这个方法主要就是把所有的中间件组成一个数组，依次执行。也就是说，任何被发送到 store 的 action 现在都会经过thunk，promise，logger 这几个中间件了。</p>
+<p>关于 Redux 的异步处理，之后会有单独解析 redux-sage 的内容。</p>
+<h2 id="Mobx"><a href="#Mobx" class="headerlink" title="Mobx"></a>Mobx</h2><p>之前说的都是单项数据流方案，思想主要就是函数是编程（FP）的思想。Mobx 则是一个 TFRP 的框架，FRP 的一个分支。</p>
+<img src="/2019/01/02/react数据流管理/flow.png" alt="flow.png" title="">   
+<p>mobx的流程图如上，通常是：触发action，在action中修改state，通过computed拿到state的计算值，自动触发对应的reactions，这里包含autorun，渲染视图等。有一点需要注意：相对于react来说，mobx没有一个全局的状态树，状态分散在各个独立的 store 中。这种自动订阅，自动发布的模式，使得开发十分方便。<br>但是相对的，mobx 中并没有解决副作用问题，同时，对 props 的直接修改，也会导致与 react 对 props 的不可变定义冲突。因此 mobx 后来给出了 action 解决方案，解决了与 react props 的冲突，但是没有解决副作用未强制分离的问题。  </p>
+<p>对比一下：</p>
+<ol>
+<li>redux 采用全局单一 store，mobx 则由多个独立 store 组成</li>
+<li>redux 通过 action 将副作用隔离在 reducer 之外。而 mobx 比较自由，没有对副作用进行处理。</li>
+<li>redux 函数式、不可变、模式化；mobx 响应式、依赖追踪</li>
+<li>redux 开发需要些很多样板代码，但是调试数据的时候确很方便。mobx 书写简单，但是没有强约束换来的是调试困难。</li>
+</ol>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MjM5MTA1MjAxMQ==&amp;mid=2651231366&amp;idx=1&amp;sn=0e322d1fb0b59710aae98fe9df7d00ae&amp;chksm=bd494d028a3ec414ccda32e03f8a794372cdb1ab614c06f60526571623dd462653813d5bc230&amp;xtrack=1&amp;scene=0&amp;subscene=131&amp;clicktime=1552304245&amp;ascene=7&amp;devicetype=android-28&amp;version=2700033b&amp;nettype=3gnet&amp;abtest_cookie=BAABAAoACwASABMABQAjlx4AVpkeAMyZHgDamR4A3JkeAAAA&amp;lang=zh_CN&amp;pass_ticket=YbTwrdgEkkcGf%252BH838CvWRFJH9PYUZn90NpiCUOidTcTbXee%252B5bgEwAXKl6tBRd7&amp;wx_header=1" target="_blank" rel="external">Vuex、Flux、Redux、Redux-saga、Dva、MobX</a></li>
+<li><a href="https://github.com/dt-fe/weekly/blob/master/42.%E7%B2%BE%E8%AF%BB%E3%80%8A%E5%89%8D%E7%AB%AF%E6%95%B0%E6%8D%AE%E6%B5%81%E5%93%B2%E5%AD%A6%E3%80%8B.md" target="_blank" rel="external">精读《前端数据流哲学》</a></li>
+<li><a href="https://imweb.io/topic/57711e37f0a5487b05f325b5" target="_blank" rel="external">浅谈 React、Flux 与 Redux</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/react/" rel="tag">react</a>
+          
+            <a href="/tags/redux/" rel="tag">redux</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/05/React组件复用和组合2/" rel="next" title="React 组件复用和组合 (二)">
+                <i class="fa fa-chevron-left"></i> React 组件复用和组合 (二)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/26/redux源码解析/" rel="prev" title="redux 源码解析">
+                redux 源码解析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="CaelumTian" />
+            
+              <p class="site-author-name" itemprop="name">CaelumTian</p>
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>LinkIn</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-globe"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#单向数据流体系"><span class="nav-number">1.</span> <span class="nav-text">单向数据流体系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Store-模式"><span class="nav-number">1.1.</span> <span class="nav-text">Store 模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Flux"><span class="nav-number">1.2.</span> <span class="nav-text">Flux</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redux"><span class="nav-number">1.3.</span> <span class="nav-text">Redux</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#对比-Flux"><span class="nav-number">1.3.1.</span> <span class="nav-text">对比 Flux</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redux-异步"><span class="nav-number">1.3.2.</span> <span class="nav-text">Redux 异步</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mobx"><span class="nav-number">2.</span> <span class="nav-text">Mobx</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">3.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaelumTian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

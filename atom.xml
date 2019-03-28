@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-11-22T09:46:48.252Z</updated>
+  <updated>2019-03-28T11:54:42.112Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,303 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>redux 源码解析</title>
+    <link href="http://yoursite.com/2019/01/26/redux%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/"/>
+    <id>http://yoursite.com/2019/01/26/redux源码解析/</id>
+    <published>2019-01-26T08:27:05.000Z</published>
+    <updated>2019-03-28T11:54:42.112Z</updated>
+    
+    <content type="html"><![CDATA[<p>redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能： </p>
+<ul>
+<li>创建 store，即：createStore()。</li>
+<li>创建出来的 store 提供subscribe，dispatch，getState这些方法。</li>
+<li>将多个reducer合并为一个reducer，即：combineReducers()。</li>
+<li>应用中间件，即applyMiddleware()。</li>
+</ul>
+<a id="more"></a>
+<h2 id="createStore-实现"><a href="#createStore-实现" class="headerlink" title="createStore 实现"></a>createStore 实现</h2><p>简化版代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">createStore</span>(<span class="params">reducer, preloadedState, enhancer</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> currentReducer = reducer <span class="comment">// reducer</span></div><div class="line">    <span class="keyword">let</span> currentState = preloadedState <span class="comment">// 默认 state</span></div><div class="line">    <span class="keyword">let</span> currentListeners = [] <span class="comment">// 发布订阅模式队列</span></div><div class="line">    <span class="keyword">let</span> nextListeners = currentListeners <span class="comment">// 浅拷贝下这个队列</span></div><div class="line">    <span class="keyword">let</span> isDispatching = <span class="literal">false</span> <span class="comment">// isDispatching 标志是否正在执行dispatch</span></div><div class="line"></div><div class="line">    <span class="comment">// @enhancer</span></div><div class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> enhancer !== <span class="string">'undefined'</span>) &#123;</div><div class="line">        <span class="comment">// 如果enhancer存在，那他必须是个function, 否则throw Error哈</span></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">typeof</span> enhancer !== <span class="string">'function'</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Expected the enhancer to be a function.'</span>)</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> enhancer(createStore)(reducer, preloadedState)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// @1</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">getState</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="comment">// 为了确保state的正确性(获取最新的state)，判断是否正在 dispatch</span></div><div class="line">        <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(.../);</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 确定currentState是当前的state 看 -&gt; subscribe</span></div><div class="line">        <span class="keyword">return</span> currentState</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// @2</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">subscribe</span>(<span class="params">listener</span>) </span>&#123;</div><div class="line">        <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(.../);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">let</span> isSubscribed = <span class="literal">true</span>;</div><div class="line">        <span class="comment">// 如果，nextListeners 和 currentListeners 是一个引用，就拷贝 currentListeners 给 nextListeners</span></div><div class="line">        ensureCanMutateNextListeners()</div><div class="line">        <span class="comment">// 添加一个订阅函数</span></div><div class="line">        nextListeners.push(listener)</div><div class="line">        <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">unsubscribe</span>(<span class="params"></span>) </span>&#123;</div><div class="line">            <span class="keyword">if</span> (!isSubscribed) &#123;</div><div class="line">                <span class="comment">// 没有直接订阅 则 return</span></div><div class="line">                <span class="keyword">return</span></div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="comment">// 同理</span></div><div class="line">            <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">''</span>)</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// 取消订阅</span></div><div class="line">            isSubscribed = <span class="literal">false</span></div><div class="line">            <span class="comment">// 保存订阅快照</span></div><div class="line">            ensureCanMutateNextListeners()</div><div class="line">            <span class="comment">// 找到并删除当前的listener</span></div><div class="line">            <span class="keyword">const</span> index = nextListeners.indexOf(listener)</div><div class="line">            nextListeners.splice(index, <span class="number">1</span>)</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// @3</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">dispatch</span>(<span class="params">action</span>) </span>&#123;</div><div class="line">        <span class="comment">// 各种常规判断</span></div><div class="line">        ...</div><div class="line">        <span class="comment">// dispatch中不可以有进行的dispatch</span></div><div class="line">        <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Reducers may not dispatch actions.'</span>)</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="comment">// 执行时标记为true</span></div><div class="line">            isDispatching = <span class="literal">true</span></div><div class="line">            <span class="comment">// 执行reducer</span></div><div class="line">            currentState = currentReducer(currentState, action)</div><div class="line">        &#125; <span class="keyword">finally</span> &#123;</div><div class="line">            <span class="comment">// 最终执行， isDispatching标记为false， 即完成状态</span></div><div class="line">            isDispatching = <span class="literal">false</span></div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// 执行所有监听队列</span></div><div class="line">        <span class="keyword">const</span> listeners = (currentListeners = nextListeners)</div><div class="line">        <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; listeners.length; i++) &#123;</div><div class="line">            <span class="keyword">const</span> listener = listeners[i]</div><div class="line">            <span class="comment">// 执行每一个监听函数</span></div><div class="line">            listener()</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 返回传入的action</span></div><div class="line">        <span class="keyword">return</span> action</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 初始化数据</span></div><div class="line">    dispatch(&#123;</div><div class="line">        type: ActionTypes.INIT</div><div class="line">    &#125;)</div><div class="line"></div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">        dispatch,</div><div class="line">        subscribe,</div><div class="line">        getState,</div><div class="line">        replaceReducer,</div><div class="line">        [$$observable]: observable</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="getState"><a href="#getState" class="headerlink" title="getState"></a>getState</h3><p>可以看出，createStore 将 state 通过闭包保存在了 currentState 中，通过调用 getState 返回。为了能够初始化数据，在 createStore 的最后，dispath 了一个 <code>ActionTypes.INIT</code> 请求。在这里 <code>ActionTypes.INIT</code> 实际上为一个随机字符串 <code>@@redux/INIT${randomString()}</code>，这就保证了其不会命中任何 <code>action</code>，而是走默认 <code>return state</code> 完成数据初始化过程。</p>
+<h3 id="subscribe"><a href="#subscribe" class="headerlink" title="subscribe"></a>subscribe</h3><p>一个简单的发布订阅模式，所有注册函数保存在 newListeners (执行的时候，会用 currentListeners) 队列中。返回一个 unsubscribe 来清除注册函数。</p>
+<h3 id="dispatch"><a href="#dispatch" class="headerlink" title="dispatch"></a>dispatch</h3><p>直接调用 reducer 函数来进行处理，并且执行所有的 listeners。可以看见整个过程都是同步的，这也是 redux 不能在 reducer 中书写异步的原因之一(最主要的还是因为纯函数，不能涉及IO)。<br>这里 dispatch 对参数 action 做了检查：action 必须是一个纯对象，且必须有 type 属性。</p>
+<h2 id="combinReducers"><a href="#combinReducers" class="headerlink" title="combinReducers"></a>combinReducers</h2><p>combinReducers 可以将多个 reducers 合并在成为一个 reducers，从而给 createStore 使用。简单的用法如下。简单来说就是讲，各个 reducer 上的 state 统一管理在一个 key 值上，action 判断都统一放在一起。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">combineReducers(&#123;</div><div class="line">    key1: reducer1,</div><div class="line">    key2: reducer2</div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">combineReducers</span>(<span class="params">reducers</span>) </span>&#123;</div><div class="line">    <span class="comment">// 先获取传入reducers对象的所有key</span></div><div class="line">    <span class="keyword">const</span> reducerKeys = <span class="built_in">Object</span>.keys(reducers)</div><div class="line">    <span class="comment">// 最后真正有效的reducer存在这里</span></div><div class="line">    <span class="keyword">const</span> finalReducers = &#123;&#125; </div><div class="line">    </div><div class="line">    <span class="comment">// 下面从reducers中筛选出有效的reducer</span></div><div class="line">    <span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; reducerKeys.length; i++)&#123;</div><div class="line">        <span class="keyword">const</span> key  = reducerKeys[i]</div><div class="line">        <span class="keyword">if</span>(<span class="keyword">typeof</span> reducers[key] === <span class="string">'function'</span>) &#123;</div><div class="line">            finalReducers[key] = reducers[key] </div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 有效的 key</span></div><div class="line">    <span class="keyword">const</span> finalReducerKeys = <span class="built_in">Object</span>.keys(finalReducers);</div><div class="line">    </div><div class="line">    <span class="keyword">let</span> shapeAssertionError</div><div class="line">  	<span class="keyword">try</span> &#123;</div><div class="line">        <span class="comment">// 检查finalReducer中的reducer接受一个初始action或一个未知的action时，是否依旧能够返回有效的值。</span></div><div class="line">    	assertReducerShape(finalReducers)</div><div class="line">  	&#125; <span class="keyword">catch</span> (e) &#123;</div><div class="line">    	shapeAssertionError = e</div><div class="line">  	&#125;</div><div class="line">    </div><div class="line">    <span class="comment">// 返回合并后的reducer</span></div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">combination</span>(<span class="params">state= &#123;&#125;, action</span>)</span>&#123;</div><div class="line">    	<span class="comment">// 取得每个子reducer对应的state，与action一起作为参数给每个子reducer执行。</span></div><div class="line">    	<span class="keyword">let</span> hasChanged = <span class="literal">false</span> <span class="comment">//标志state是否有变化</span></div><div class="line">        <span class="keyword">let</span> nextState = &#123;&#125;</div><div class="line">        <span class="comment">// 执行所有的子 reducer </span></div><div class="line">        <span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; finalReducerKeys.length; i++) &#123;</div><div class="line">            <span class="keyword">const</span> key = finalReducerKeys[i]</div><div class="line">            <span class="keyword">const</span> reducer = finalReducers[key]</div><div class="line">            <span class="comment">// 当前key的state值</span></div><div class="line">            <span class="keyword">const</span> previousStateForKey = state[key]</div><div class="line">            <span class="comment">// 执行reducer， 返回当前state</span></div><div class="line">            <span class="keyword">const</span> nextStateForKey = reducer(previousStateForKey, action)</div><div class="line">            <span class="comment">//存到nextState中（总的状态）</span></div><div class="line">            nextState[key] = nextStateForKey</div><div class="line">            <span class="comment">// 如果子reducer不能处理该action，那么会返回previousStateForKey</span></div><div class="line">            hasChanged = hasChanged || previousStateForKey !== nextStateForKey</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 当所有状态都没改变时，我们直接返回之前的state就可以了。</span></div><div class="line">        <span class="keyword">return</span> hasChanged ? nextState : state</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里我们可以看见，融合后的 reducer 当一个 action 触发时，不仅仅是该 action 对应的 reducer 执行了，其他所有的 reducer 也同时被执行了，只是 action type 不匹配，state 的值不变而已。这种空操作，可能会存在性能的浪费。(理论上大部分都不会有问题，只有节点数量多了才会有，最重要的优化是：没问题之前不做优化)<br>我们可以借助 redux-ignore 来指定黑白名单的方式，返回优化后的 reducer。  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; ignoreActions, filterActions &#125; <span class="keyword">from</span> <span class="string">'redux-ignore'</span>;</div><div class="line"> </div><div class="line"><span class="comment">// 黑名单写法</span></div><div class="line">ignoreActions(reducer, [ARRAY_OF_ACTIONS])</div><div class="line">ignoreActions(reducer, (action) =&gt; !action.valid)</div><div class="line"></div><div class="line"><span class="comment">// 白名单写法</span></div><div class="line">filterActions(reducer, [ARRAY_OF_ACTIONS])</div><div class="line">filterActions(reducer, (action) =&gt; action.valid)</div></pre></td></tr></table></figure>
+<p>原理也很简单，就是利用  actions.indexOf(action.type) &gt;= 0 来决定 reducer 是否触发而已。</p>
+<h2 id="applyMiddleware-中间件"><a href="#applyMiddleware-中间件" class="headerlink" title="applyMiddleware 中间件"></a>applyMiddleware 中间件</h2><p>我们知道 reducer 本身是一个纯函数，纯函数要求自身不能和 IO 产生关联。这也就注定 reducer 本身是一个同步函数。同样，我们在 <code>store.dispath</code> 源码中看见，当一个 dispath 发出后，所有的监听回调也就同步发生了。<br>在实际业务中，我们的请求一般都是异步的，那么做异步请求处理就只能放在 dispatch 前来做。所以我们希望有一种通用的方案，来扩展 dispath 的功能。这就是中间件的功能。下面我们思考因该如何来做一个中间件：</p>
+<h3 id="封装-dispath"><a href="#封装-dispath" class="headerlink" title="封装 dispath"></a>封装 dispath</h3><p>加入我们想要加入一个 dispath 前后记录日志的功能。我们可能会这么写 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.log(<span class="string">'action 触发前'</span>);</div><div class="line">store.dispath(action);</div><div class="line"><span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>);</div></pre></td></tr></table></figure>
+<p>为了方便复用，我们扩展其为一个函数： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">dispatchAndLog</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    store.dispatch(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="重写-dispatch"><a href="#重写-dispatch" class="headerlink" title="重写 dispatch"></a>重写 dispatch</h3><p>现在我们可以通过调用 <code>dispatchAndLog</code> 来完成带有日志的 dispath。日志记录功能可以直接反映到 dispath 上面，不改变原有的用法，更直接些。通过复写 dispath 来实现扩展：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 保存 dispath 副本</span></div><div class="line"><span class="keyword">let</span> next = store.dispatch;</div><div class="line">store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    <span class="keyword">let</span> result = store.dispatch(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">    <span class="comment">// 返回 action</span></div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>现在我们随便使用 dispath 就可以实现日志的打印，而不用费事的去使用 <code>dispatchAndLog</code> 函数。</p>
+<h3 id="新的扩展"><a href="#新的扩展" class="headerlink" title="新的扩展"></a>新的扩展</h3><p>实际开发中，我们可能不仅需要日志功能，还有可能需要其他的扩展功能。比如异常上报。为此我们需要将上述操作写成两个函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsLogFunc</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">        <span class="keyword">let</span> result = next(action);</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">        <span class="comment">// 返回 action</span></div><div class="line">        <span class="keyword">return</span> result;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsErrorPublish</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="keyword">return</span> next(action)</div><div class="line">        &#125; <span class="keyword">catch</span>(e) &#123;</div><div class="line">            <span class="comment">// 错误处理</span></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>使用两个扩展：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">extendsLogFunc(store, aciton);</div><div class="line">extendsErrorPublish(store, action);</div></pre></td></tr></table></figure>
+<h3 id="middleware-方法"><a href="#middleware-方法" class="headerlink" title="middleware 方法"></a>middleware 方法</h3><p>从上面，我们可以看出，其实扩展多个中间件，就是复写多次 <code>store.dispatch</code> 方法。每次 next 缓存的都是上一个中间件替换好的 dispatch 方法。即如下链式调用：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">next(next(next(...args)))</div></pre></td></tr></table></figure>
+<p>即洋葱模型。我们提供这样一个封装函数，来实现这一模型。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">store, middleswares</span>) </span>&#123;</div><div class="line">    middlewares = middlewares.slice();</div><div class="line">    <span class="comment">// 翻转是为了实现从内向外逐步执行</span></div><div class="line">    middlewares.reverse();</div><div class="line">    middlewares.forEach(<span class="function"><span class="params">middleware</span> =&gt;</span></div><div class="line">        store.dispatch = middleware(store);</div><div class="line">    )</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>对 <code>extendsLogFunc</code> 稍作改动(extendsErrorPublish， 同理) </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsLogFunc</span>(<span class="params">store</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params">action</span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">        <span class="keyword">let</span> result = next(action);</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">        <span class="comment">// 返回 action</span></div><div class="line">        <span class="keyword">return</span> result;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>就可以使用了：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">applyMiddleware(store, [extendsLogFunc, extendsErrorPublish])</div></pre></td></tr></table></figure>
+<h3 id="函数柯里化"><a href="#函数柯里化" class="headerlink" title="函数柯里化"></a>函数柯里化</h3><p>我们观察改动后的 extendsLogFunc。无非就是层层准备参数，最后一起使用，这样我们很容易想到函数柯里化：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> extendsLogFunc = <span class="function"><span class="params">store</span> =&gt;</span> next =&gt; <span class="function"><span class="params">action</span> =&gt;</span> &#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    <span class="keyword">let</span> result = next(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">    <span class="comment">// 返回 action</span></div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>为了能顺利运行，我们也需要晒微修改下 applyMiddleware，如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">store, middlewares</span>) </span>&#123;</div><div class="line">    middlewares = middlewares.slice();</div><div class="line">    middlewares.reverse();</div><div class="line">    <span class="keyword">let</span> dispatch = store.dispath;</div><div class="line">    middlewares.forEach(<span class="function"><span class="params">middleware</span> =&gt;</span></div><div class="line">        dispatch = middleware(store)(dispatch);</div><div class="line">    )</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们再看，createStore 的源码，如果我们传入了第三个参数 enhancer 作为中间件，那么调用的是：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">return</span> enhancer(createStore)(reducer, preloadedState)</div></pre></td></tr></table></figure>
+<p>典型的柯里化调用，为此，我们最后修改下 <code>applyMiddleware</code> 函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">middlewares</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="function">(<span class="params">createStore</span>) =&gt;</span> (reducer, preloadedState) =&gt; &#123;</div><div class="line">        <span class="keyword">const</span> stores = createStore(reducer, preloadedState);</div><div class="line">        <span class="keyword">let</span> dispatch = store.dispath;</div><div class="line">        middlewares = middlewares.slice();</div><div class="line">        middlewares.reverse();</div><div class="line">        middlewares.forEach(<span class="function"><span class="params">middleware</span> =&gt;</span></div><div class="line">            dispatch = middleware(store)(dispatch);</div><div class="line">        )</div><div class="line">        <span class="keyword">return</span> <span class="built_in">Object</span>.assing(&#123;&#125;, store, &#123;dispath&#125;);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="string">``</span><span class="string">` </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">这样，我们就完成了，使用如下：</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript</div><div class="line"><span class="keyword">import</span> &#123;createStore&#125; <span class="keyword">from</span> <span class="string">'redux'</span></div><div class="line"><span class="keyword">let</span> store = createStore(reducers, applyMiddleware([extendsLogFunc, extendsErrorPublish]));</div></pre></td></tr></table></figure>
+<h3 id="看下源码"><a href="#看下源码" class="headerlink" title="看下源码"></a>看下源码</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">...middlewares</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> <span class="function"><span class="params">createStore</span> =&gt;</span> (...args) =&gt; &#123;</div><div class="line">    <span class="keyword">const</span> store = createStore(...args)</div><div class="line">    <span class="keyword">let</span> dispatch = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(</div><div class="line">        <span class="string">`Dispatching while constructing your middleware is not allowed. `</span> +</div><div class="line">          <span class="string">`Other middleware would not be applied to this dispatch.`</span></div><div class="line">      )</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">const</span> middlewareAPI = &#123;</div><div class="line">      getState: store.getState,</div><div class="line">      dispatch: <span class="function">(<span class="params">...args</span>) =&gt;</span> dispatch(...args)</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">const</span> chain = middlewares.map(<span class="function"><span class="params">middleware</span> =&gt;</span> middleware(middlewareAPI))</div><div class="line">    <span class="comment">// 实现洋葱模型</span></div><div class="line">    dispatch = compose(...chain)(store.dispatch) </div><div class="line">    <span class="comment">// 返回增强的store</span></div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      ...store,</div><div class="line">      dispatch</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>和我们的书写思路差不多吧，在源码里，通过 compose 方法，来实现的洋葱模型；compose 函数式编程中用来复合代码的：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">compose</span>(<span class="params">...funcs</span>) </span>&#123;</div><div class="line">    <span class="keyword">if</span> (funcs.length === <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="function"><span class="params">arg</span> =&gt;</span> arg</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (funcs.length === <span class="number">1</span>) &#123;</div><div class="line">        <span class="keyword">return</span> funcs[<span class="number">0</span>]</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> funcs.reduce(<span class="function">(<span class="params">a, b</span>) =&gt;</span> (...args) =&gt; a(b(...args)))</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在搭配 react 的时候，我们通常不会直接使用 <code>redux</code> 因为这样需要关注的优化点就有点多。通常情况下，我们会选择 <code>react-redux</code> 来完成和 react 的结合。下篇文章着重介绍下，<code>react-redux</code> 源码，并针对 redux 可能带来的性能问题进行说明。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能： &lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;创建 store，即：createStore()。&lt;/li&gt;
+&lt;li&gt;创建出来的 store 提供subscribe，dispatch，getState这些方法。&lt;/li&gt;
+&lt;li&gt;将多个reducer合并为一个reducer，即：combineReducers()。&lt;/li&gt;
+&lt;li&gt;应用中间件，即applyMiddleware()。&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+    
+      <category term="redux" scheme="http://yoursite.com/tags/redux/"/>
+    
+      <category term="前端源码解析" scheme="http://yoursite.com/tags/%E5%89%8D%E7%AB%AF%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>前端数据流管理</title>
+    <link href="http://yoursite.com/2019/01/02/react%E6%95%B0%E6%8D%AE%E6%B5%81%E7%AE%A1%E7%90%86/"/>
+    <id>http://yoursite.com/2019/01/02/react数据流管理/</id>
+    <published>2019-01-02T06:19:28.000Z</published>
+    <updated>2019-03-26T08:26:17.930Z</updated>
+    
+    <content type="html"><![CDATA[<p>react 的范式为 <code>UI = render(state)</code>，用户的界面完全取决于数据层。react 中通过管理状态（state）来实现对组件的管理，当 state 发生变更后，react 就会重新渲染界面，组件与组件之间也经常需要共享状态。如果缺乏一个好的状态管理方案，那么共享数据将变得麻烦，同时状态不受控的话会让我们很难跟踪调试程序。</p>
+<a id="more"></a>
+<p>react 本身采用的时自上而下的单向组件数据流，我们通常将代码抽成 Smart Component 组件和 Dumb Component 组件。通过 proprs 来连接，来完成功能。针对小的项目，这就足够了，但是项目大了以后会出现如下几个问题：</p>
+<ol>
+<li>如何跨组件实现状态同步<br>react 16 提供新的的 context 可以解决这一问题，但是 context 一般会放顶级组件上，一旦有改变将触发所有组件的re-render，这将带来损耗。</li>
+<li>如何让状态变得可预知，甚至可回溯</li>
+<li>如何避免组件臃肿，Model 和 View 都混在了一起</li>
+</ol>
+<p>为此前端提出了一个通用解决思路：把组件之间需要共享的状态抽取出来，遵循特定的约定，统一来管理，让状态的变化可以预测。针对这个思路，我们来看下都有哪些实现。 (隔离变化，约定大于配置，其实不管是 Vue，还是 React 都对其状态管理有着同样的要求)</p>
+<h2 id="单向数据流体系"><a href="#单向数据流体系" class="headerlink" title="单向数据流体系"></a>单向数据流体系</h2><h3 id="Store-模式"><a href="#Store-模式" class="headerlink" title="Store 模式"></a>Store 模式</h3><p>我们将状态存在一个全局变量 <code>store</code> 里面，store 里面设置一些方法来控制 state 的改变。<br><code>约定</code>：组件只能通过调用 store 上的方法来改变数据，而不能直接操作 store 里面的 state。这样就保证了数据的可追溯。 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> store = &#123;</div><div class="line">    state: &#123;</div><div class="line">        data: &#123;&#125;</div><div class="line">    &#125;,</div><div class="line">    setDataAction(newValue) &#123;</div><div class="line">        <span class="keyword">this</span>.state.data = newValue;</div><div class="line">    &#125;,</div><div class="line">    clearDataAction() &#123;</div><div class="line">        <span class="keyword">this</span>.state.data = &#123;&#125;;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>进一步，为了方便管理 view 层调用相应的 store 方法，我们包装一个 <code>dispatcher</code> 来映射 view 层的一个动作 action 到 store 上。这样一个 flux 架构就诞生了。</p>
+<h3 id="Flux"><a href="#Flux" class="headerlink" title="Flux"></a>Flux</h3><p>Flux 本身是一种思想，一种约定。Flux 把一个应用分成 4 个部分：View, Action, Dispatcher, Store</p>
+<img src="/2019/01/02/react数据流管理/a3.png" alt="a3.png" title="">   
+<p>View 层用来展示数据，当用户操作UI上的某个操作，就会触发 Dispatcher。<br>Dispatcher 就像一个请求中转站一样会 dispatch 一个 action 给 Store。Store 根据这个 action 来改变数据。当然 Action 也可以由其他地方触发。<br>一旦 Store 发生了变化，就会往外面发送一个事件，比如 change，来通知所有的订阅者。View 会监听这个事件，从而触发自身的 re-render。（实现：发布订阅模式）<br>Dispatcher 的作用是接收所有的 Action，然后发给所有的 Store。 Store 的改变只能通过 Action，不能通过其他方式。</p>
+<p>改写上面的例子：</p>
+<p>store 部分加入发布订阅</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> store = assign((), EventEmitter.prototype, store, &#123;</div><div class="line">    emitChange: <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="keyword">this</span>.emit(<span class="string">'change'</span>);</div><div class="line">    &#125;</div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p>Dispatcher 部分</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> store <span class="keyword">from</span> <span class="string">'../store'</span>;</div><div class="line"></div><div class="line">AppDispatcher.regiseter(<span class="function">(<span class="params">action</span>) =&gt;</span> &#123;</div><div class="line">    <span class="keyword">switch</span>(action.type) &#123;</div><div class="line">        <span class="keyword">case</span> <span class="string">'setData'</span>:</div><div class="line">            store.setData(action.data);</div><div class="line">            <span class="comment">// 触发变更</span></div><div class="line">            store.emitChange();</div><div class="line">            <span class="keyword">break</span>;</div><div class="line">        <span class="keyword">case</span> <span class="string">'clear'</span>:</div><div class="line">            store.clearData();</div><div class="line">    &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>View 层</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> store <span class="keyword">from</span> <span class="string">'../store'</span>;</div><div class="line"><span class="keyword">import</span> AppDispatcher <span class="keyword">from</span> <span class="string">'...'</span>;</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    componentDidMount: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        store.addChangeListener(<span class="keyword">this</span>._onChange);</div><div class="line">    &#125;</div><div class="line">    componentWillUnmount: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        store.removeChangeListener(<span class="keyword">this</span>._onChange);</div><div class="line">    &#125;</div><div class="line">    _onChange: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        <span class="keyword">this</span>.setState(&#123;</div><div class="line">            items: ListStore.getAll()</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line">    handleClick: <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">        AppDispatcher(&#123;</div><div class="line">            type: <span class="string">'setData'</span>,</div><div class="line">            data: data</div><div class="line">        &#125;);</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="comment">// ...</span></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看出，Flux 核心思想就是数据都是单向流动的。<br>Flux 本身会有很多个 store 来存储引用数据，并在各自的 store 里面执行更新逻辑。那么当多个store之间有依赖关系的时候，就不太好处理。同时 store 里面不仅封装了数据，还有处理数据的逻辑。</p>
+<h3 id="Redux"><a href="#Redux" class="headerlink" title="Redux"></a>Redux</h3><p>在 Flux 的基础上，Redux 对其进行了一些改进增强。  </p>
+<img src="/2019/01/02/react数据流管理/a4.png" alt="a4.png" title=""> 
+<p>在 Redux 中没有 Dispatcher 的概念，它使用 reducer 来进行事件处理。<br>reducer 是一个纯函数，每个 reducer 负责维护应用整体 state 树中的某一部分，多个 reducer 可以通过 combineReducers 方法合成一个根reducer，这个根reducer负责维护完整的 state。<br><code>约定</code>: reducer 必须为纯函数（此函数在相同的输入值时，需产生相同的输出。函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O 设备产生的外部输出无关，例如 Ajax）。<br>由于有这样的规定，redux 成功副作用隔离。我们很容易判断出数据的变化的原因，数据流清晰可回朔。同时 Redux 引入的 immutable 进一步隔离了对象引用的问题。</p>
+<h4 id="对比-Flux"><a href="#对比-Flux" class="headerlink" title="对比 Flux"></a>对比 Flux</h4><p>Redux 和 Flux 之间最大的区别就是对 store/reducer 的抽象，Flux 中 store 是各自为战的，每个 store 只对对应的 controller-view 负责，每次更新都只通知对应的 controller-view；而 Redux 中各子 reducer 都是由根reducer统一管理的，每个子reducer的变化都要经过根reducer的整合。</p>
+<img src="/2019/01/02/react数据流管理/a5.png" alt="a5.png" title=""> 
+<p>综上：Redux有三大原则：</p>
+<ol>
+<li>单一数据源：Flux 的数据源可以是多个。 </li>
+<li>State 是只读的：Flux 的 State 可以随便改。</li>
+<li>使用纯函数来执行修改：Flux 执行修改的不一定是纯函数。</li>
+</ol>
+<h4 id="Redux-异步"><a href="#Redux-异步" class="headerlink" title="Redux 异步"></a>Redux 异步</h4><p>在 Redux 中，每当我们发出一个 Action，Reducer 就会立即算出 State。那么我们想支持异步呢？在哪儿加入异步操作呢？<br>Reducer ？ 纯函数，不能引入IO，不适合。Action ? 一个纯对象，没有位置。所以只能通过包装 dispatch 加上中间件的动能。例如：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> next = store.dispatch;</div><div class="line">store.dispatch = <span class="function"><span class="keyword">function</span> <span class="title">dispatchAndLog</span>(<span class="params">action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'dispatching'</span>, action);</div><div class="line">    next(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'next state'</span>, store.getState());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Redux 提供了一个 applyMiddleware 方法来应用中间件：  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> store = createStore(</div><div class="line">    reducer,</div><div class="line">    applyMiddleware(thunk, promise, logger)</div><div class="line">);</div></pre></td></tr></table></figure>
+<p>这个方法主要就是把所有的中间件组成一个数组，依次执行。也就是说，任何被发送到 store 的 action 现在都会经过thunk，promise，logger 这几个中间件了。</p>
+<p>关于 Redux 的异步处理，之后会有单独解析 redux-sage 的内容。</p>
+<h2 id="Mobx"><a href="#Mobx" class="headerlink" title="Mobx"></a>Mobx</h2><p>之前说的都是单项数据流方案，思想主要就是函数是编程（FP）的思想。Mobx 则是一个 TFRP 的框架，FRP 的一个分支。</p>
+<img src="/2019/01/02/react数据流管理/flow.png" alt="flow.png" title="">   
+<p>mobx的流程图如上，通常是：触发action，在action中修改state，通过computed拿到state的计算值，自动触发对应的reactions，这里包含autorun，渲染视图等。有一点需要注意：相对于react来说，mobx没有一个全局的状态树，状态分散在各个独立的 store 中。这种自动订阅，自动发布的模式，使得开发十分方便。<br>但是相对的，mobx 中并没有解决副作用问题，同时，对 props 的直接修改，也会导致与 react 对 props 的不可变定义冲突。因此 mobx 后来给出了 action 解决方案，解决了与 react props 的冲突，但是没有解决副作用未强制分离的问题。  </p>
+<p>对比一下：</p>
+<ol>
+<li>redux 采用全局单一 store，mobx 则由多个独立 store 组成</li>
+<li>redux 通过 action 将副作用隔离在 reducer 之外。而 mobx 比较自由，没有对副作用进行处理。</li>
+<li>redux 函数式、不可变、模式化；mobx 响应式、依赖追踪</li>
+<li>redux 开发需要些很多样板代码，但是调试数据的时候确很方便。mobx 书写简单，但是没有强约束换来的是调试困难。</li>
+</ol>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://mp.weixin.qq.com/s?__biz=MjM5MTA1MjAxMQ==&amp;mid=2651231366&amp;idx=1&amp;sn=0e322d1fb0b59710aae98fe9df7d00ae&amp;chksm=bd494d028a3ec414ccda32e03f8a794372cdb1ab614c06f60526571623dd462653813d5bc230&amp;xtrack=1&amp;scene=0&amp;subscene=131&amp;clicktime=1552304245&amp;ascene=7&amp;devicetype=android-28&amp;version=2700033b&amp;nettype=3gnet&amp;abtest_cookie=BAABAAoACwASABMABQAjlx4AVpkeAMyZHgDamR4A3JkeAAAA&amp;lang=zh_CN&amp;pass_ticket=YbTwrdgEkkcGf%252BH838CvWRFJH9PYUZn90NpiCUOidTcTbXee%252B5bgEwAXKl6tBRd7&amp;wx_header=1" target="_blank" rel="external">Vuex、Flux、Redux、Redux-saga、Dva、MobX</a></li>
+<li><a href="https://github.com/dt-fe/weekly/blob/master/42.%E7%B2%BE%E8%AF%BB%E3%80%8A%E5%89%8D%E7%AB%AF%E6%95%B0%E6%8D%AE%E6%B5%81%E5%93%B2%E5%AD%A6%E3%80%8B.md" target="_blank" rel="external">精读《前端数据流哲学》</a></li>
+<li><a href="https://imweb.io/topic/57711e37f0a5487b05f325b5" target="_blank" rel="external">浅谈 React、Flux 与 Redux</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;react 的范式为 &lt;code&gt;UI = render(state)&lt;/code&gt;，用户的界面完全取决于数据层。react 中通过管理状态（state）来实现对组件的管理，当 state 发生变更后，react 就会重新渲染界面，组件与组件之间也经常需要共享状态。如果缺乏一个好的状态管理方案，那么共享数据将变得麻烦，同时状态不受控的话会让我们很难跟踪调试程序。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+    
+      <category term="react" scheme="http://yoursite.com/tags/react/"/>
+    
+      <category term="redux" scheme="http://yoursite.com/tags/redux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>React 组件复用和组合 (二)</title>
+    <link href="http://yoursite.com/2018/12/05/React%E7%BB%84%E4%BB%B6%E5%A4%8D%E7%94%A8%E5%92%8C%E7%BB%84%E5%90%882/"/>
+    <id>http://yoursite.com/2018/12/05/React组件复用和组合2/</id>
+    <published>2018-12-05T09:27:12.000Z</published>
+    <updated>2019-03-11T11:59:47.636Z</updated>
+    
+    <content type="html"><![CDATA[<p>上一篇文章，我们介绍了高阶组件(HOC)，最后也提出了几个关于高阶组件的问题。这里我们接上另一种组件复用模式 <code>render props</code> 亦或是 <code>funtion as child</code>。</p>
+<h2 id="render-props"><a href="#render-props" class="headerlink" title="render props"></a>render props</h2><p>本质上，render props 就是在原有的组件上增加一个 prop 来实现不同的渲染情况，从而达到代码复用的目的(即将组件组件做为参数)。举例如下：</p>
+<a id="more"></a>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShareStateComponent</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    state = &#123;...&#125;;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;div&gt;&#123;<span class="keyword">this</span>.props.render(<span class="keyword">this</span>.state)&#125;&lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">        );</span></div><div class="line"><span class="regexp">    &#125;</span></div><div class="line"><span class="regexp">&#125;</span></div><div class="line"><span class="regexp">/</span><span class="regexp">/ 使用</span></div><div class="line"><span class="regexp">class App extends React.Component &#123;</span></div><div class="line"><span class="regexp">    render() &#123;</span></div><div class="line"><span class="regexp">        &lt;ShareStateComponent </span></div><div class="line"><span class="regexp">            render = &#123;</span></div><div class="line"><span class="regexp">                (state) =&gt; &#123;</span></div><div class="line"><span class="regexp">                    &lt;span&gt;数据：&#123;...state&#125;&lt;/</span>span&gt;</div><div class="line">                &#125;</div><div class="line">            &#125;/&gt;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>StareStateComponent 内部维护了一些可复用的功能，在实例化时，通过调用名为 render 的 prop 属性函数实现了不同组件的渲染。换个更直观的方案，我们可以直接利用 <code>this.props.children</code> ，通过执行 this.props.children 方法，来传递必要的参数，从而实现基于共享数据的不同渲染逻辑，达到复用的目的。这种用法在 <code>React Motion</code>, <code>React Router</code> 里都有采用。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">render (</div><div class="line">    &lt;RenderProps1&gt;</div><div class="line">        &#123;(data1) =&gt; (</div><div class="line">            &lt;div&gt;</div><div class="line">                &#123;data1&#125;  </div><div class="line">                &lt;RenderProps2&gt;</div><div class="line">                    &#123;(data2) =&gt; &#123;</div><div class="line">                        &lt;RenderProps3&gt;</div><div class="line">                            (&#123;data3&#125; =&gt; &#123;</div><div class="line">                                &lt;div&gt;&#123;data2&#125;, &#123;data3&#125;&lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">                            &#125;)</span></div><div class="line"><span class="regexp">                        &lt;/</span>RenderProps3&gt;</div><div class="line">                    &#125;&#125;</div><div class="line">                &lt;<span class="regexp">/RenderProps2&gt;       </span></div><div class="line"><span class="regexp">            &lt;/</span>div&gt;</div><div class="line">        )&#125;</div><div class="line">    &lt;<span class="regexp">/RenderProps1&gt;</span></div><div class="line"><span class="regexp">)</span></div></pre></td></tr></table></figure>
+<p>通过上面的代码，我们可以看到相比高阶组件，render props 的方案，我们更能直观的观察到数据的流动，从而解决了高阶组件的嵌套问题。与高阶组件相比，render props 的开放性得到提升，原本 HOC 所做的功能抽象可以通过 render props 获取，render 方式还可以直接访问父级的一切内容：  </p>
+<img src="/2018/12/05/React组件复用和组合2/a2.png" alt="a2.png" title="">
+<h3 id="render-props-存在的问题"><a href="#render-props-存在的问题" class="headerlink" title="render props 存在的问题"></a>render props 存在的问题</h3><p>render props 带来的优点：</p>
+<ol>
+<li>不用担心props命名问题，在render函数中只取需要的state，数据流动更加直观</li>
+<li>不会产生无用的组件加深层级</li>
+<li>render props模式的构建都是动态的，所有的改变都在render中触发，可以更好的利用组件内的生命周期。</li>
+<li>能够直接访问父组件的内容，开发性更高</li>
+</ol>
+<p>但 render props 也有一些不能忽视的问题：</p>
+<ol>
+<li>this.props.children 被重新定义为函数是否合适</li>
+<li>渲染粒度变大，如果在属性中定义函数，浅比较下 prop 的值永远是新的，每次都将重新生成新的 prop，这将导致 React.PureComponent 不起作用</li>
+<li>renderProps 渲染的并不是 React 组件，无法为其单独使用 redux，mobx</li>
+<li>容易产生嵌套地狱问题</li>
+</ol>
+<p>当然，对于项目使用 HOC 还是 render props 应该根据不同的场景来进行渲染。<br>个人觉得，HOC 更倾向于封装一些复杂的操作，需要复用通用的业务状态和功能的时候使用。而 render props 比较适合抽离与业务无关但是和UI保存的状态有关的功能 (renderProps 内部管理的状态不方便从外部获取，因此只适合保存业务无关的数据，比如 Modal 显隐)。</p>
+<h2 id="RenderProps-工具库-react-powerplug"><a href="#RenderProps-工具库-react-powerplug" class="headerlink" title="RenderProps 工具库 react-powerplug"></a>RenderProps 工具库 react-powerplug</h2><p>React PowerPlug 是利用 render props 进行更好状态管理的工具库。<br>在我们日常开发中，一个 Component 类中，可能有很多的 state 但是并不是每个状态都和有业务有关，比如：UI 的展示状态，受控组件的临时 value 等。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    state = &#123;</div><div class="line">        nameIsEdit: <span class="literal">false</span>,</div><div class="line">        briefIsEdit: <span class="literal">false</span>,</div><div class="line">        isLoding: <span class="literal">false</span>,</div><div class="line">        value: <span class="string">''</span>,</div><div class="line">        data: &#123;&#125;</div><div class="line">    &#125;;</div><div class="line">    render() &#123;</div><div class="line">        <span class="comment">//....</span></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这时候我们就一些常用的状态管理封装成 render props 的形式。react-powerplug 就是提供这样工具的一个类库。这里简单看下几个功能，来帮助我们更好理解 render props 的应用。</p>
+<h3 id="Value"><a href="#Value" class="headerlink" title="Value"></a>Value</h3><p>该方法是用来管理值操作的工具。</p>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&lt;Value initial=<span class="string">"React"</span>&gt;</div><div class="line">    &#123;(&#123; value, set, reset &#125;) =&gt; (</div><div class="line">        &lt;&gt;</div><div class="line">        &lt;Select</div><div class="line">            label=<span class="string">"Choose one"</span></div><div class="line">            options=&#123;[<span class="string">"React"</span>, <span class="string">"Preact"</span>, <span class="string">"Vue"</span>]&#125;</div><div class="line">            value=&#123;value&#125;</div><div class="line">            onChange=&#123;set&#125;</div><div class="line">        /&gt;</div><div class="line">        &lt;Button onClick=&#123;reset&#125;&gt;Reset to initial&lt;<span class="regexp">/Button&gt;</span></div><div class="line"><span class="regexp">        &lt;/</span>&gt;</div><div class="line">    )&#125;</div><div class="line">&lt;<span class="regexp">/Value&gt;</span></div></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/renatorib/react-powerplug/blob/master/src/components/Value.js" target="_blank" rel="external">源码地址</a>  </li>
+</ul>
+<p>Value 中，只存储一个属性 value，并赋初始值为 initial。</p>
+<p>方法：set reset。</p>
+<ul>
+<li>set 回调函数触发后调用 setState 更新 value。</li>
+<li>reset 就是调用 set 并传入 this.props.initial 即可。</li>
+</ul>
+<h3 id="Active"><a href="#Active" class="headerlink" title="Active"></a>Active</h3><p>这是一个内置鼠标交互监听的容器，监听了 onMouseUp 与 onMouseDown，并依此判断 active 状态。</p>
+<h4 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&lt;Active&gt;</div><div class="line">    &#123;(&#123; active, bind &#125;) =&gt; (</div><div class="line">        &lt;div &#123;...bind&#125;&gt;</div><div class="line">            You are &#123;active ? <span class="string">"clicking"</span> : <span class="string">"not clicking"</span>&#125; <span class="keyword">this</span> div.</div><div class="line">        &lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">    )&#125;</span></div><div class="line"><span class="regexp">&lt;/</span>Active&gt;</div></pre></td></tr></table></figure>
+<p>借助 Value 实现，巧妙的利用了 value，value 重命名为 active 且初始值为 false。增加了 bind 方法，借助 set 来更新状态。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> * <span class="keyword">as</span> React <span class="keyword">from</span> <span class="string">'react'</span></div><div class="line"><span class="keyword">import</span> Value <span class="keyword">from</span> <span class="string">'./Value'</span></div><div class="line"><span class="keyword">import</span> renderProps <span class="keyword">from</span> <span class="string">'../utils/renderProps'</span></div><div class="line"></div><div class="line"><span class="keyword">const</span> Active = <span class="function">(<span class="params">&#123; onChange, ...props &#125;</span>) =&gt;</span> (</div><div class="line">    &lt;Value initial=&#123;<span class="literal">false</span>&#125; onChange=&#123;onChange&#125;&gt;</div><div class="line">        &#123;(&#123; value, set &#125;) =&gt;</div><div class="line">            renderProps(props, &#123;</div><div class="line">                active: value,</div><div class="line">                bind: &#123;</div><div class="line">                    onMouseDown: <span class="function"><span class="params">()</span> =&gt;</span> set(<span class="literal">true</span>),</div><div class="line">                    onMouseUp: <span class="function"><span class="params">()</span> =&gt;</span> set(<span class="literal">false</span>)</div><div class="line">                &#125;,</div><div class="line">            &#125;)</div><div class="line">        &#125;</div><div class="line">    &lt;<span class="regexp">/Value&gt;</span></div><div class="line"><span class="regexp">)</span></div><div class="line"><span class="regexp"></span></div><div class="line"><span class="regexp">export default Active</span></div></pre></td></tr></table></figure>
+<p>其他功能就不一一展示了。</p>
+<h2 id="render-props-嵌套问题"><a href="#render-props-嵌套问题" class="headerlink" title="render props 嵌套问题"></a>render props 嵌套问题</h2><p>上面过，render props 有一个缺点当我们想要组合使用的时候，可能会遇到嵌套地狱问题。在 react-powerplug 中提供了 compose 函数，来解决这一问题。 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; compose &#125; <span class="keyword">from</span> <span class="string">'react-powerplug'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> AandB = compose(</div><div class="line">    &lt;A .../&gt;,</div><div class="line">    &lt;B .../&gt;</div><div class="line">)</div><div class="line">&lt;AandB&gt;</div><div class="line">    &#123;(a, b) =&gt; &#123;</div><div class="line">        <span class="comment">//....</span></div><div class="line">    &#125;&#125;</div><div class="line">&lt;<span class="regexp">/AandB&gt;</span></div></pre></td></tr></table></figure>
+<p>社区也提供了 <a href="https://github.com/Astrocoders/epitath" target="_blank" rel="external">Epitath</a> 工具来专门解决 render props 嵌套问题。细节就不看了。</p>
+<h2 id="React-Hooks"><a href="#React-Hooks" class="headerlink" title="React Hooks"></a>React Hooks</h2><p>React Hooks 是 React 16.7.0-alpha 版本推出的新特性。React Hooks 要解决的问题是状态共享，是继 render-props 和 higher-order components 之后的第三种状态共享方案，不会产生 JSX 嵌套地狱问题。之后介绍吧，现在还没空仔细体会呢。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://www.jianshu.com/p/ff6b3008820a?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation" target="_blank" rel="external">React组件Render Props VS HOC 设计模式</a></li>
+<li><a href="https://medium.com/tandemly/im-breaking-up-with-higher-order-components-44b0df2db052" target="_blank" rel="external">I’m Breaking up with Higher Order Components.</a></li>
+<li><a href="https://github.com/dt-fe/weekly/blob/master/75.%E7%B2%BE%E8%AF%BB%E3%80%8AEpitath%20%E6%BA%90%E7%A0%81%20-%20renderProps%20%E6%96%B0%E7%94%A8%E6%B3%95%E3%80%8B.md" target="_blank" rel="external">精读《Epitath 源码 - renderProps 新用法》</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;上一篇文章，我们介绍了高阶组件(HOC)，最后也提出了几个关于高阶组件的问题。这里我们接上另一种组件复用模式 &lt;code&gt;render props&lt;/code&gt; 亦或是 &lt;code&gt;funtion as child&lt;/code&gt;。&lt;/p&gt;
+&lt;h2 id=&quot;render-props&quot;&gt;&lt;a href=&quot;#render-props&quot; class=&quot;headerlink&quot; title=&quot;render props&quot;&gt;&lt;/a&gt;render props&lt;/h2&gt;&lt;p&gt;本质上，render props 就是在原有的组件上增加一个 prop 来实现不同的渲染情况，从而达到代码复用的目的(即将组件组件做为参数)。举例如下：&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+    
+      <category term="react" scheme="http://yoursite.com/tags/react/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>React 组件复用和组合 (一)</title>
+    <link href="http://yoursite.com/2018/12/01/React%E7%BB%84%E5%90%88%E4%B8%8E%E5%A4%8D%E7%94%A8/"/>
+    <id>http://yoursite.com/2018/12/01/React组合与复用/</id>
+    <published>2018-12-01T02:57:08.000Z</published>
+    <updated>2019-03-11T07:41:23.120Z</updated>
+    
+    <content type="html"><![CDATA[<p>组件的复用和组合，可以帮助我们在现有的轮子上扩展新的功能，提高工作效率，避免重复造轮子。React 组件化的开发方式可以很好地实现复用和组合的功能，本章主要围绕高阶组件来讨论下这一问题。</p>
+<h2 id="高阶组件（HOC）"><a href="#高阶组件（HOC）" class="headerlink" title="高阶组件（HOC）"></a>高阶组件（HOC）</h2><blockquote>
+<p>高阶组件（HOC）是 React 中用于重用组件逻辑的高级技术。 HOC 本身不是 React API 的一部分。 它们是从 React 构思本质中浮现出来的一种模式。  </p>
+</blockquote>
+<a id="more"></a>
+<p>通俗点高阶组件就是一个函数，其接受一个组件并返回对着个组件功能上的扩展复用的新的组件。</p>
+<blockquote>
+<p>const EnhancedComponent = higherOrderComponent(WrappedComponent);</p>
+</blockquote>
+<p>高阶组件常见有两种实现方式，一种是 Props Proxy(属性代理)，一种是 Inheritance Inversion(继承反转)</p>
+<h3 id="Props-Proxy"><a href="#Props-Proxy" class="headerlink" title="Props Proxy"></a>Props Proxy</h3><p>Props Proxy 模式可以对 WrappedComponent 的 props 进行操作扩展，抽离 state，并可以使用其他元素来包裹 WrappedComponend 来实现扩展组件的功能。</p>
+<h4 id="操作-props"><a href="#操作-props" class="headerlink" title="操作 props"></a>操作 props</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">propsHOC</span>(<span class="params">WrappedComponent</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</div><div class="line">        render() &#123;</div><div class="line">            <span class="keyword">let</span> newProps = &#123;/.../&#125;;</div><div class="line">            <span class="keyword">return</span> &lt;WrappedComponent &#123;...props&#125; &#123;...newProps&#125;/&gt;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到，传递给 WrappedComponent 的属性首先传递给了高阶组件返回的组件，这样我们就获得了props的控制权。</p>
+<h4 id="抽离-state"><a href="#抽离-state" class="headerlink" title="抽离 state"></a>抽离 state</h4><p>我们可以将 WrappedComponent 中的状态提到包裹组件中，一种很常见的操作就是将不受控组件转换成受控组件。通常，我们在设计 UI 组件的时候，组件应该简单只负责展示 (不受控组件)。对组件的修改逻辑不应该放在组件中，而是由调用者来提供。这样，我们就可以用HOC来将无状态组件变成受控组件。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">stateHoc</span>(<span class="params">WrappedComponent</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</div><div class="line">        <span class="keyword">constructor</span>(props) &#123;</div><div class="line">            <span class="keyword">super</span>(props);</div><div class="line">            <span class="keyword">this</span>.state = &#123;</div><div class="line">                value: <span class="string">''</span></div><div class="line">            &#125;;</div><div class="line">        &#125;</div><div class="line">        onChange(event) &#123;</div><div class="line">            <span class="keyword">this</span>.setState(&#123;</div><div class="line">                value: event.target.value</div><div class="line">            &#125;)</div><div class="line">        &#125;</div><div class="line">        render() &#123;</div><div class="line">            <span class="keyword">const</span> props = &#123;</div><div class="line">                ...this.props,</div><div class="line">                value: <span class="keyword">this</span>.state.value,</div><div class="line">                onChange: <span class="keyword">this</span>.onChange</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> &lt;WrappedComponent &#123;...props&#125;/&gt;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">@stateHoc</div><div class="line">class InputStateLess extends Component &#123;</div><div class="line">    render() &#123;</div><div class="line">        return &lt;input name="name" value=&#123;this.props.value&#125; /&gt;;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="Inheritance-Inversion"><a href="#Inheritance-Inversion" class="headerlink" title="Inheritance Inversion"></a>Inheritance Inversion</h3><p>反向继承，我们采用直接继承 WrappedComponent 的方案，而不是采用包裹 WrappedComonent 的代理方案。这意味着，我们可以调用 WrappedComponent 的属性，声明周期等任何内容。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">iiOC</span>(<span class="params">WrappedComponent</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="keyword">extends</span> <span class="title">WrappedComponent</span> </span>&#123;</div><div class="line">        render() &#123;</div><div class="line">            <span class="keyword">return</span> <span class="keyword">super</span>.render();</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>通过我们可以完全操作 WrappedComponent 上的内容，我们可以实现<code>渲染劫持</code>等操作，改变 WrappedComponent 的任何行为。<br>Inheritance Inversion 是继承的思想，对于 WrappedComponent 也有较强的侵入性，因此并不常见。</p>
+<h3 id="高阶组件的应用"><a href="#高阶组件的应用" class="headerlink" title="高阶组件的应用"></a>高阶组件的应用</h3><p>高阶组件的本质是统一抽象功能，强调逻辑和UI的分离</p>
+<h4 id="view-层分离"><a href="#view-层分离" class="headerlink" title="view 层分离"></a>view 层分离</h4><p>在设计组件的时候，我们会尽可能考虑组件的复用性，对于组件的 view 层，我们期望是组件与组件之间没有重叠的部分，重叠的部分应该被抽出来形成更细粒度的组件，这样方便我们各种各样的组件组合。每个最小的基础组件我们都期望他是一个<code>木偶组件(Dumb Component)</code>。<br>木偶组件，指只会接受 props 并且渲染结果完全依赖 props 的组件。Dumb 组件不应该依赖除了 React.js 和 Dumb 组合以外的内容(比如不应该依赖 redux，mobx 等)。这样的组件可复用性是最好的，其他人可以放心使用。<br>当然仅有 Dumb 组件，是不能工作的，因为他们没有逻辑。为此还应该有这么一类组件，他们只负责应用逻辑，和各种数据打交道，然后把数据以 props 的形式传递给 Dumb 组件。<br>注意，Dumb 绝对不能依赖 Smart 组件，这相当增加了 Dumb 输出的不确定性。如果一个组件是 Dumb 的，那么它的子组件们都应该是 Dumb 的才对。</p>
+<img src="/2018/12/01/React组合与复用/a.png" alt="a.png" title="">
+<h4 id="逻辑层的分离"><a href="#逻辑层的分离" class="headerlink" title="逻辑层的分离"></a>逻辑层的分离</h4><p>组件中的交互逻辑和业务逻辑有很大部分也是重复的，我们可以将这写公共部分进行抽象封装起来，来为其他组件增加新的能力，这也就是高阶组建的思想。每个独立可重用的逻辑都是一个 <code>Decorator</code> 装饰器。<br>适用于高阶组件的逻辑层应该时那些完全不与 DOM 相关的内容。比如数据校验，权限控制，或者通过数据变化间接控制 DOM 的。</p>
+<h4 id="举例-Form-表单的抽离"><a href="#举例-Form-表单的抽离" class="headerlink" title="举例 Form 表单的抽离"></a>举例 Form 表单的抽离</h4><p>Form 中，会包含不同的组件，input, selector, checkbox 等等，也可能会是多种常见组件的组合。</p>
+<img src="/2018/12/01/React组合与复用/b.png" alt="b.png" title="">
+<p>如图，一个下拉搜索框，由 input，select, list 三个纯粹的细粒度的 Dumb 组件组成。对于每个 UI 都有自己的数据 validator 验证规则，和数据变化回调规则。我们可以将这部分逻辑的对应关系和UI的绑定做成一个 HOC 组件。 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 函数柯里化，为 HOC 提供参数</span></div><div class="line"><span class="comment">// validator 用户定义的变淡验证规则</span></div><div class="line"><span class="comment">// changeFunc 相应数据变化的函数</span></div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">formFactory</span>(<span class="params">validator, changeFunc = <span class="string">'onChange'</span></span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">WrappedComponent</span>) </span>&#123;</div><div class="line">        <span class="keyword">return</span> <span class="class"><span class="keyword">class</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">            getBind(changeFunc, validtor) &#123;</div><div class="line">                <span class="comment">//...</span></div><div class="line">            &#125;</div><div class="line">            render() &#123;</div><div class="line">                <span class="keyword">const</span> props = &#123;</div><div class="line">                    ...this.props,</div><div class="line">                    [trigger]: <span class="keyword">this</span>.getBind(trigger, validtor)</div><div class="line">                &#125;</div><div class="line">                <span class="keyword">return</span> &lt;WrappedComponent &#123;...props&#125; /&gt;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">// 为 Input 组件绑定验证规则</div><div class="line">formFactory((value) =&gt; &#123;</div><div class="line">    return value &gt; 0</div><div class="line">&#125;)(&lt;Input name="age" placeholder="请输入年龄"/&gt;)</div></pre></td></tr></table></figure>
+<h3 id="高阶组件的问题"><a href="#高阶组件的问题" class="headerlink" title="高阶组件的问题"></a>高阶组件的问题</h3><h4 id="不确定性-amp-命名冲突"><a href="#不确定性-amp-命名冲突" class="headerlink" title="不确定性 &amp; 命名冲突"></a>不确定性 &amp; 命名冲突</h4><p>高阶组件的变更是由 props 引起的，且高阶组件之间是互相独立的。因此当组件的 props 发生变化后，我们很难确定是哪个高级组件引起的 props 变动或者是组件本身引起的。同样多个高阶组件的引入的 props 也有可能因为同名原因导致互相覆盖，产生许多无用的组件嵌套加深组件层级，这些问题高阶组件都无法解决。<br>官方文档上推荐我们使用高阶组件的时候提出了如下约定：</p>
+<blockquote>
+<p>约定: 给包裹组件传递不相关的属性(Props)</p>
+</blockquote>
+<p>这个问题只能靠约定而没有办法约束，因此可维护性变低。</p>
+<h4 id="静态方法必须复制-amp-Refs-不会被传递"><a href="#静态方法必须复制-amp-Refs-不会被传递" class="headerlink" title="静态方法必须复制 &amp; Refs 不会被传递"></a>静态方法必须复制 &amp; Refs 不会被传递</h4><p>由于高阶组件包裹的特性，原有组件上的静态方法并不会得到传递。同样的道理 ref 在容器组件上应用 ref 也不会直接传递给原有组件。我们都需要在容器组件上做静态方法的复制和 ref 的传递。</p>
+<p>高阶组件的带来的副作用有没有解决办法呢？render-props 可以在一定程度上来解决，这个之后我们再谈吧。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://zhuanlan.zhihu.com/p/22054582" target="_blank" rel="external">基于 Decorator 的组件扩展实践</a></li>
+<li><a href="http://react.html.cn/docs/higher-order-components.html" target="_blank" rel="external">高阶组件(Higher-Order Components)</a></li>
+<li><a href="https://medium.com/@franleplant/react-higher-order-components-in-depth-cf9032ee6c3e" target="_blank" rel="external">React Higher Order Components in depth</a></li>
+<li><a href="http://huziketang.mangojuice.top/books/react/lesson43" target="_blank" rel="external">Smart 组件 vs Dumb 组件</a></li>
+<li><a href="https://juejin.im/post/5914fb4a0ce4630069d1f3f6" target="_blank" rel="external">React 高阶组件(HOC)入门指南</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;组件的复用和组合，可以帮助我们在现有的轮子上扩展新的功能，提高工作效率，避免重复造轮子。React 组件化的开发方式可以很好地实现复用和组合的功能，本章主要围绕高阶组件来讨论下这一问题。&lt;/p&gt;
+&lt;h2 id=&quot;高阶组件（HOC）&quot;&gt;&lt;a href=&quot;#高阶组件（HOC）&quot; class=&quot;headerlink&quot; title=&quot;高阶组件（HOC）&quot;&gt;&lt;/a&gt;高阶组件（HOC）&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;高阶组件（HOC）是 React 中用于重用组件逻辑的高级技术。 HOC 本身不是 React API 的一部分。 它们是从 React 构思本质中浮现出来的一种模式。  &lt;/p&gt;
+&lt;/blockquote&gt;
+    
+    </summary>
+    
+      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
+    
+    
+      <category term="react" scheme="http://yoursite.com/tags/react/"/>
+    
+  </entry>
   
   <entry>
     <title>单页应用代码分割</title>
@@ -121,7 +418,7 @@
     <link href="http://yoursite.com/2018/09/19/%E4%BB%8Ejs%E8%A7%92%E5%BA%A6%E7%9C%8Bdart3/"/>
     <id>http://yoursite.com/2018/09/19/从js角度看dart3/</id>
     <published>2018-09-19T06:06:54.000Z</published>
-    <updated>2018-09-19T07:55:43.953Z</updated>
+    <updated>2019-03-18T07:55:47.734Z</updated>
     
     <content type="html"><![CDATA[<p>前两篇文章，已经介绍了 Dart 的基础语法部分，并适当的结合 js 来进行对比。总的来看，Dart 设计的还是和 JS 很像的。本文，是最后一篇介绍 Dart 语言的。本文将着重介绍一下，Dart 的一些基础库。  </p>
 <a id="more"></a>
@@ -1194,20 +1491,6 @@
   </entry>
   
   <entry>
-    <title>[译] 为 Web Bluetooth 做好准备</title>
-    <link href="http://yoursite.com/2017/08/21/%E8%AF%91-%E4%B8%BA-Web-Bluetooth-%E5%81%9A%E5%A5%BD%E5%87%86%E5%A4%87/"/>
-    <id>http://yoursite.com/2017/08/21/译-为-Web-Bluetooth-做好准备/</id>
-    <published>2017-08-21T11:43:00.000Z</published>
-    <updated>2017-08-21T11:43:00.000Z</updated>
-    
-    <summary type="html">
-    
-    </summary>
-    
-    
-  </entry>
-  
-  <entry>
     <title>利用javascript搭建富文本编辑器</title>
     <link href="http://yoursite.com/2017/08/21/%E5%88%A9%E7%94%A8javascript%E6%90%AD%E5%BB%BA%E5%AF%8C%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%99%A8/"/>
     <id>http://yoursite.com/2017/08/21/利用javascript搭建富文本编辑器/</id>
@@ -1432,358 +1715,6 @@
       <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
     
       <category term="移动开发" scheme="http://yoursite.com/tags/%E7%A7%BB%E5%8A%A8%E5%BC%80%E5%8F%91/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>CORS 跨域数据交互</title>
-    <link href="http://yoursite.com/2016/08/22/CORS-%E8%B7%A8%E5%9F%9F%E6%95%B0%E6%8D%AE%E4%BA%A4%E4%BA%92/"/>
-    <id>http://yoursite.com/2016/08/22/CORS-跨域数据交互/</id>
-    <published>2016-08-22T04:09:20.000Z</published>
-    <updated>2017-09-22T07:01:23.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="跨域数据交互"><a href="#跨域数据交互" class="headerlink" title="跨域数据交互  "></a>跨域数据交互  </h1><p>在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求<br>跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。<br><a id="more"></a></p>
-<h1 id="什么是-CORS"><a href="#什么是-CORS" class="headerlink" title="什么是 CORS"></a>什么是 CORS</h1><p>CORS是一种允许当前域（domain）的资源（比如html/js/web service）被其他域（domain）的脚本请求访问的机制。使用CORS，可以通过普通的XMLHttpRequest发起请求和获得数据，并且支持各种类型请求。说白了就是利用XMLHttpRequest来实现跨站通信，而不是仅仅遵循同源策略，再也不用为了ajax能跨域写苦逼的jsonp了。  CORS技术现在已经被广泛的支持了。 兼容性如下：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-1.png" alt="js12-1.png" title=""><br>CORS 兼容大部分浏览器， IE8 及其以下就自求多福吧。  </p>
-<h1 id="CORS-使用方法及场景举例"><a href="#CORS-使用方法及场景举例" class="headerlink" title="CORS 使用方法及场景举例"></a>CORS 使用方法及场景举例</h1><p>所谓的跨域请求，从本质上来说并不是浏览器对其他域名的请求不能发送，而是请求可以正常发起，<br>但是浏览器在收到服务器信息后就屏蔽掉了，并向前端报错(跨域)。如图所示，跨域请求结果被屏蔽。<br><img src="/2016/08/22/CORS-跨域数据交互/js12-2.png" alt="js12-2.png" title=""><br>解决方案，服务器在响应HTTP头部加入 <code>Access-Control-Allow-Origin：*</code>即可，这样就表示服务端同意任意域名的请求。<br>一般我们会指定可响应的域名如：<code>Access-Control-Allow-Origin: http://b.com, http://c.com</code>等。这样浏览器在检测到服务端HTTP头部的时候就可以不再拦截响应。<br>请求头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-3.png" alt="js12-3.png" title=""><br>响应头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-4.png" alt="js12-4.png" title=""><br>就在我们以为轻松搞定的时候，我们又遇到了问题。前端要给后端传json格式的数据于是在http头部加入了<br><code>content-type: application/json</code>, <code>access_token</code>等信息。请求再次失败，通过观察控制台信息我们发现，多了一个请求<code>options</code>:<br><img src="/2016/08/22/CORS-跨域数据交互/js12-5.png" alt="js12-5.png" title=""><br>原来在CORS中的请求分为两种：简单请求和复杂请求    </p>
-<h2 id="简单请求"><a href="#简单请求" class="headerlink" title="简单请求"></a>简单请求</h2><ol>
-<li>只使用GET，HEAD或者POST。如果使用POST来发送数据到服务器，那么使用HTTP POST请求发送到服务器的数据的Content-Type为以下几种之一：application/x-www-form-urlencoded，multipart/form-data以及text/plain。  </li>
-<li>不使用HTTP请求发送定制请求头（例如X-Modified等）  </li>
-</ol>
-<p>在简单请求下，我们只需要像上面所说设置Access-Control-Allow-Origin头部即可。  </p>
-<h2 id="复杂请求"><a href="#复杂请求" class="headerlink" title="复杂请求"></a>复杂请求</h2><ol>
-<li>使用了除GET，HEAD和POST以外的方法。如果使用POST方法发送请求数据时的<code>Content-Type</code>不是<code>application/x-www-form-urlencoded，multipart/form-data</code>或者<code>text/plaint</code>。例如，如果POST请求向服务器使用application/xml或者text/xml向服务器发送请求，那么这个请求就是preflighted的。</li>
-<li>设置了定制请求头的请求（例如，请求使用了例如X-PINGOTHER这样的请求头）。这类请求在发送正式请求之前会发送一个<code>Preflighted(预请求)</code>，<code>Preflighted</code>请求首先通过HTTP OPTIONS方法请求其他域上的资源，以确定发送实际的请求是否安全。这样做，是因为跨站请求可能会对目的站点的数据造成破坏。我们第二次发的请求是一个复杂请求，服务端没有响应options的方法，导致预请求失败，之后的请求也就终止了。我们看一下复杂请求下的HTTP报文:  </li>
-</ol>
-<p>Prelignted请求头部：<br><img src="/2016/08/22/CORS-跨域数据交互/js12-6.png" alt="js12-6.png" title=""><br>可以看到报文头部信息为OPTIONS请求<br>预请求服务端响应报文<br><img src="/2016/08/22/CORS-跨域数据交互/js12-7.png" alt="js12-7.png" title=""><br>预请求响应只要返回一个2xx表示成功的响应信息即可说明服务端同意了跨域请求，<br>这里我们选择204的状态码作为响应状态。因为<code>204</code>表示响应成功，并且没有结果返回的状态。这样节省了传输信息的事件，加快了预请求的处理。<br>预处理结束后，事情并没有就此解决。错误信息再次传来。<br><br>原来我们自定义了头部信息，还要在响应报文中加入<code>Access-Control-Allow-Headers</code>来指出服务端允许的复杂请求需要的自定义头部信息。注意这里不能用*来表示所有，<br>只能一个个添加。例如：<code>&quot;Access-Control-Allow-Methods&quot; : &quot;PUT,POST,GET,DELETE,OPTIONS&quot;</code>。<br>这样就齐活了，总算是数据可以流通了。这里我建议在服务端响应部分也加入 <code>&quot;Access-Control-Allow-Methods&quot; : &quot;PUT,POST,GET,DELETE,OPTIONS&quot;</code>来指出可接受的请求类型。<br>最后我们的服务端响应头部信息：<br> </p>
-<h2 id="附带凭证信息的请求"><a href="#附带凭证信息的请求" class="headerlink" title="附带凭证信息的请求"></a>附带凭证信息的请求</h2><p>我手贱的在xhr中加入了 <code>xhr.withCredentials = true</code> 因为跨源请求默认请求头部中不提供凭据(cookie、HTTP认证及客户端SSL证明等)。<br>为了能把这些信息带上，我们设置了withCredentials为true。浏览器再次报错，通过检查我们发现，<br>如果你设置了withCredentials为true那么 Access-Control-Allow-Origin就不能用 * ，必须使用明确的域名。<br>而且还要为你的响应头加上<code>&quot;Access-Control-Allow-Credentials&quot;:&quot;true&quot;</code>信息。<br>最后我列出CORS中可能使用的头部信息供大家参考：  </p>
-<ul>
-<li><p><strong>HTTP响应头</strong>：Access-Control-Allow-Origin，Access-Control-Expose-Headers，Access-Control-Max-Age，<br>Access-Control-Allow-Credentials，Access-Control-Allow-Methods，Access-Control-Allow-Headers      </p>
-</li>
-<li><p><strong>HTTP请求头</strong>：Origin，Access-Control-Request-Method，Access-Control-Request-Headers   </p>
-</li>
-</ul>
-<p>附上用Node.js跨域请求服务端的简单配置：  </p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">"express"</span>),</div><div class="line">    app = express();</div><div class="line">    </div><div class="line"><span class="comment">//统一拦截请求设置头部信息，响应预请求</span></div><div class="line">app.all(<span class="string">'*'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</div><div class="line">    res.set(&#123;</div><div class="line">        <span class="string">"Access-Control-Allow-Origin"</span>: <span class="string">"*"</span>,</div><div class="line">        <span class="string">"Access-Control-Allow-Headers"</span>: <span class="string">"Content-Type,access_token,user_id"</span>,</div><div class="line">        <span class="string">"Access-Control-Allow-Methods"</span>: <span class="string">"PUT,POST,GET,DELETE,OPTIONS"</span></div><div class="line">    &#125;);</div><div class="line"></div><div class="line">    <span class="keyword">if</span>(req.method==<span class="string">"OPTIONS"</span>) &#123;</div><div class="line">        res.send(<span class="number">204</span>);</div><div class="line">    &#125;<span class="keyword">else</span> &#123;</div><div class="line">        next();</div><div class="line">    &#125;</div><div class="line">&#125;);</div><div class="line"></div><div class="line">app.post(<span class="string">"/data"</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res</span>) </span>&#123;</div><div class="line">    res.json(&#123;</div><div class="line">        status: <span class="string">"success"</span>,</div><div class="line">        text: <span class="string">"返回数据"</span></div><div class="line">    &#125;)</div><div class="line">&#125;);</div><div class="line"></div><div class="line">app.listen(<span class="number">3000</span>, <span class="string">"127.0.0.1"</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">"服务器启动了"</span>);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
-<h1 id="跨域请求的其他方案"><a href="#跨域请求的其他方案" class="headerlink" title="跨域请求的其他方案"></a>跨域请求的其他方案</h1><p>这里列举一下其他常用的跨域方案，仅供参考:    </p>
-<ol>
-<li><code>jsonp</code>：利用 <code>&lt;script&gt;</code> 元素的这个开放策略，网页可以得到从其他来源动态产生的 JSON 资料，而这种使用模式就是所谓的 JSONP。用 JSONP 抓到的资料并不是 JSON，而是任意的JavaScript，用 JavaScript 直译器执行而不是用 JSON 解析器解析。  </li>
-<li><code>postMessage</code>：postMessage()方法允许来自不同源的脚本采用异步方式进行有限的通信，可以实现跨文本档、多窗口、跨域消息传递。  </li>
-<li><code>websocket</code>：WebSocket实现了全双工通信，使WEB上的真正的实时通信成为可能。浏览器和服务器只需要做一个握手的动作，然后，浏览器和服务器之间就形成了一条快速通道。两者之间就直接可以数据互相传送。  </li>
-<li><code>SSE</code>：Server-Sent Events(SSE)功能，允许服务端推送数据到客户端(通常叫数据推送)。已经在浏览器上普遍支持，然而IE和Edge全系列不支持。</li>
-<li><code>ServiceWorker</code>：一个 service worker 是一段运行在浏览器后台进程里的脚本，它独立于当前页面，提供了那些不需要与web页面交互的功能在网页背后悄悄执行的能力。在将来，基于它可以实现消息推送，静默更新以及地理围栏等服务，但是目前它首先要具备的功能是拦截和处理网络请求，包括可编程的响应缓存管理。简而言之，这是让浏览器具有服务器功能的API，有了他还跨域个球球。不过这只是实验中API目前只有chrome和firfox高版本浏览器支持。   </li>
-</ol>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h1 id=&quot;跨域数据交互&quot;&gt;&lt;a href=&quot;#跨域数据交互&quot; class=&quot;headerlink&quot; title=&quot;跨域数据交互  &quot;&gt;&lt;/a&gt;跨域数据交互  &lt;/h1&gt;&lt;p&gt;在实际项目中，ajax 经常应用在跨域通信的场景下，如果采用 jsonp 来实现跨域，需要对前后端代码有很大的改动。而且， jsonp 仅支持 get 请求&lt;br&gt;跨域。为此我们必须寻找一个简单的跨域通信方式 - CORS。&lt;br&gt;
-    
-    </summary>
-    
-      <category term="浏览器" scheme="http://yoursite.com/categories/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
-    
-    
-      <category term="浏览器" scheme="http://yoursite.com/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/"/>
-    
-      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>javascript 类与继承</title>
-    <link href="http://yoursite.com/2015/05/03/javascript-%E7%B1%BB%E4%B8%8E%E7%BB%A7%E6%89%BF/"/>
-    <id>http://yoursite.com/2015/05/03/javascript-类与继承/</id>
-    <published>2015-05-03T10:59:31.000Z</published>
-    <updated>2017-08-22T10:02:33.000Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="类的创建"><a href="#类的创建" class="headerlink" title="类的创建"></a>类的创建</h1><p>在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，Javascript中创建类的方式有很多种：工厂模式，构造函数模式，原形模式，动态原形模式，寄生构造模式，稳妥构造模式。<br><a id="more"></a></p>
-<h2 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h2><p>通过函数把一个类型实例包装起来，这样可以通过函数来实现类型的实例化；但是这只是一种伪装的构造函数，而且instanceof判断会发现创建的对象并不属于自己定义的类而是Object不推荐使用     </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name,age</span>) </span>{
-    <span class="keyword">var</span> o = <span class="keyword">new</span> <span class="built_in">Object</span>();    <span class="comment">//Object创建对象</span>
-    o.name = name;
-    o.age = age;
-    <span class="keyword">return</span> o;
-}
-<span class="keyword">var</span> per1 = Person(<span class="string">"tian"</span>,<span class="number">11</span>);
-per1 <span class="keyword">instanceof</span> Person;   <span class="comment">//false</span>
-per1 <span class="keyword">instanceof</span> <span class="built_in">Object</span>;   <span class="comment">//true</span>
-</code></pre>
-<h2 id="原形模式"><a href="#原形模式" class="headerlink" title="原形模式"></a>原形模式</h2><p>声明一个构造函数，利用构造函数的prototype属性为该构造函数定义原形属性（原形prototype是Javascript核心特性之一，设计的目的就是用来实现继承的，从予以角度分析，prototype就是构造类拥有的原始成员。注意对象是没有原形的，只有构造函数拥有原形)；  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>) </span>{
-
-}
-Person.prototype = {
-        name : <span class="string">"tian"</span>,
-        age : <span class="number">21</span>,
-        run : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-            <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);
-        }                                                                                                                
-}
-<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person(<span class="string">"tian"</span>, <span class="number">12</span>);
-</code></pre>
-<p>一般的我们把定义在原形上的方法叫做原形方法，他们被所有对象共享，也就是只有一份。这样就解决了构造模式的缺点，但是又没有特权方法||属性。于是，我们参考以上这几种方法，就可以得到目前最常用的类的创建方法。  </p>
-<h2 id="组合模式（构造原形模式）"><a href="#组合模式（构造原形模式）" class="headerlink" title="组合模式（构造原形模式）"></a>组合模式（构造原形模式）</h2><p>可以看出这是原型模式和构造模式的组合，构造函数中我们放入特权属性和特权方法，他们每一个实例就是一个副本，互不影响。在内部还可以放入var 声明的变量作为私有属性。把公共的方法给原形，这样就可以通用。  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name, age</span>) </span>{
-        <span class="keyword">this</span>.name = name;        <span class="comment">//特权方法</span>
-        <span class="keyword">this</span>.age = age;
-        <span class="keyword">var</span> _idNum = <span class="number">0</span>;     <span class="comment">//该属性无法被访问到</span>
-}
-Person.prototype = {
-        run : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-                conosole.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);  <span class="comment">//公共方法</span>
-        }
-}
-<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person(<span class="string">"tian"</span>, <span class="number">12</span>);
-</code></pre>
-<p>原形方法和特权方法都属于实例方法，还有一种类方法或者类属性，我们直接在函数上定义就可以：Person.method = function(){}。遵循对象设计原则，类的所有成员都应该封装在类的结构体内，因此优化该模式，产生动态原形模式。</p>
-<h2 id="动态原形模式"><a href="#动态原形模式" class="headerlink" title="动态原形模式"></a>动态原形模式</h2><p>把所有信息放在构造函数中，并且动态的判断是否具有某方法并创建  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name, age</span>) </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.age = age;
-        <span class="keyword">if</span>(<span class="keyword">typeof</span> <span class="keyword">this</span>.run === <span class="string">'undefined'</span>) {
-                Person.prototype.run = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-                        <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"在跑步"</span>);
-                }
-        }
-}
-</code></pre>
-<h2 id="其他模式"><a href="#其他模式" class="headerlink" title="其他模式"></a>其他模式</h2><p>寄生构造函数：类似工厂模式，将工厂中的对象实例o，换成指定构造器生成，常用来扩展一些JS本身构造函数，又不希望直接修改构造函数时候使用。比如扩展Array构造函数。<br>稳妥构造函数模式：一般用于安全的环境中。最后这两种方法直接十分类似，也不太常用，具体代码就不贴了都和工厂模式长得很像，有兴趣的自行查找。  </p>
-<h1 id="Prototype原形与new操作符"><a href="#Prototype原形与new操作符" class="headerlink" title="Prototype原形与new操作符"></a>Prototype原形与new操作符</h1><p>在讨论继承之前，我们先探索一下原形链和new操作符在创建对象的时候的步骤。<br>首先：我们知道在当我们访问对象的一个属性或方法的时候，那么他会先找特权成员，如果有同名的就返回，没有就查找原形，在没有查找父类原形。我们通过组合模式创建的对象都有父类：Object。这种原形链的查找方式我们看看在修改prototype的时候会发生什么：  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>) </span>{}
-Person.prototype = {
-        name : <span class="string">"tian"</span>
-}
-<span class="keyword">var</span> per1 = <span class="keyword">new</span> Person();
-<span class="built_in">console</span>.log(per1.name) <span class="comment">//tian</span>
-Person.prototype = {
-        name : <span class="string">"hyang"</span>     <span class="comment">//原形链断开，重写</span>
-}
-<span class="built_in">console</span>.log(per1.name) <span class="comment">//tian 不受影响</span>
-<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params"></span>)</span>{}
-Teacher.prototype = {
-       name : <span class="string">"qiqi"</span>
-}
-per1.constructor = Teacher;
-<span class="built_in">console</span>.log(per1.name)  <span class="comment">//tian 依然不受影响</span>
-</code></pre>
-<p>通过上述代码我们发现，当重写类的原形链的时候，已经生成的实例并不受任何影响，修改construct属性（该属性表示对象的构造函数），也没有任何效果。那么究竟什么才是对象回溯的依据呢？其实每个对象都有一个 <code>__proto__</code>属性。该属性保存着对象指向的原形。  </p>
-<pre><code class="javascript"><span class="built_in">console</span>.log(per1.__proto__)   <span class="comment">//Object {name: "tian"}</span>
-per1.__proto__ = Person.prototype;   <span class="comment">//修改__proto__属性</span>
-<span class="built_in">console</span>.log(per1.name)   <span class="comment">//hyang</span>
-per1.__proto__ = Teacher.prototype 
-<span class="built_in">console</span>.log(per1.name)   <span class="comment">//qiqi</span>
-</code></pre>
-<p>在IE11以后和标准浏览器中该属性可以修改访问，之前的该属性不暴露。于是我们得出new操作符在执行的时候过程（参考Person类）：</p>
-<blockquote>
-<p>1）创建一个空对象obj<br>2）obj.<strong>proto</strong> = Person.prototype (引用)<br>3）将构造器中this = obj<br>4）执行构造器里面的代码<br>5）判断有没有返回值，没有返回值默认undefined，有返回值且为复合类型则返回该类型，否则返回this如果通过new生成对象的时候，忘记加上new了，那么属性会保存在哪儿里呢？  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name</span>) </span>{
-        <span class="keyword">this</span>.name = name;
-}
-<span class="keyword">var</span> per = Person(<span class="string">"tian"</span>);
-per   <span class="comment">//'undefined'</span>
-<span class="built_in">console</span>.log(<span class="built_in">window</span>.name) <span class="comment">//'tian'</span>
-</code></pre>
-<p>可以看到没有加new操作符，Person中的this会被解释称window对象，全局变量就很容易受到污染，谨慎使用new操作符。  </p>
-</blockquote>
-<h1 id="继承"><a href="#继承" class="headerlink" title="继承"></a>继承</h1><p>Javascript实现继承，通过上面我们知道只要prototype有什么，那么实例就有什么；如果我们将类prototype置换为另一类的prototype，那么该类就可以轻易得到类的原型成员。但是由于对象是引用类型，所以不能直接替换  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params"></span>)</span>{}  <span class="comment">//父类</span>
-Person.prototype = {
-        <span class="string">"name"</span> : <span class="string">"tian"</span>
-}
-<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params"></span>)</span>{}    <span class="comment">//子类</span>
-Teacher.prototype = Person.prototype;
-</code></pre>
-<p>这样Teacher的原形保存的是对Person的引用，修改Teacher会同时修改Person。解决的方法有两个，一个是通过for in把父类原型逐一赋给子类的原形（拷贝继承）；第二种现将父类的原形赋给一个函数，然后将该函数的实例作为子类的原形。<br>方法1：  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">extend</span>(<span class="params">child, super</span>) </span>{
-        <span class="keyword">for</span>(<span class="keyword">var</span> property <span class="keyword">in</span> <span class="keyword">super</span>) {
-                child[property] = <span class="keyword">super</span>[property];
-        }
-        <span class="keyword">return</span> child;
-}
-</code></pre>
-<p>该方法有一个缺陷，就是无法通过instanceof验证。<br>方法2 原型继承：  </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Person</span>(<span class="params">name</span>)</span>{
-        <span class="keyword">this</span>.name = name;
-}
-Person.prototype = {
-        <span class="string">"run"</span> : <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
-                <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"跑步"</span>)
-        }
-}
-
-<span class="function"><span class="keyword">function</span> <span class="title">birdge</span>(<span class="params"></span>)</span>{}
-birdge.prototype = Person.prototype;
-
-<span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params">name, wage</span>)</span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.wage = wage;
-}
-Teacher.prototype = <span class="keyword">new</span> birdge();
-<span class="keyword">var</span> per = <span class="keyword">new</span> Person(<span class="string">"tian"</span>);
-<span class="keyword">var</span> tea = <span class="keyword">new</span> Teacher(<span class="string">"hyang"</span>,<span class="number">10</span>);
-Person.prototype === Teacher.prototype;  <span class="comment">// false 说明原型已经分离</span>
-Person.prototype.say = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
-    <span class="built_in">console</span>.log(<span class="keyword">this</span>.name)
-} <span class="comment">//为父类添加一个方法</span>
-tea.say()    <span class="comment">//hyang  说明子类得到了父类新添加的方法</span>
-Teacher.prototype.getWage = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
-    <span class="built_in">console</span>.log(<span class="keyword">this</span>.wage);
-}
-per.getWage;  <span class="comment">//'undefined' 说明子类添加的方法并没有影响到父类</span>
-</code></pre>
-<p>这样我们就完成了类的原型继承，我们给子类原形添加的新方法，其实是保存在了生成的new bridge()那个对象中（Teacher的原型保存的是对new bridge这个对象的引用）  </p>
-<pre><code class="javascript">per.__proto__                  <span class="comment">//Object {run: function, say: function}</span>
-tea.__proto__                  <span class="comment">//birdge {getWage: function, run: function, say: function}</span>
-tea.__proto__.__proto__  <span class="comment">//Object {run: function, say: function}</span>
-</code></pre>
-<p>这里我们可以清除的看到对象各自的原型是什么，中介函数bridge的使用在ES5中有更加简单的方法 Object.create(原型)这样就可以创建出一个具有指定原形的对象。对于不支持Object.create我们可以自己定义该函数   </p>
-<pre><code class="javascript"><span class="keyword">if</span>(!<span class="built_in">Object</span>.create){
-        <span class="built_in">Object</span>.create= (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>{
-                <span class="function"><span class="keyword">function</span> <span class="title">F</span>(<span class="params"></span>)</span>{}   <span class="comment">//创建中介函数（bridge）</span>
-                <span class="keyword">return</span> <span class="function"><span class="keyword">function</span>(<span class="params">obj</span>) </span>{
-                        <span class="keyword">if</span>(<span class="built_in">arguments</span>.length !== <span class="number">1</span>) {
-                                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"仅支持一个参数"</span>);
-                        }
-                        F.prototype = obj;   <span class="comment">//原形绑定</span>
-                        <span class="keyword">return</span> <span class="keyword">new</span> F();      <span class="comment">//返回实例</span>
-                }
-        })()
-}
-</code></pre>
-<p>这样上述继承就可以改写成，Teacher.prototype = Object.create(Person.prototype)。对于特权属性和函并没有在原型链中，我们可以采用借用构造函数来继承，于是上面Teacher子类修改为    </p>
-<pre><code class="javascript"><span class="function"><span class="keyword">function</span> <span class="title">Teacher</span>(<span class="params">name, wage</span>) </span>{
-        Person.call(<span class="keyword">this</span>, name);   <span class="comment">//调用父类的构造方法，实现特权函数继承;</span>
-        <span class="keyword">this</span>.wage = wage;
-}
-</code></pre>
-<p>综上两种当时组合在一起，就是我们常用的类的类的继承方法（组合继承）。  还有其他的继承方式比如寄生式继承，寄生组合式继承，这些方法个人用的比较少，有兴趣的可以自己参考。  </p>
-<h1 id="类工厂"><a href="#类工厂" class="headerlink" title="类工厂"></a>类工厂</h1><p>js作为一个基于对象的语言，本身并没有提供class这一概念，通过上一篇文章Javascript 类工厂Ⅰ - 类与继承我们明白了类的继承原理，为此我们可以实现一个属于的简单的OO原型继承。  </p>
-<pre><code class="javascript"><span class="comment">/**</span>
-<span class="comment"> * 提供简单的OO原型继承</span>
-<span class="comment"> */</span>
-(<span class="function"><span class="keyword">function</span>(<span class="params">global</span>) </span>{
-<span class="meta">    "use strict"</span>
-    global.Class = {
-        <span class="comment">/**</span>
-<span class="comment">         * @param superclass  父类</span>
-<span class="comment">         * @param definition  类的属性设置</span>
-<span class="comment">         * @returns {_Object}  返回生成好的类</span>
-<span class="comment">         */</span>
-        create : <span class="function"><span class="keyword">function</span>(<span class="params">superclass, definition</span>) </span>{
-            <span class="keyword">if</span>(<span class="built_in">arguments</span>.length === <span class="number">1</span>) {
-                definition = superclass;
-                superclass = <span class="built_in">Object</span>;
-            }
-            <span class="keyword">if</span>(<span class="keyword">typeof</span> superclass !== <span class="string">"function"</span>) {
-                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"superclass must be fun"</span>);
-            }
-            <span class="keyword">var</span> _super = superclass.prototype;
-
-            <span class="comment">//删去静态方法（静态方法不能被继承）</span>
-            <span class="keyword">var</span> statics = definition.statics;
-            <span class="keyword">delete</span> definition.statics;
-
-            <span class="comment">// 用于返回的中间类,调去deinition对象中的内容</span>
-            <span class="function"><span class="keyword">function</span> <span class="title">_Object</span>(<span class="params"></span>) </span>{
-                <span class="keyword">this</span>.init.apply(<span class="keyword">this</span>, <span class="built_in">arguments</span>);
-            }
-            _Object.prototype = <span class="built_in">Object</span>.create(_super);
-
-            <span class="comment">//_super 属性保存父类原型</span>
-            _Object.prototype._super = _super;
-            _Object.prototype.constructor = _Object;
-           <span class="comment">//确保一定存在init方法</span>
-            <span class="keyword">if</span>(<span class="keyword">typeof</span> _Object.prototype.init !== <span class="string">'function'</span>) {
-                _Object.prototype.init = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-                    superclass.apply(<span class="keyword">this</span>, <span class="built_in">arguments</span>);
-                }
-            }
-            <span class="comment">//copy对象内容到原型中</span>
-            <span class="keyword">for</span>(<span class="keyword">var</span> name <span class="keyword">in</span> definition) {
-                _Object.prototype[name] = definition[name];
-            }
-
-           <span class="comment">//绑定静态内容</span>
-            _Object.statics = {};
-            <span class="keyword">for</span>(<span class="keyword">var</span> name <span class="keyword">in</span> statics) {
-                _Object.statics[name] = statics[name];
-            }
-
-            <span class="keyword">return</span> _Object;
-        }
-    }
-
-})(<span class="keyword">this</span>);
-</code></pre>
-<h2 id="使用说明"><a href="#使用说明" class="headerlink" title="使用说明"></a>使用说明</h2><p>通过Class.create([properties])创建类，properties为属性对象;<br>init 初始化方法，会在创建实例是被调用<br>statics 类的静态方法，ClassName.fn()   </p>
-<pre><code class="javascript"><span class="keyword">var</span> Person = Class.create({
-    init : <span class="function"><span class="keyword">function</span>(<span class="params">name, age</span>) </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.age = age;
-    },
-    statics : {
-       <span class="string">"name"</span> : <span class="string">"Person"</span>,
-       <span class="string">"type"</span> : <span class="string">"Class"</span>
-    }
-})
-<span class="keyword">var</span> per = <span class="keyword">new</span> Person(<span class="string">"phantom"</span>, <span class="number">1</span>);
-</code></pre>
-<p>使用Class.create(superClass, properties) 继承父类superClass</p>
-<p>this._super 保存有父类属性，可以用于子类中调用父类方法。  </p>
-<pre><code class="javascript"><span class="keyword">var</span> Teacher = Class.create(Person, {
-    init : <span class="function"><span class="keyword">function</span>(<span class="params">name, age, school</span>) </span>{
-        <span class="keyword">this</span>._super.init.call(<span class="keyword">this</span>, name, age);  <span class="comment">//调用父类init</span>
-        <span class="keyword">this</span>.school = school;
-    },
-    teach : <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>{
-        <span class="built_in">console</span>.log(<span class="keyword">this</span>.name + <span class="string">"上课呢"</span>);
-    }
-})
-<span class="keyword">var</span> te = <span class="keyword">new</span> Teacher(<span class="string">"cjk"</span>, <span class="number">30</span>, <span class="string">'t_hot'</span>);
-</code></pre>
-<h1 id="ES6的类扩展"><a href="#ES6的类扩展" class="headerlink" title="ES6的类扩展"></a>ES6的类扩展</h1><p>ES6提供了更接近传统语言的写法，引入了Class（类）这个概念，作为对象的模板。通过class关键字，可以定义类。  </p>
-<pre><code class="javascript"><span class="comment">//定义类</span>
-<span class="class"><span class="keyword">class</span> <span class="title">Point</span> </span>{
-  <span class="keyword">constructor</span>(x, y) {
-    <span class="keyword">this</span>.x = x;
-    <span class="keyword">this</span>.y = y;
-  }
-  toString() {
-    <span class="keyword">return</span> <span class="string">'('</span> + <span class="keyword">this</span>.x + <span class="string">', '</span> + <span class="keyword">this</span>.y + <span class="string">')'</span>;
-  }
-}
-</code></pre>
-<p>上面代码定义了一个“类”，可以看到里面有一个constructor方法，这就是构造方法，而this关键字则代表实例对象。</p>
-<p>继承类:<br>Class之间可以通过extends关键字实现继承，这比ES5的通过修改原型链实现继承，要清晰和方便很多。<br><code>class ColorPoint extends Point {}</code><br>上面代码定义了一个ColorPoint类，该类通过extends关键字，继承了Point类的所有属性和方法。但是由于没有部署任何代码，所以这两个类完全一样，等于复制了一个Point类。下面，我们在ColorPoint内部加上代码。  </p>
-<pre><code class="javascript"><span class="class"><span class="keyword">class</span> <span class="title">ColorPoint</span> <span class="keyword">extends</span> <span class="title">Point</span> </span>{
-  <span class="keyword">constructor</span>(x, y, color) {
-    <span class="keyword">super</span>(x, y); <span class="comment">// 调用父类的constructor(x, y)</span>
-    <span class="keyword">this</span>.color = color;
-  }
-  toString() {
-    <span class="keyword">return</span> <span class="keyword">this</span>.color + <span class="string">' '</span> + <span class="keyword">super</span>.toString(); <span class="comment">// 调用父类的toString()</span>
-  }
-}
-</code></pre>
-<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><p>参考资料如下：  </p>
-<ul>
-<li><a href="http://product.dangdang.com/1900470931.html" target="_blank" rel="external">javascript高级程序设计第三版</a></li>
-<li>Prototype.js源码</li>
-<li><a href="https://item.jd.com/11436424.html" target="_blank" rel="external">jQuery框架设计</a></li>
-<li><a href="https://github.com/T-phantom" target="_blank" rel="external">PhantomUI组件库</a></li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;h1 id=&quot;类的创建&quot;&gt;&lt;a href=&quot;#类的创建&quot; class=&quot;headerlink&quot; title=&quot;类的创建&quot;&gt;&lt;/a&gt;类的创建&lt;/h1&gt;&lt;p&gt;在面向对象语言中，类是面向对象的基础，并且具有棉线的层次概念和继承关系。Javascript中并没有类的概念，Javascript是基于对象的弱类型语言，以对象为基础，以函数为模型，以原形为继承机制的一种模式。创建一个简单的对象，就是创建一个Object类的实例。虽然Object构造函数或对象字面量可以用来创建单个对象，但是这些对象都是基于Object这一个类。为此我们需要创建自己的类，Javascript中创建类的方式有很多种：工厂模式，构造函数模式，原形模式，动态原形模式，寄生构造模式，稳妥构造模式。&lt;br&gt;
-    
-    </summary>
-    
-      <category term="javascript" scheme="http://yoursite.com/categories/javascript/"/>
-    
-    
-      <category term="javascript" scheme="http://yoursite.com/tags/javascript/"/>
     
   </entry>
   

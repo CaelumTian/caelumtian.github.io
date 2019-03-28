@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="redux,前端源码解析," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware()。">
+<meta name="keywords" content="redux,前端源码解析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redux 源码解析">
+<meta property="og:url" content="http://yoursite.com/2019/01/26/redux源码解析/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware()。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-03-28T11:54:42.112Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="redux 源码解析">
+<meta name="twitter:description" content="redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware()。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/01/26/redux源码解析/"/>
+
+
+
+
+
+  <title>redux 源码解析 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/26/redux源码解析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">redux 源码解析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-26T16:27:05+08:00">
+                2019-01-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能： </p>
+<ul>
+<li>创建 store，即：createStore()。</li>
+<li>创建出来的 store 提供subscribe，dispatch，getState这些方法。</li>
+<li>将多个reducer合并为一个reducer，即：combineReducers()。</li>
+<li>应用中间件，即applyMiddleware()。</li>
+</ul>
+<a id="more"></a>
+<h2 id="createStore-实现"><a href="#createStore-实现" class="headerlink" title="createStore 实现"></a>createStore 实现</h2><p>简化版代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">createStore</span>(<span class="params">reducer, preloadedState, enhancer</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> currentReducer = reducer <span class="comment">// reducer</span></div><div class="line">    <span class="keyword">let</span> currentState = preloadedState <span class="comment">// 默认 state</span></div><div class="line">    <span class="keyword">let</span> currentListeners = [] <span class="comment">// 发布订阅模式队列</span></div><div class="line">    <span class="keyword">let</span> nextListeners = currentListeners <span class="comment">// 浅拷贝下这个队列</span></div><div class="line">    <span class="keyword">let</span> isDispatching = <span class="literal">false</span> <span class="comment">// isDispatching 标志是否正在执行dispatch</span></div><div class="line"></div><div class="line">    <span class="comment">// @enhancer</span></div><div class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> enhancer !== <span class="string">'undefined'</span>) &#123;</div><div class="line">        <span class="comment">// 如果enhancer存在，那他必须是个function, 否则throw Error哈</span></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">typeof</span> enhancer !== <span class="string">'function'</span>) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Expected the enhancer to be a function.'</span>)</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> enhancer(createStore)(reducer, preloadedState)</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// @1</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">getState</span>(<span class="params"></span>) </span>&#123;</div><div class="line">        <span class="comment">// 为了确保state的正确性(获取最新的state)，判断是否正在 dispatch</span></div><div class="line">        <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(.../);</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 确定currentState是当前的state 看 -&gt; subscribe</span></div><div class="line">        <span class="keyword">return</span> currentState</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// @2</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">subscribe</span>(<span class="params">listener</span>) </span>&#123;</div><div class="line">        <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(.../);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">let</span> isSubscribed = <span class="literal">true</span>;</div><div class="line">        <span class="comment">// 如果，nextListeners 和 currentListeners 是一个引用，就拷贝 currentListeners 给 nextListeners</span></div><div class="line">        ensureCanMutateNextListeners()</div><div class="line">        <span class="comment">// 添加一个订阅函数</span></div><div class="line">        nextListeners.push(listener)</div><div class="line">        <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">unsubscribe</span>(<span class="params"></span>) </span>&#123;</div><div class="line">            <span class="keyword">if</span> (!isSubscribed) &#123;</div><div class="line">                <span class="comment">// 没有直接订阅 则 return</span></div><div class="line">                <span class="keyword">return</span></div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="comment">// 同理</span></div><div class="line">            <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">''</span>)</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// 取消订阅</span></div><div class="line">            isSubscribed = <span class="literal">false</span></div><div class="line">            <span class="comment">// 保存订阅快照</span></div><div class="line">            ensureCanMutateNextListeners()</div><div class="line">            <span class="comment">// 找到并删除当前的listener</span></div><div class="line">            <span class="keyword">const</span> index = nextListeners.indexOf(listener)</div><div class="line">            nextListeners.splice(index, <span class="number">1</span>)</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// @3</span></div><div class="line">    <span class="function"><span class="keyword">function</span> <span class="title">dispatch</span>(<span class="params">action</span>) </span>&#123;</div><div class="line">        <span class="comment">// 各种常规判断</span></div><div class="line">        ...</div><div class="line">        <span class="comment">// dispatch中不可以有进行的dispatch</span></div><div class="line">        <span class="keyword">if</span> (isDispatching) &#123;</div><div class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Reducers may not dispatch actions.'</span>)</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="comment">// 执行时标记为true</span></div><div class="line">            isDispatching = <span class="literal">true</span></div><div class="line">            <span class="comment">// 执行reducer</span></div><div class="line">            currentState = currentReducer(currentState, action)</div><div class="line">        &#125; <span class="keyword">finally</span> &#123;</div><div class="line">            <span class="comment">// 最终执行， isDispatching标记为false， 即完成状态</span></div><div class="line">            isDispatching = <span class="literal">false</span></div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// 执行所有监听队列</span></div><div class="line">        <span class="keyword">const</span> listeners = (currentListeners = nextListeners)</div><div class="line">        <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; listeners.length; i++) &#123;</div><div class="line">            <span class="keyword">const</span> listener = listeners[i]</div><div class="line">            <span class="comment">// 执行每一个监听函数</span></div><div class="line">            listener()</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 返回传入的action</span></div><div class="line">        <span class="keyword">return</span> action</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 初始化数据</span></div><div class="line">    dispatch(&#123;</div><div class="line">        type: ActionTypes.INIT</div><div class="line">    &#125;)</div><div class="line"></div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">        dispatch,</div><div class="line">        subscribe,</div><div class="line">        getState,</div><div class="line">        replaceReducer,</div><div class="line">        [$$observable]: observable</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="getState"><a href="#getState" class="headerlink" title="getState"></a>getState</h3><p>可以看出，createStore 将 state 通过闭包保存在了 currentState 中，通过调用 getState 返回。为了能够初始化数据，在 createStore 的最后，dispath 了一个 <code>ActionTypes.INIT</code> 请求。在这里 <code>ActionTypes.INIT</code> 实际上为一个随机字符串 <code>@@redux/INIT${randomString()}</code>，这就保证了其不会命中任何 <code>action</code>，而是走默认 <code>return state</code> 完成数据初始化过程。</p>
+<h3 id="subscribe"><a href="#subscribe" class="headerlink" title="subscribe"></a>subscribe</h3><p>一个简单的发布订阅模式，所有注册函数保存在 newListeners (执行的时候，会用 currentListeners) 队列中。返回一个 unsubscribe 来清除注册函数。</p>
+<h3 id="dispatch"><a href="#dispatch" class="headerlink" title="dispatch"></a>dispatch</h3><p>直接调用 reducer 函数来进行处理，并且执行所有的 listeners。可以看见整个过程都是同步的，这也是 redux 不能在 reducer 中书写异步的原因之一(最主要的还是因为纯函数，不能涉及IO)。<br>这里 dispatch 对参数 action 做了检查：action 必须是一个纯对象，且必须有 type 属性。</p>
+<h2 id="combinReducers"><a href="#combinReducers" class="headerlink" title="combinReducers"></a>combinReducers</h2><p>combinReducers 可以将多个 reducers 合并在成为一个 reducers，从而给 createStore 使用。简单的用法如下。简单来说就是讲，各个 reducer 上的 state 统一管理在一个 key 值上，action 判断都统一放在一起。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">combineReducers(&#123;</div><div class="line">    key1: reducer1,</div><div class="line">    key2: reducer2</div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">combineReducers</span>(<span class="params">reducers</span>) </span>&#123;</div><div class="line">    <span class="comment">// 先获取传入reducers对象的所有key</span></div><div class="line">    <span class="keyword">const</span> reducerKeys = <span class="built_in">Object</span>.keys(reducers)</div><div class="line">    <span class="comment">// 最后真正有效的reducer存在这里</span></div><div class="line">    <span class="keyword">const</span> finalReducers = &#123;&#125; </div><div class="line">    </div><div class="line">    <span class="comment">// 下面从reducers中筛选出有效的reducer</span></div><div class="line">    <span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; reducerKeys.length; i++)&#123;</div><div class="line">        <span class="keyword">const</span> key  = reducerKeys[i]</div><div class="line">        <span class="keyword">if</span>(<span class="keyword">typeof</span> reducers[key] === <span class="string">'function'</span>) &#123;</div><div class="line">            finalReducers[key] = reducers[key] </div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    <span class="comment">// 有效的 key</span></div><div class="line">    <span class="keyword">const</span> finalReducerKeys = <span class="built_in">Object</span>.keys(finalReducers);</div><div class="line">    </div><div class="line">    <span class="keyword">let</span> shapeAssertionError</div><div class="line">  	<span class="keyword">try</span> &#123;</div><div class="line">        <span class="comment">// 检查finalReducer中的reducer接受一个初始action或一个未知的action时，是否依旧能够返回有效的值。</span></div><div class="line">    	assertReducerShape(finalReducers)</div><div class="line">  	&#125; <span class="keyword">catch</span> (e) &#123;</div><div class="line">    	shapeAssertionError = e</div><div class="line">  	&#125;</div><div class="line">    </div><div class="line">    <span class="comment">// 返回合并后的reducer</span></div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">combination</span>(<span class="params">state= &#123;&#125;, action</span>)</span>&#123;</div><div class="line">    	<span class="comment">// 取得每个子reducer对应的state，与action一起作为参数给每个子reducer执行。</span></div><div class="line">    	<span class="keyword">let</span> hasChanged = <span class="literal">false</span> <span class="comment">//标志state是否有变化</span></div><div class="line">        <span class="keyword">let</span> nextState = &#123;&#125;</div><div class="line">        <span class="comment">// 执行所有的子 reducer </span></div><div class="line">        <span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; finalReducerKeys.length; i++) &#123;</div><div class="line">            <span class="keyword">const</span> key = finalReducerKeys[i]</div><div class="line">            <span class="keyword">const</span> reducer = finalReducers[key]</div><div class="line">            <span class="comment">// 当前key的state值</span></div><div class="line">            <span class="keyword">const</span> previousStateForKey = state[key]</div><div class="line">            <span class="comment">// 执行reducer， 返回当前state</span></div><div class="line">            <span class="keyword">const</span> nextStateForKey = reducer(previousStateForKey, action)</div><div class="line">            <span class="comment">//存到nextState中（总的状态）</span></div><div class="line">            nextState[key] = nextStateForKey</div><div class="line">            <span class="comment">// 如果子reducer不能处理该action，那么会返回previousStateForKey</span></div><div class="line">            hasChanged = hasChanged || previousStateForKey !== nextStateForKey</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// 当所有状态都没改变时，我们直接返回之前的state就可以了。</span></div><div class="line">        <span class="keyword">return</span> hasChanged ? nextState : state</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这里我们可以看见，融合后的 reducer 当一个 action 触发时，不仅仅是该 action 对应的 reducer 执行了，其他所有的 reducer 也同时被执行了，只是 action type 不匹配，state 的值不变而已。这种空操作，可能会存在性能的浪费。(理论上大部分都不会有问题，只有节点数量多了才会有，最重要的优化是：没问题之前不做优化)<br>我们可以借助 redux-ignore 来指定黑白名单的方式，返回优化后的 reducer。  </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; ignoreActions, filterActions &#125; <span class="keyword">from</span> <span class="string">'redux-ignore'</span>;</div><div class="line"> </div><div class="line"><span class="comment">// 黑名单写法</span></div><div class="line">ignoreActions(reducer, [ARRAY_OF_ACTIONS])</div><div class="line">ignoreActions(reducer, (action) =&gt; !action.valid)</div><div class="line"></div><div class="line"><span class="comment">// 白名单写法</span></div><div class="line">filterActions(reducer, [ARRAY_OF_ACTIONS])</div><div class="line">filterActions(reducer, (action) =&gt; action.valid)</div></pre></td></tr></table></figure>
+<p>原理也很简单，就是利用  actions.indexOf(action.type) &gt;= 0 来决定 reducer 是否触发而已。</p>
+<h2 id="applyMiddleware-中间件"><a href="#applyMiddleware-中间件" class="headerlink" title="applyMiddleware 中间件"></a>applyMiddleware 中间件</h2><p>我们知道 reducer 本身是一个纯函数，纯函数要求自身不能和 IO 产生关联。这也就注定 reducer 本身是一个同步函数。同样，我们在 <code>store.dispath</code> 源码中看见，当一个 dispath 发出后，所有的监听回调也就同步发生了。<br>在实际业务中，我们的请求一般都是异步的，那么做异步请求处理就只能放在 dispatch 前来做。所以我们希望有一种通用的方案，来扩展 dispath 的功能。这就是中间件的功能。下面我们思考因该如何来做一个中间件：</p>
+<h3 id="封装-dispath"><a href="#封装-dispath" class="headerlink" title="封装 dispath"></a>封装 dispath</h3><p>加入我们想要加入一个 dispath 前后记录日志的功能。我们可能会这么写 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="built_in">console</span>.log(<span class="string">'action 触发前'</span>);</div><div class="line">store.dispath(action);</div><div class="line"><span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>);</div></pre></td></tr></table></figure>
+<p>为了方便复用，我们扩展其为一个函数： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">dispatchAndLog</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    store.dispatch(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="重写-dispatch"><a href="#重写-dispatch" class="headerlink" title="重写 dispatch"></a>重写 dispatch</h3><p>现在我们可以通过调用 <code>dispatchAndLog</code> 来完成带有日志的 dispath。日志记录功能可以直接反映到 dispath 上面，不改变原有的用法，更直接些。通过复写 dispath 来实现扩展：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 保存 dispath 副本</span></div><div class="line"><span class="keyword">let</span> next = store.dispatch;</div><div class="line">store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    <span class="keyword">let</span> result = store.dispatch(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">    <span class="comment">// 返回 action</span></div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>现在我们随便使用 dispath 就可以实现日志的打印，而不用费事的去使用 <code>dispatchAndLog</code> 函数。</p>
+<h3 id="新的扩展"><a href="#新的扩展" class="headerlink" title="新的扩展"></a>新的扩展</h3><p>实际开发中，我们可能不仅需要日志功能，还有可能需要其他的扩展功能。比如异常上报。为此我们需要将上述操作写成两个函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsLogFunc</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">        <span class="keyword">let</span> result = next(action);</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">        <span class="comment">// 返回 action</span></div><div class="line">        <span class="keyword">return</span> result;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsErrorPublish</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="keyword">return</span> next(action)</div><div class="line">        &#125; <span class="keyword">catch</span>(e) &#123;</div><div class="line">            <span class="comment">// 错误处理</span></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>使用两个扩展：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">extendsLogFunc(store, aciton);</div><div class="line">extendsErrorPublish(store, action);</div></pre></td></tr></table></figure>
+<h3 id="middleware-方法"><a href="#middleware-方法" class="headerlink" title="middleware 方法"></a>middleware 方法</h3><p>从上面，我们可以看出，其实扩展多个中间件，就是复写多次 <code>store.dispatch</code> 方法。每次 next 缓存的都是上一个中间件替换好的 dispatch 方法。即如下链式调用：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">next(next(next(...args)))</div></pre></td></tr></table></figure>
+<p>即洋葱模型。我们提供这样一个封装函数，来实现这一模型。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">store, middleswares</span>) </span>&#123;</div><div class="line">    middlewares = middlewares.slice();</div><div class="line">    <span class="comment">// 翻转是为了实现从内向外逐步执行</span></div><div class="line">    middlewares.reverse();</div><div class="line">    middlewares.forEach(<span class="function"><span class="params">middleware</span> =&gt;</span></div><div class="line">        store.dispatch = middleware(store);</div><div class="line">    )</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>对 <code>extendsLogFunc</code> 稍作改动(extendsErrorPublish， 同理) </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsLogFunc</span>(<span class="params">store</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params">action</span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">        <span class="keyword">let</span> result = next(action);</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">        <span class="comment">// 返回 action</span></div><div class="line">        <span class="keyword">return</span> result;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>就可以使用了：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">applyMiddleware(store, [extendsLogFunc, extendsErrorPublish])</div></pre></td></tr></table></figure>
+<h3 id="函数柯里化"><a href="#函数柯里化" class="headerlink" title="函数柯里化"></a>函数柯里化</h3><p>我们观察改动后的 extendsLogFunc。无非就是层层准备参数，最后一起使用，这样我们很容易想到函数柯里化：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> extendsLogFunc = <span class="function"><span class="params">store</span> =&gt;</span> next =&gt; <span class="function"><span class="params">action</span> =&gt;</span> &#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    <span class="keyword">let</span> result = next(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">    <span class="comment">// 返回 action</span></div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>为了能顺利运行，我们也需要晒微修改下 applyMiddleware，如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">store, middlewares</span>) </span>&#123;</div><div class="line">    middlewares = middlewares.slice();</div><div class="line">    middlewares.reverse();</div><div class="line">    <span class="keyword">let</span> dispatch = store.dispath;</div><div class="line">    middlewares.forEach(<span class="function"><span class="params">middleware</span> =&gt;</span></div><div class="line">        dispatch = middleware(store)(dispatch);</div><div class="line">    )</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们再看，createStore 的源码，如果我们传入了第三个参数 enhancer 作为中间件，那么调用的是：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">return</span> enhancer(createStore)(reducer, preloadedState)</div></pre></td></tr></table></figure>
+<p>典型的柯里化调用，为此，我们最后修改下 <code>applyMiddleware</code> 函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">middlewares</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> <span class="function">(<span class="params">createStore</span>) =&gt;</span> (reducer, preloadedState) =&gt; &#123;</div><div class="line">        <span class="keyword">const</span> stores = createStore(reducer, preloadedState);</div><div class="line">        <span class="keyword">let</span> dispatch = store.dispath;</div><div class="line">        middlewares = middlewares.slice();</div><div class="line">        middlewares.reverse();</div><div class="line">        middlewares.forEach(<span class="function"><span class="params">middleware</span> =&gt;</span></div><div class="line">            dispatch = middleware(store)(dispatch);</div><div class="line">        )</div><div class="line">        <span class="keyword">return</span> <span class="built_in">Object</span>.assing(&#123;&#125;, store, &#123;dispath&#125;);</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="string">``</span><span class="string">` </span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">这样，我们就完成了，使用如下：</span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string"></span></div><div class="line"><span class="string">`</span><span class="string">``</span>javascript</div><div class="line"><span class="keyword">import</span> &#123;createStore&#125; <span class="keyword">from</span> <span class="string">'redux'</span></div><div class="line"><span class="keyword">let</span> store = createStore(reducers, applyMiddleware([extendsLogFunc, extendsErrorPublish]));</div></pre></td></tr></table></figure>
+<h3 id="看下源码"><a href="#看下源码" class="headerlink" title="看下源码"></a>看下源码</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">applyMiddleware</span>(<span class="params">...middlewares</span>) </span>&#123;</div><div class="line">  <span class="keyword">return</span> <span class="function"><span class="params">createStore</span> =&gt;</span> (...args) =&gt; &#123;</div><div class="line">    <span class="keyword">const</span> store = createStore(...args)</div><div class="line">    <span class="keyword">let</span> dispatch = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(</div><div class="line">        <span class="string">`Dispatching while constructing your middleware is not allowed. `</span> +</div><div class="line">          <span class="string">`Other middleware would not be applied to this dispatch.`</span></div><div class="line">      )</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">const</span> middlewareAPI = &#123;</div><div class="line">      getState: store.getState,</div><div class="line">      dispatch: <span class="function">(<span class="params">...args</span>) =&gt;</span> dispatch(...args)</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">const</span> chain = middlewares.map(<span class="function"><span class="params">middleware</span> =&gt;</span> middleware(middlewareAPI))</div><div class="line">    <span class="comment">// 实现洋葱模型</span></div><div class="line">    dispatch = compose(...chain)(store.dispatch) </div><div class="line">    <span class="comment">// 返回增强的store</span></div><div class="line">    <span class="keyword">return</span> &#123;</div><div class="line">      ...store,</div><div class="line">      dispatch</div><div class="line">    &#125;</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>和我们的书写思路差不多吧，在源码里，通过 compose 方法，来实现的洋葱模型；compose 函数式编程中用来复合代码的：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">compose</span>(<span class="params">...funcs</span>) </span>&#123;</div><div class="line">    <span class="keyword">if</span> (funcs.length === <span class="number">0</span>) &#123;</div><div class="line">        <span class="keyword">return</span> <span class="function"><span class="params">arg</span> =&gt;</span> arg</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">if</span> (funcs.length === <span class="number">1</span>) &#123;</div><div class="line">        <span class="keyword">return</span> funcs[<span class="number">0</span>]</div><div class="line">    &#125;</div><div class="line">    <span class="keyword">return</span> funcs.reduce(<span class="function">(<span class="params">a, b</span>) =&gt;</span> (...args) =&gt; a(b(...args)))</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>在搭配 react 的时候，我们通常不会直接使用 <code>redux</code> 因为这样需要关注的优化点就有点多。通常情况下，我们会选择 <code>react-redux</code> 来完成和 react 的结合。下篇文章着重介绍下，<code>react-redux</code> 源码，并针对 redux 可能带来的性能问题进行说明。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/redux/" rel="tag">redux</a>
+          
+            <a href="/tags/前端源码解析/" rel="tag">前端源码解析</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/02/react数据流管理/" rel="next" title="前端数据流管理">
+                <i class="fa fa-chevron-left"></i> 前端数据流管理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="CaelumTian" />
+            
+              <p class="site-author-name" itemprop="name">CaelumTian</p>
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>LinkIn</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-globe"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#createStore-实现"><span class="nav-number">1.</span> <span class="nav-text">createStore 实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#getState"><span class="nav-number">1.1.</span> <span class="nav-text">getState</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#subscribe"><span class="nav-number">1.2.</span> <span class="nav-text">subscribe</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dispatch"><span class="nav-number">1.3.</span> <span class="nav-text">dispatch</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#combinReducers"><span class="nav-number">2.</span> <span class="nav-text">combinReducers</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#applyMiddleware-中间件"><span class="nav-number">3.</span> <span class="nav-text">applyMiddleware 中间件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#封装-dispath"><span class="nav-number">3.1.</span> <span class="nav-text">封装 dispath</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#重写-dispatch"><span class="nav-number">3.2.</span> <span class="nav-text">重写 dispatch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#新的扩展"><span class="nav-number">3.3.</span> <span class="nav-text">新的扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#middleware-方法"><span class="nav-number">3.4.</span> <span class="nav-text">middleware 方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数柯里化"><span class="nav-number">3.5.</span> <span class="nav-text">函数柯里化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#看下源码"><span class="nav-number">3.6.</span> <span class="nav-text">看下源码</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaelumTian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="react," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="上一篇文章，我们介绍了高阶组件(HOC)，最后也提出了几个关于高阶组件的问题。这里我们接上另一种组件复用模式 render props 亦或是 funtion as child。 render props本质上，render props 就是在原有的组件上增加一个 prop 来实现不同的渲染情况，从而达到代码复用的目的(即将组件组件做为参数)。举例如下：">
+<meta name="keywords" content="react">
+<meta property="og:type" content="article">
+<meta property="og:title" content="React 组件复用和组合 (二)">
+<meta property="og:url" content="http://yoursite.com/2018/12/05/React组件复用和组合2/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="上一篇文章，我们介绍了高阶组件(HOC)，最后也提出了几个关于高阶组件的问题。这里我们接上另一种组件复用模式 render props 亦或是 funtion as child。 render props本质上，render props 就是在原有的组件上增加一个 prop 来实现不同的渲染情况，从而达到代码复用的目的(即将组件组件做为参数)。举例如下：">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/12/05/React组件复用和组合2/a2.png">
+<meta property="og:updated_time" content="2019-03-11T11:59:47.636Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="React 组件复用和组合 (二)">
+<meta name="twitter:description" content="上一篇文章，我们介绍了高阶组件(HOC)，最后也提出了几个关于高阶组件的问题。这里我们接上另一种组件复用模式 render props 亦或是 funtion as child。 render props本质上，render props 就是在原有的组件上增加一个 prop 来实现不同的渲染情况，从而达到代码复用的目的(即将组件组件做为参数)。举例如下：">
+<meta name="twitter:image" content="http://yoursite.com/2018/12/05/React组件复用和组合2/a2.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/12/05/React组件复用和组合2/"/>
+
+
+
+
+
+  <title>React 组件复用和组合 (二) | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/12/05/React组件复用和组合2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">React 组件复用和组合 (二)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-12-05T17:27:12+08:00">
+                2018-12-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/javascript/" itemprop="url" rel="index">
+                    <span itemprop="name">javascript</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>上一篇文章，我们介绍了高阶组件(HOC)，最后也提出了几个关于高阶组件的问题。这里我们接上另一种组件复用模式 <code>render props</code> 亦或是 <code>funtion as child</code>。</p>
+<h2 id="render-props"><a href="#render-props" class="headerlink" title="render props"></a>render props</h2><p>本质上，render props 就是在原有的组件上增加一个 prop 来实现不同的渲染情况，从而达到代码复用的目的(即将组件组件做为参数)。举例如下：</p>
+<a id="more"></a>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShareStateComponent</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    state = &#123;...&#125;;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;div&gt;&#123;<span class="keyword">this</span>.props.render(<span class="keyword">this</span>.state)&#125;&lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">        );</span></div><div class="line"><span class="regexp">    &#125;</span></div><div class="line"><span class="regexp">&#125;</span></div><div class="line"><span class="regexp">/</span><span class="regexp">/ 使用</span></div><div class="line"><span class="regexp">class App extends React.Component &#123;</span></div><div class="line"><span class="regexp">    render() &#123;</span></div><div class="line"><span class="regexp">        &lt;ShareStateComponent </span></div><div class="line"><span class="regexp">            render = &#123;</span></div><div class="line"><span class="regexp">                (state) =&gt; &#123;</span></div><div class="line"><span class="regexp">                    &lt;span&gt;数据：&#123;...state&#125;&lt;/</span>span&gt;</div><div class="line">                &#125;</div><div class="line">            &#125;/&gt;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>StareStateComponent 内部维护了一些可复用的功能，在实例化时，通过调用名为 render 的 prop 属性函数实现了不同组件的渲染。换个更直观的方案，我们可以直接利用 <code>this.props.children</code> ，通过执行 this.props.children 方法，来传递必要的参数，从而实现基于共享数据的不同渲染逻辑，达到复用的目的。这种用法在 <code>React Motion</code>, <code>React Router</code> 里都有采用。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">render (</div><div class="line">    &lt;RenderProps1&gt;</div><div class="line">        &#123;(data1) =&gt; (</div><div class="line">            &lt;div&gt;</div><div class="line">                &#123;data1&#125;  </div><div class="line">                &lt;RenderProps2&gt;</div><div class="line">                    &#123;(data2) =&gt; &#123;</div><div class="line">                        &lt;RenderProps3&gt;</div><div class="line">                            (&#123;data3&#125; =&gt; &#123;</div><div class="line">                                &lt;div&gt;&#123;data2&#125;, &#123;data3&#125;&lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">                            &#125;)</span></div><div class="line"><span class="regexp">                        &lt;/</span>RenderProps3&gt;</div><div class="line">                    &#125;&#125;</div><div class="line">                &lt;<span class="regexp">/RenderProps2&gt;       </span></div><div class="line"><span class="regexp">            &lt;/</span>div&gt;</div><div class="line">        )&#125;</div><div class="line">    &lt;<span class="regexp">/RenderProps1&gt;</span></div><div class="line"><span class="regexp">)</span></div></pre></td></tr></table></figure>
+<p>通过上面的代码，我们可以看到相比高阶组件，render props 的方案，我们更能直观的观察到数据的流动，从而解决了高阶组件的嵌套问题。与高阶组件相比，render props 的开放性得到提升，原本 HOC 所做的功能抽象可以通过 render props 获取，render 方式还可以直接访问父级的一切内容：  </p>
+<img src="/2018/12/05/React组件复用和组合2/a2.png" alt="a2.png" title="">
+<h3 id="render-props-存在的问题"><a href="#render-props-存在的问题" class="headerlink" title="render props 存在的问题"></a>render props 存在的问题</h3><p>render props 带来的优点：</p>
+<ol>
+<li>不用担心props命名问题，在render函数中只取需要的state，数据流动更加直观</li>
+<li>不会产生无用的组件加深层级</li>
+<li>render props模式的构建都是动态的，所有的改变都在render中触发，可以更好的利用组件内的生命周期。</li>
+<li>能够直接访问父组件的内容，开发性更高</li>
+</ol>
+<p>但 render props 也有一些不能忽视的问题：</p>
+<ol>
+<li>this.props.children 被重新定义为函数是否合适</li>
+<li>渲染粒度变大，如果在属性中定义函数，浅比较下 prop 的值永远是新的，每次都将重新生成新的 prop，这将导致 React.PureComponent 不起作用</li>
+<li>renderProps 渲染的并不是 React 组件，无法为其单独使用 redux，mobx</li>
+<li>容易产生嵌套地狱问题</li>
+</ol>
+<p>当然，对于项目使用 HOC 还是 render props 应该根据不同的场景来进行渲染。<br>个人觉得，HOC 更倾向于封装一些复杂的操作，需要复用通用的业务状态和功能的时候使用。而 render props 比较适合抽离与业务无关但是和UI保存的状态有关的功能 (renderProps 内部管理的状态不方便从外部获取，因此只适合保存业务无关的数据，比如 Modal 显隐)。</p>
+<h2 id="RenderProps-工具库-react-powerplug"><a href="#RenderProps-工具库-react-powerplug" class="headerlink" title="RenderProps 工具库 react-powerplug"></a>RenderProps 工具库 react-powerplug</h2><p>React PowerPlug 是利用 render props 进行更好状态管理的工具库。<br>在我们日常开发中，一个 Component 类中，可能有很多的 state 但是并不是每个状态都和有业务有关，比如：UI 的展示状态，受控组件的临时 value 等。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    state = &#123;</div><div class="line">        nameIsEdit: <span class="literal">false</span>,</div><div class="line">        briefIsEdit: <span class="literal">false</span>,</div><div class="line">        isLoding: <span class="literal">false</span>,</div><div class="line">        value: <span class="string">''</span>,</div><div class="line">        data: &#123;&#125;</div><div class="line">    &#125;;</div><div class="line">    render() &#123;</div><div class="line">        <span class="comment">//....</span></div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>这时候我们就一些常用的状态管理封装成 render props 的形式。react-powerplug 就是提供这样工具的一个类库。这里简单看下几个功能，来帮助我们更好理解 render props 的应用。</p>
+<h3 id="Value"><a href="#Value" class="headerlink" title="Value"></a>Value</h3><p>该方法是用来管理值操作的工具。</p>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">&lt;Value initial=<span class="string">"React"</span>&gt;</div><div class="line">    &#123;(&#123; value, set, reset &#125;) =&gt; (</div><div class="line">        &lt;&gt;</div><div class="line">        &lt;Select</div><div class="line">            label=<span class="string">"Choose one"</span></div><div class="line">            options=&#123;[<span class="string">"React"</span>, <span class="string">"Preact"</span>, <span class="string">"Vue"</span>]&#125;</div><div class="line">            value=&#123;value&#125;</div><div class="line">            onChange=&#123;set&#125;</div><div class="line">        /&gt;</div><div class="line">        &lt;Button onClick=&#123;reset&#125;&gt;Reset to initial&lt;<span class="regexp">/Button&gt;</span></div><div class="line"><span class="regexp">        &lt;/</span>&gt;</div><div class="line">    )&#125;</div><div class="line">&lt;<span class="regexp">/Value&gt;</span></div></pre></td></tr></table></figure>
+<ul>
+<li><a href="https://github.com/renatorib/react-powerplug/blob/master/src/components/Value.js" target="_blank" rel="external">源码地址</a>  </li>
+</ul>
+<p>Value 中，只存储一个属性 value，并赋初始值为 initial。</p>
+<p>方法：set reset。</p>
+<ul>
+<li>set 回调函数触发后调用 setState 更新 value。</li>
+<li>reset 就是调用 set 并传入 this.props.initial 即可。</li>
+</ul>
+<h3 id="Active"><a href="#Active" class="headerlink" title="Active"></a>Active</h3><p>这是一个内置鼠标交互监听的容器，监听了 onMouseUp 与 onMouseDown，并依此判断 active 状态。</p>
+<h4 id="示例-1"><a href="#示例-1" class="headerlink" title="示例"></a>示例</h4><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">&lt;Active&gt;</div><div class="line">    &#123;(&#123; active, bind &#125;) =&gt; (</div><div class="line">        &lt;div &#123;...bind&#125;&gt;</div><div class="line">            You are &#123;active ? <span class="string">"clicking"</span> : <span class="string">"not clicking"</span>&#125; <span class="keyword">this</span> div.</div><div class="line">        &lt;<span class="regexp">/div&gt;</span></div><div class="line"><span class="regexp">    )&#125;</span></div><div class="line"><span class="regexp">&lt;/</span>Active&gt;</div></pre></td></tr></table></figure>
+<p>借助 Value 实现，巧妙的利用了 value，value 重命名为 active 且初始值为 false。增加了 bind 方法，借助 set 来更新状态。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> * <span class="keyword">as</span> React <span class="keyword">from</span> <span class="string">'react'</span></div><div class="line"><span class="keyword">import</span> Value <span class="keyword">from</span> <span class="string">'./Value'</span></div><div class="line"><span class="keyword">import</span> renderProps <span class="keyword">from</span> <span class="string">'../utils/renderProps'</span></div><div class="line"></div><div class="line"><span class="keyword">const</span> Active = <span class="function">(<span class="params">&#123; onChange, ...props &#125;</span>) =&gt;</span> (</div><div class="line">    &lt;Value initial=&#123;<span class="literal">false</span>&#125; onChange=&#123;onChange&#125;&gt;</div><div class="line">        &#123;(&#123; value, set &#125;) =&gt;</div><div class="line">            renderProps(props, &#123;</div><div class="line">                active: value,</div><div class="line">                bind: &#123;</div><div class="line">                    onMouseDown: <span class="function"><span class="params">()</span> =&gt;</span> set(<span class="literal">true</span>),</div><div class="line">                    onMouseUp: <span class="function"><span class="params">()</span> =&gt;</span> set(<span class="literal">false</span>)</div><div class="line">                &#125;,</div><div class="line">            &#125;)</div><div class="line">        &#125;</div><div class="line">    &lt;<span class="regexp">/Value&gt;</span></div><div class="line"><span class="regexp">)</span></div><div class="line"><span class="regexp"></span></div><div class="line"><span class="regexp">export default Active</span></div></pre></td></tr></table></figure>
+<p>其他功能就不一一展示了。</p>
+<h2 id="render-props-嵌套问题"><a href="#render-props-嵌套问题" class="headerlink" title="render props 嵌套问题"></a>render props 嵌套问题</h2><p>上面过，render props 有一个缺点当我们想要组合使用的时候，可能会遇到嵌套地狱问题。在 react-powerplug 中提供了 compose 函数，来解决这一问题。 </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123; compose &#125; <span class="keyword">from</span> <span class="string">'react-powerplug'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> AandB = compose(</div><div class="line">    &lt;A .../&gt;,</div><div class="line">    &lt;B .../&gt;</div><div class="line">)</div><div class="line">&lt;AandB&gt;</div><div class="line">    &#123;(a, b) =&gt; &#123;</div><div class="line">        <span class="comment">//....</span></div><div class="line">    &#125;&#125;</div><div class="line">&lt;<span class="regexp">/AandB&gt;</span></div></pre></td></tr></table></figure>
+<p>社区也提供了 <a href="https://github.com/Astrocoders/epitath" target="_blank" rel="external">Epitath</a> 工具来专门解决 render props 嵌套问题。细节就不看了。</p>
+<h2 id="React-Hooks"><a href="#React-Hooks" class="headerlink" title="React Hooks"></a>React Hooks</h2><p>React Hooks 是 React 16.7.0-alpha 版本推出的新特性。React Hooks 要解决的问题是状态共享，是继 render-props 和 higher-order components 之后的第三种状态共享方案，不会产生 JSX 嵌套地狱问题。之后介绍吧，现在还没空仔细体会呢。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://www.jianshu.com/p/ff6b3008820a?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation" target="_blank" rel="external">React组件Render Props VS HOC 设计模式</a></li>
+<li><a href="https://medium.com/tandemly/im-breaking-up-with-higher-order-components-44b0df2db052" target="_blank" rel="external">I’m Breaking up with Higher Order Components.</a></li>
+<li><a href="https://github.com/dt-fe/weekly/blob/master/75.%E7%B2%BE%E8%AF%BB%E3%80%8AEpitath%20%E6%BA%90%E7%A0%81%20-%20renderProps%20%E6%96%B0%E7%94%A8%E6%B3%95%E3%80%8B.md" target="_blank" rel="external">精读《Epitath 源码 - renderProps 新用法》</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/react/" rel="tag">react</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/12/01/React组合与复用/" rel="next" title="React 组件复用和组合 (一)">
+                <i class="fa fa-chevron-left"></i> React 组件复用和组合 (一)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/01/02/react数据流管理/" rel="prev" title="前端数据流管理">
+                前端数据流管理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="CaelumTian" />
+            
+              <p class="site-author-name" itemprop="name">CaelumTian</p>
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>LinkIn</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-globe"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#render-props"><span class="nav-number">1.</span> <span class="nav-text">render props</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#render-props-存在的问题"><span class="nav-number">1.1.</span> <span class="nav-text">render props 存在的问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RenderProps-工具库-react-powerplug"><span class="nav-number">2.</span> <span class="nav-text">RenderProps 工具库 react-powerplug</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Value"><span class="nav-number">2.1.</span> <span class="nav-text">Value</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#示例"><span class="nav-number">2.1.1.</span> <span class="nav-text">示例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Active"><span class="nav-number">2.2.</span> <span class="nav-text">Active</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#示例-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">示例</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#render-props-嵌套问题"><span class="nav-number">3.</span> <span class="nav-text">render props 嵌套问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#React-Hooks"><span class="nav-number">4.</span> <span class="nav-text">React Hooks</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaelumTian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
