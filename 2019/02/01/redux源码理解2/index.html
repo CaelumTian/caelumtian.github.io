@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="redux,前端源码解析," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="之前的文章我们讲解了数据流的作用，还有 redux 的源码。现在思考，如何将 redux 应用到 react 上面呢？首先我们想到 store 可能被多个组件依赖和影响，为此我们应当借助 context 来存储 store 数据。将 store 存储在根元素上，通过 context 进行数据的传递。为了实现这一步，react-redux 提供了 &amp;lt;Provider&amp;gt;：">
+<meta name="keywords" content="redux,前端源码解析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="react-redux 深入探究">
+<meta property="og:url" content="http://yoursite.com/2019/02/01/redux源码理解2/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="之前的文章我们讲解了数据流的作用，还有 redux 的源码。现在思考，如何将 redux 应用到 react 上面呢？首先我们想到 store 可能被多个组件依赖和影响，为此我们应当借助 context 来存储 store 数据。将 store 存储在根元素上，通过 context 进行数据的传递。为了实现这一步，react-redux 提供了 &amp;lt;Provider&amp;gt;：">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2019/02/01/redux源码理解2/a1.png">
+<meta property="og:image" content="http://yoursite.com/2019/02/01/redux源码理解2/a2.png">
+<meta property="og:updated_time" content="2019-04-21T11:29:20.119Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="react-redux 深入探究">
+<meta name="twitter:description" content="之前的文章我们讲解了数据流的作用，还有 redux 的源码。现在思考，如何将 redux 应用到 react 上面呢？首先我们想到 store 可能被多个组件依赖和影响，为此我们应当借助 context 来存储 store 数据。将 store 存储在根元素上，通过 context 进行数据的传递。为了实现这一步，react-redux 提供了 &amp;lt;Provider&amp;gt;：">
+<meta name="twitter:image" content="http://yoursite.com/2019/02/01/redux源码理解2/a1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2019/02/01/redux源码理解2/"/>
+
+
+
+
+
+  <title>react-redux 深入探究 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/02/01/redux源码理解2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">react-redux 深入探究</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-01T14:25:43+08:00">
+                2019-02-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/前端源码解析/" itemprop="url" rel="index">
+                    <span itemprop="name">前端源码解析</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>之前的文章我们讲解了数据流的作用，还有 redux 的源码。现在思考，如何将 redux 应用到 react 上面呢？<br>首先我们想到 store 可能被多个组件依赖和影响，为此我们应当借助 <code>context</code> 来存储 store 数据。将 store 存储在根元素上，通过 context 进行数据的传递。为了实现这一步，react-redux 提供了 <code>&lt;Provider&gt;</code>：</p>
+<a id="more"></a>
+<h2 id="Provider"><a href="#Provider" class="headerlink" title="Provider"></a>Provider</h2><p>Provider 简单代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Provider</span> <span class="keyword">extends</span> <span class="title">Component</span> </span>&#123;</div><div class="line">    <span class="keyword">constructor</span>(props) &#123;</div><div class="line">        <span class="keyword">super</span>(props)</div><div class="line"></div><div class="line">        <span class="comment">// 获取store</span></div><div class="line">        <span class="keyword">const</span> &#123; store &#125; = props</div><div class="line"></div><div class="line">        <span class="comment">// 初始化state, storeState为初始的redux state</span></div><div class="line">        <span class="keyword">this</span>.state = &#123;</div><div class="line">            storeState: store.getState(),</div><div class="line">            <span class="comment">// 保存init store</span></div><div class="line">            store</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    componentDidMount() &#123;</div><div class="line">        <span class="comment">// 订阅 store 变更</span></div><div class="line">        <span class="keyword">this</span>.subscribe()</div><div class="line">    &#125;</div><div class="line">    componentWillUnmount() &#123;</div><div class="line">        <span class="comment">// 取消订阅</span></div><div class="line">        <span class="keyword">this</span>.unsubscribe();</div><div class="line">    &#125;</div><div class="line">    componentDidUpdate() &#123;</div><div class="line">        <span class="comment">// 如果更新的过程中store改变引用</span></div><div class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.props.store !== prevProps.store) &#123;</div><div class="line">            <span class="comment">// 如果存在监听则取消</span></div><div class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.unsubscribe) <span class="keyword">this</span>.unsubscribe()</div><div class="line">            <span class="comment">// 更新storeState</span></div><div class="line">            <span class="keyword">this</span>.subscribe()</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    subscribe() &#123;</div><div class="line">        <span class="keyword">const</span> &#123; store &#125; = <span class="keyword">this</span>.props</div><div class="line">        <span class="comment">// 监听subscribe</span></div><div class="line">        <span class="keyword">this</span>.unsubscribe = store.subscribe(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">            <span class="comment">// 获取最新的state赋值给newStoreState</span></div><div class="line">            <span class="keyword">const</span> newStoreState = store.getState()</div><div class="line">            <span class="comment">// 不在本次生命周期中return</span></div><div class="line">            <span class="keyword">if</span> (!<span class="keyword">this</span>._isMounted) &#123;</div><div class="line">                <span class="keyword">return</span></div><div class="line">            &#125;</div><div class="line">            <span class="keyword">this</span>.setState(<span class="function"><span class="params">providerState</span> =&gt;</span> &#123;</div><div class="line">                <span class="comment">// If the value is the same, skip the unnecessary state update.</span></div><div class="line">                <span class="comment">// 如果state是相同的引用， 直接跳过state的更新</span></div><div class="line">                <span class="keyword">if</span> (providerState.storeState === newStoreState) &#123;</div><div class="line">                    <span class="keyword">return</span> <span class="literal">null</span></div><div class="line">                &#125;</div><div class="line">                <span class="comment">// 更新当前storeState</span></div><div class="line">                <span class="keyword">return</span> &#123; <span class="attr">storeState</span>: newStoreState &#125;</div><div class="line">            &#125;)</div><div class="line">        &#125;)</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="comment">// ReactReduxContext = React.createContext(null);</span></div><div class="line">        <span class="keyword">const</span> Context = <span class="keyword">this</span>.props.context || ReactReduxContext</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;Context.Provider value=&#123;<span class="keyword">this</span>.state&#125;&gt;</div><div class="line">                &#123;<span class="keyword">this</span>.props.children&#125;</div><div class="line">            &lt;<span class="regexp">/Context.Provider&gt;</span></div><div class="line"><span class="regexp">        )</span></div><div class="line"><span class="regexp">    &#125;</span></div><div class="line"><span class="regexp">&#125;</span></div></pre></td></tr></table></figure>
+<p>我们可以看到，在 Provider 准备完毕后，将 <code>state.store</code> 作为 context 的值。并且监听 store 的变化，如果有变化则调用 <code>setState</code> 来更新 context。这里用到的 context 是 <code>React 16+</code> 之后的新版本写法。之后会对其进行介绍。<br>现在我们子组件想要使用 <code>store</code> 数据的就可以包装在 <code>&lt;Context.Customer&gt;</code> 里面即可。当然这中间少不了一些优化和功能的增强，这些方法都被封撞在了 <code>connect</code> 中。</p>
+<h2 id="connect"><a href="#connect" class="headerlink" title="connect"></a>connect</h2><p>首先看下 connect 的用法：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">connect([mapStateToProps],[mapDispatchToProps],[mergeProps],[options])(&lt;Component / &gt;)</div></pre></td></tr></table></figure>
+<p>connect 简化版代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">createConnect</span>(<span class="params">&#123;</span></span></div><div class="line"><span class="function"><span class="params">    connectHOC = connectAdvanced,</span></span></div><div class="line"><span class="function"><span class="params">    mapStateToPropsFactories = defaultMapStateToPropsFactories,</span></span></div><div class="line"><span class="function"><span class="params">    mapDispatchToPropsFactories = defaultMapDispatchToPropsFactories,</span></span></div><div class="line"><span class="function"><span class="params">    mergePropsFactories = defaultMergePropsFactories,</span></span></div><div class="line"><span class="function"><span class="params">    selectorFactory = defaultSelectorFactory</span></span></div><div class="line"><span class="function"><span class="params">&#125; = &#123;&#125;</span>) </span>&#123;</div><div class="line">    <span class="comment">// connect方法</span></div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">connect</span>(<span class="params"></span></span></div><div class="line"><span class="function"><span class="params">        mapStateToProps,</span></span></div><div class="line"><span class="function"><span class="params">        mapDispatchToProps,</span></span></div><div class="line"><span class="function"><span class="params">        mergeProps,</span></span></div><div class="line"><span class="function"><span class="params">        &#123;</span></span></div><div class="line"><span class="function"><span class="params">            pure = true,  <span class="regexp">//</span> 是否就行浅比较的配置</span></span></div><div class="line"><span class="function"><span class="params">            strictEqual,  <span class="regexp">//</span> 判断object引用, strictEqual(a, b</span>)=&gt; <span class="title">a</span> === <span class="title">b</span></span></div><div class="line"><span class="function">            <span class="title">shallowEqual</span>, // 浅比较</span></div><div class="line"><span class="function">            ...<span class="title">extraOptions</span>  // 其他配置项</span></div><div class="line"><span class="function">        &#125; = </span>&#123;&#125;</div><div class="line">    ) &#123;</div><div class="line">        <span class="comment">// 下面，分别初始化了各自的参数 mapStateToProps,mapDispatchToProps,mergeProps，并且包装了一些内默认参数和方法 </span></div><div class="line">        <span class="keyword">const</span> initMapStateToProps = match(...args)</div><div class="line">        <span class="keyword">const</span> initMapDispatchToProps = match(...args)</div><div class="line">        <span class="keyword">const</span> initMergeProps = match(...args)</div><div class="line">        <span class="comment">// 核心部分，根据传入参数，返回包装好的高阶组件</span></div><div class="line">        <span class="keyword">return</span> connectAdvanced(selectorFactory, &#123;</div><div class="line">            initMapStateToProps,</div><div class="line">            initMapDispatchToProps,</div><div class="line">            initMergeProps,</div><div class="line">            pure,</div><div class="line">            ...extraOptions</div><div class="line">        &#125;)</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"> <span class="comment">// 直接执行createConnect方法返回connect</span></div><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> createConnect()</div></pre></td></tr></table></figure>
+<p>先说明一下该函数的参数：</p>
+<ul>
+<li>connectHOC: 一个重要组件，用于执行已确定的逻辑，渲染最终组件，后面会详细说。</li>
+<li>mapStateToPropsFactories: 对 mapStateToProps 这个传入的参数的类型选择一个合适的方法。</li>
+<li>mapDispatchToPropsFactories: 对 mapDispatchToProps 这个传入的参数的类型选择一个合适的方法。</li>
+<li>mergePropsFactories: 对 mergeProps 这个传入的参数的类型选择一个合适的方法。 </li>
+<li>selectorFactory: 以上3个只是简单的返回另一个合适的处理方法，它则执行这些处理方法，并且对结果定义了如何比较的逻辑。</li>
+</ul>
+<p>三个 mapxxx 参数，用来对 <code>mapStateToProps</code> 和 <code>mapDispatchToProps</code> 进行参数校验，并且通过 match 返回如下形式函数，作为 connectAdvanced 参数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> initProxySelector = <span class="function">(<span class="params">mapToProps, methodName</span>) =&gt;</span> (dispatch, &#123;displayName&#125;) =&gt; &#123;</div><div class="line">    <span class="keyword">const</span> proxy = <span class="function"><span class="keyword">function</span> <span class="title">mapToPropsProxy</span>(<span class="params">...</span>) </span>&#123;...&#125;</div><div class="line">    <span class="comment">// proxy 各种包装</span></div><div class="line">    <span class="keyword">return</span> proxy;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>后面解释为什么这么包装。 <code>connect</code> 核心部分就是高阶函数的封装：</p>
+<h3 id="connectAdvanced-高阶函数"><a href="#connectAdvanced-高阶函数" class="headerlink" title="connectAdvanced 高阶函数"></a>connectAdvanced 高阶函数</h3><p>简要代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">connectAdvanced</span> (<span class="params"></span></span></div><div class="line"><span class="function"><span class="params">    selectorFactory,</span></span></div><div class="line"><span class="function"><span class="params">    &#123;</span></span></div><div class="line"><span class="function"><span class="params">        <span class="regexp">//</span>... 各种参数配置</span></span></div><div class="line"><span class="function"><span class="params">    &#125; = &#123;&#125;</span></span></div><div class="line"><span class="function"><span class="params"></span>) </span>&#123;</div><div class="line">    <span class="keyword">const</span> Context = context;</div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">wrapWithConnect</span>(<span class="params">WrappedComponent</span>) </span>&#123;</div><div class="line">        <span class="comment">// pure 决定 shouldComponentUpdate 是否进行 shallowEqual 浅比较，默认 true</span></div><div class="line">        <span class="keyword">const</span> &#123;pure&#125; = connectOptions;</div><div class="line">        <span class="comment">// 即 React.Component</span></div><div class="line">        <span class="keyword">let</span> OuterBaseComponent = Component</div><div class="line">        <span class="keyword">let</span> FinalWrappedComponent = WrappedComponent</div><div class="line">        <span class="class"><span class="keyword">class</span> <span class="title">Connect</span> <span class="keyword">extends</span> <span class="title">OuterBaseComponent</span> </span>&#123;</div><div class="line">            <span class="keyword">constructor</span>(props) &#123;</div><div class="line">                <span class="comment">// 这两个定义的方法，后面介绍</span></div><div class="line">                <span class="keyword">this</span>.selectDerivedProps = makeDerivedPropsSelector()</div><div class="line">                <span class="keyword">this</span>.selectChildElement = makeChildElementSelector()</div><div class="line">                <span class="comment">// bind this</span></div><div class="line">                <span class="keyword">this</span>.renderWrappedComponent = <span class="keyword">this</span>.renderWrappedComponent.bind(<span class="keyword">this</span>)</div><div class="line">            &#125;</div><div class="line">            <span class="comment">// value 为 context, 既 provider中的 &#123;storeState: store.getState(),store&#125;</span></div><div class="line">            renderWrappedComponent(value) &#123;</div><div class="line">                <span class="keyword">const</span> &#123;</div><div class="line">                    storeState,</div><div class="line">                    store</div><div class="line">                &#125; = value</div><div class="line"></div><div class="line">                <span class="comment">// 定义wrapperProps为this.props</span></div><div class="line">                <span class="keyword">let</span> wrapperProps = <span class="keyword">this</span>.props</div><div class="line">                <span class="keyword">let</span> forwardedRef</div><div class="line">                <span class="comment">// forwardRef为真时, Connect组件提供了forwardedRef = &#123;ref&#125;</span></div><div class="line">                <span class="keyword">if</span> (forwardRef) &#123;</div><div class="line">                    <span class="comment">// wrapperProps为props中的wrapperProps</span></div><div class="line">                    wrapperProps = <span class="keyword">this</span>.props.wrapperProps</div><div class="line">                    forwardedRef = <span class="keyword">this</span>.props.forwardedRef</div><div class="line">                &#125;</div><div class="line">                <span class="comment">//@1 导出 props</span></div><div class="line">                <span class="keyword">let</span> derivedProps = <span class="keyword">this</span>.selectDerivedProps(</div><div class="line">                    storeState,</div><div class="line">                    wrapperProps,</div><div class="line">                    store</div><div class="line">                )</div><div class="line">                <span class="comment">//@2 返回最终的组件, 传入最终的 props 和 ref -&gt; 看selectChildElement发放</span></div><div class="line">                <span class="keyword">return</span> <span class="keyword">this</span>.selectChildElement(derivedProps, forwardedRef)</div><div class="line">            &#125;</div><div class="line">            render() &#123;</div><div class="line">                <span class="comment">// 默认情况下公用的 ReactReduxContext</span></div><div class="line">                <span class="keyword">const</span> ContextToUse = <span class="keyword">this</span>.props.context || Context</div><div class="line">                <span class="keyword">return</span> (</div><div class="line">                    &lt;ContextToUse.Consumer&gt; &#123;</div><div class="line">                        <span class="keyword">this</span>.renderWrappedComponent</div><div class="line">                    &#125; &lt;<span class="regexp">/ContextToUse.Consumer&gt;</span></div><div class="line"><span class="regexp">                )</span></div><div class="line"><span class="regexp">            &#125;</span></div><div class="line"><span class="regexp">        &#125;</span></div><div class="line"><span class="regexp">        Connect.WrappedComponent = WrappedComponent</span></div><div class="line"><span class="regexp">        Connect.displayName = displayName</span></div><div class="line"><span class="regexp">        if (forwardRef) &#123;</span></div><div class="line"><span class="regexp">            /</span><span class="regexp">/ 转发 Ref (React 16 ref 转发语法)</span></div><div class="line"><span class="regexp">            const forwarded = React.forwardRef(function forwardConnectRef(props,ref) &#123;</span></div><div class="line"><span class="regexp">                return </span></div><div class="line"><span class="regexp">                    &lt;Connect </span></div><div class="line"><span class="regexp">                        wrapperProps = &#123;props&#125; </span></div><div class="line"><span class="regexp">                        forwardedRef = &#123;ref&#125;/</span>&gt;</div><div class="line">            &#125;)</div><div class="line">            forwarded.displayName = displayName</div><div class="line">            forwarded.WrappedComponent = WrappedComponent</div><div class="line">            <span class="keyword">return</span> hoistStatics(forwarded, WrappedComponent)</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        <span class="comment">// 静态方法补充</span></div><div class="line">        <span class="keyword">return</span> hoistStatics(Connect, WrappedComponent)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>connectAdvanced</code>，本身上返回了一个包装了 <code>&lt;Context.Consumer&gt;</code> 的高阶组件，并且其内部已经用 <code>React.forwardRef</code> 解决了高阶组件的 ref 转发问题，利用 <code>hoist-non-react-statics</code> 工具解决了高阶组件静态方法复制的问题 <code>hoistStatics(Connect, WrappedComponent)</code>。</p>
+<h3 id="如何优化？"><a href="#如何优化？" class="headerlink" title="如何优化？"></a>如何优化？</h3><p>到这里，react-redux 的机制大体就完整了。store 的每次更新都会触发 <code>context</code> 的变动，从而引起订阅了 <code>context</code> 的组件重新渲染。那么我们来思考两个问题：</p>
+<ol>
+<li>每次 <code>store</code> 变动，都会触发根组件 <code>setState</code> 从而导致 <code>re-render</code>。我们知道当父组件 <code>re-render</code> 后一定会导致子组件 <code>re-render</code> 然而，引入 react-redux 并没有这个副作用，这是如何处理的？</li>
+<li>不同的子组件，需要的只是 <code>store</code> 上的一部分数据，如何在 <code>context</code> 发生变化后，仅仅影响那些用到变化部分 <code>context</code> 的组件？</li>
+</ol>
+<h4 id="this-props-children"><a href="#this-props-children" class="headerlink" title="this.props.children"></a>this.props.children</h4><p>针对第一个问题，其实解决很简单。源码中，<code>Provider</code> 返回的是 <code>&lt;Context.Provider&gt;this.props.children&lt;/Context&gt;</code> 这样当 Provider 调用 <code>setState</code> 的时候，由于 this.props.children 本质上是没有变化的，所以 Provider 下的所有组件都不会触发 <code>re-render</code>。简单来说如下： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">A1</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    componentDidMount() &#123;</div><div class="line">        setTimeout(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">            <span class="built_in">console</span>.log(<span class="string">'re-render'</span>)</div><div class="line">            <span class="keyword">this</span>.setState(&#123;&#125;);</div><div class="line">        &#125;, <span class="number">1000</span>)</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.props.children;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">A2</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    render() &#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'A2 '</span>)</div><div class="line">        <span class="keyword">return</span> &lt;span&gt;A2&lt;/span&gt;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="comment">// 渲染节点 &lt;A1&gt;&lt;A2 /&gt;&lt;A1/&gt;</span></div></pre></td></tr></table></figure>
+<p>运行结果如下，可以看到 <code>this.props.children</code> 下的内容都不会 <code>re-render</code><br><img src="/2019/02/01/redux源码理解2/a1.png" alt="a1.png" title="">  </p>
+<p>（如果没有使用 this.props.children 的写法，直接嵌套的话，那么当 Context 变动后，所有子组件都会 re-render 没有达到很好地预期效果）</p>
+<p>（旧版本是通过对 connect 的组件都加入了 store.subscribe 达到的局部相应更新）</p>
+<h4 id="makeDerivedPropsSelector-amp-amp-makeChildElementSelector"><a href="#makeDerivedPropsSelector-amp-amp-makeChildElementSelector" class="headerlink" title="makeDerivedPropsSelector &amp;&amp; makeChildElementSelector"></a>makeDerivedPropsSelector &amp;&amp; makeChildElementSelector</h4><p>针对第二个问题，我们可以在 <code>renderWrappedComponent</code> 中的这两个方法找到答案。</p>
+<h4 id="makeChildElementSelector"><a href="#makeChildElementSelector" class="headerlink" title="makeChildElementSelector"></a>makeChildElementSelector</h4><p>从上面的源码中，我们看出最终返回的组件就是调用了这个函数，带函数接受了最终需要渲染的 <code>props</code> 和 <code>ref</code> 值：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeChildElementSelector</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="comment">// 定义props, ref, element变量</span></div><div class="line">    <span class="keyword">let</span> lastChildProps, lastForwardRef, lastChildElement</div><div class="line">    <span class="comment">// 返回function</span></div><div class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">selectChildElement</span>(<span class="params">childProps, forwardRef</span>) </span>&#123;</div><div class="line">        <span class="comment">// 判断新旧 props， hre， elelment是否相同</span></div><div class="line">        <span class="keyword">if</span> (childProps !== lastChildProps || forwardRef !== lastForwardRef) &#123;</div><div class="line">            <span class="comment">// 如果不同重新赋值</span></div><div class="line">            lastChildProps = childProps</div><div class="line">            lastForwardRef = forwardRef</div><div class="line">            lastChildElement = (</div><div class="line">                <span class="comment">// return FinalWrappedComponent, 改变props和ref</span></div><div class="line">                &lt;FinalWrappedComponent </div><div class="line">                    &#123;...childProps&#125;</div><div class="line">                    ref = &#123;forwardRef&#125;</div><div class="line">                    /&gt;</div><div class="line">            )</div><div class="line">        &#125;</div><div class="line">        <span class="comment">// react组件</span></div><div class="line">        <span class="keyword">return</span> lastChildElement</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>作用很简单，就是判断 props ref 是否有变化，有变化就返回一个新的组件，没有则返回之前的。这个函数接受的最终版本的 <code>derivedProps</code> 就是由 <code>makeDerivedPropsSelector</code> 确定的。</p>
+<h4 id="makeDerivedPropsSelector"><a href="#makeDerivedPropsSelector" class="headerlink" title="makeDerivedPropsSelector"></a>makeDerivedPropsSelector</h4><p>makeDerivedPropsSelector 代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">makeDerivedPropsSelector</span>(<span class="params"></span>) </span>&#123;</div><div class="line">  <span class="comment">// 闭包储存上一次的执行结果</span></div><div class="line">  <span class="keyword">let</span> lastProps</div><div class="line">  <span class="keyword">let</span> lastState</div><div class="line">  <span class="keyword">let</span> lastDerivedProps</div><div class="line">  <span class="keyword">let</span> lastStore</div><div class="line">  <span class="keyword">let</span> sourceSelector</div><div class="line">  <span class="comment">// storeState props store</span></div><div class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">selectDerivedProps</span>(<span class="params">state, props, store</span>) </span>&#123;</div><div class="line">    <span class="comment">// props和state都和之前相等 直接返回上一次的结果</span></div><div class="line">    <span class="keyword">if</span> (pure &amp;&amp; lastProps === props &amp;&amp; lastState === state) &#123;</div><div class="line">      <span class="keyword">return</span> lastDerivedProps</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// 当前store和lastStore不等，更新lastStore</span></div><div class="line">    <span class="keyword">if</span> (store !== lastStore) &#123;</div><div class="line">      lastStore = store</div><div class="line">      </div><div class="line">      <span class="comment">// 终于调用 selectorFactory 了</span></div><div class="line">      sourceSelector = selectorFactory(</div><div class="line">        store.dispatch,</div><div class="line">        selectorFactoryOptions</div><div class="line">      )</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="comment">// 更新数据</span></div><div class="line">    lastProps = props</div><div class="line">    lastState = state</div><div class="line"></div><div class="line">    <span class="comment">// 返回的就是最终的包含所有相应的 state 和 props 的结果</span></div><div class="line">    <span class="keyword">const</span> nextProps = sourceSelector(state, props)</div><div class="line"></div><div class="line">    <span class="comment">// 最终的比较</span></div><div class="line">    <span class="keyword">if</span> (lastDerivedProps === nextProps) &#123;</div><div class="line">      <span class="keyword">return</span> lastDerivedProps</div><div class="line">    &#125;</div><div class="line">    lastDerivedProps = nextProps</div><div class="line">    <span class="keyword">return</span> lastDerivedProps</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>先判断了当前传入的props (组件的props) 和 state (redux store 的state) 跟以前的是否全等，如果全等就不需要更新了；<br>如果不等，则调用高阶函数 <code>selectFactory</code> 得到 <code>sourceSelector</code> 函数，<code>sourceSelector</code> 会将当前 storeState 和 props 合并成一个 props。之后再次判断这个最终 props 和上一次的是否全等。<br>看下 <code>selectFactory</code> 源码：</p>
+<h5 id="selectFactory"><a href="#selectFactory" class="headerlink" title="selectFactory"></a>selectFactory</h5><figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">finalPropsSelectorFactory</span>(<span class="params"></span></span></div><div class="line"><span class="function"><span class="params">  <span class="regexp">//</span> redux store的store.dispatch</span></span></div><div class="line"><span class="function"><span class="params">  dispatch,</span></span></div><div class="line"><span class="function"><span class="params">  <span class="regexp">//</span> <span class="number">3</span>种已经确定了的处理方法</span></span></div><div class="line"><span class="function"><span class="params">  &#123; initMapStateToProps, initMapDispatchToProps, initMergeProps, ...options &#125;</span></span></div><div class="line"><span class="function"><span class="params"></span>) </span>&#123;</div><div class="line">  <span class="comment">// 调用initProxySelector得到proxy function, proxy包含mapToProps, dependsOnOwnProps属性</span></div><div class="line">  <span class="keyword">const</span> mapStateToProps = initMapStateToProps(dispatch, options)</div><div class="line">  <span class="keyword">const</span> mapDispatchToProps = initMapDispatchToProps(dispatch, options)</div><div class="line">  <span class="comment">// mergePropsProxy为function</span></div><div class="line">  <span class="comment">// 返回值为 connect(mapstate,mapdispatch,function mergeProps()&#123;&#125;)()中mergeProps的返回值</span></div><div class="line">  <span class="keyword">const</span> mergeProps = initMergeProps(dispatch, options)</div><div class="line"></div><div class="line">  <span class="keyword">if</span> (process.env.NODE_ENV !== <span class="string">'production'</span>) &#123;</div><div class="line">    verifySubselectors(</div><div class="line">      mapStateToProps,</div><div class="line">      mapDispatchToProps,</div><div class="line">      mergeProps,</div><div class="line">      options.displayName</div><div class="line">    )</div><div class="line">  &#125;</div><div class="line"></div><div class="line">  <span class="keyword">const</span> selectorFactory = options.pure</div><div class="line">    ? pureFinalPropsSelectorFactory</div><div class="line">    : impureFinalPropsSelectorFactory</div><div class="line"></div><div class="line">  <span class="comment">// 默认pure问题true，因此执行 pureFinalPropsSelectorFactory(...)</span></div><div class="line">  <span class="keyword">return</span> selectorFactory(</div><div class="line">    mapStateToProps,</div><div class="line">    mapDispatchToProps,</div><div class="line">    mergeProps,</div><div class="line">    dispatch,</div><div class="line">    options</div><div class="line">  )</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>首先这里执行了之前封装好的 <code>initProxySelector</code> 函数，返回一个 proxy 函数。</p>
+<p>接下来执行 <code>selectorFactory</code> 函数，也就是 <code>pureFinalPropsSelectorFactory</code> 函数 (pure 默认值为 true)。关键代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">pureFinalPropsSelectorFactory</span>(<span class="params"></span></span></div><div class="line"><span class="function"><span class="params">  <span class="regexp">//</span> 接受<span class="number">3</span>个proxy方法</span></span></div><div class="line"><span class="function"><span class="params">  mapStateToProps,</span></span></div><div class="line"><span class="function"><span class="params">  mapDispatchToProps,</span></span></div><div class="line"><span class="function"><span class="params">  mergeProps,</span></span></div><div class="line"><span class="function"><span class="params">  dispatch,</span></span></div><div class="line"><span class="function"><span class="params">  <span class="regexp">//</span> 接受<span class="number">3</span>个比较方法</span></span></div><div class="line"><span class="function"><span class="params">  &#123; areStatesEqual, areOwnPropsEqual, areStatePropsEqual &#125;</span></span></div><div class="line"><span class="function"><span class="params"></span>) </span>&#123;</div><div class="line">  <span class="comment">/* ...定义变量保存之前的数据(闭包)... */</span></div><div class="line">  <span class="function"><span class="keyword">function</span> <span class="title">handleFirstCall</span>(<span class="params">firstState, firstOwnProps</span>) </span>&#123;</div><div class="line">    <span class="comment">/* ...定义第一次执行数据比较的方法，也就是简单的赋值给上面定义的闭包变量... */</span></div><div class="line">  &#125;</div><div class="line">  <span class="function"><span class="keyword">function</span> <span class="title">handleNewPropsAndNewState</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="comment">/* 当state和props都有变动时的处理方法 */</span></div><div class="line">  &#125;</div><div class="line">  <span class="function"><span class="keyword">function</span> <span class="title">handleNewProps</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="comment">/* 当state无变动，props有变动时的处理方法 */</span></div><div class="line">  &#125;</div><div class="line">  <span class="function"><span class="keyword">function</span> <span class="title">handleNewState</span>(<span class="params"></span>) </span>&#123;</div><div class="line">    <span class="comment">/* 当state有变动，props无变动时的处理方法 */</span></div><div class="line">  &#125;</div><div class="line">  <span class="comment">// 后续数据比较的方法</span></div><div class="line">  <span class="function"><span class="keyword">function</span> <span class="title">handleSubsequentCalls</span>(<span class="params">nextState, nextOwnProps</span>) </span>&#123;</div><div class="line">    <span class="comment">// 浅比较</span></div><div class="line">    <span class="keyword">const</span> propsChanged = !areOwnPropsEqual(nextOwnProps, ownProps)</div><div class="line">    <span class="comment">// 全等比较</span></div><div class="line">    <span class="keyword">const</span> stateChanged = !areStatesEqual(nextState, state)</div><div class="line">    <span class="comment">// 更新数据</span></div><div class="line">    state = nextState</div><div class="line">    ownProps = nextOwnProps</div><div class="line">    <span class="comment">// 当发生不相等的3种情况(关键)</span></div><div class="line">    <span class="keyword">if</span> (propsChanged &amp;&amp; stateChanged) <span class="keyword">return</span> handleNewPropsAndNewState()</div><div class="line">    <span class="keyword">if</span> (propsChanged) <span class="keyword">return</span> handleNewProps()</div><div class="line">    <span class="keyword">if</span> (stateChanged) <span class="keyword">return</span> handleNewState()</div><div class="line">    <span class="comment">// 比较都相等，直接返回旧值</span></div><div class="line">    <span class="keyword">return</span> mergedProps</div><div class="line">  &#125;</div><div class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">pureFinalPropsSelector</span>(<span class="params">nextState, nextOwnProps</span>) </span>&#123;</div><div class="line">    <span class="keyword">return</span> hasRunAtLeastOnce</div><div class="line">      ? handleSubsequentCalls(nextState, nextOwnProps)</div><div class="line">      : handleFirstCall(nextState, nextOwnProps)</div><div class="line">  &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>pureFinalPropsSelectorFactory</code> 函数返回的就是最外层 <code>sourceSelector</code> 函数。</p>
+<p>函数主要是对比 storeState 和组件 props 的数据，并返回合并结果。（在函数 <code>handleSubsequentCalls</code>，其中 <code>areStatesEqual</code> 为严格相等(===)比较。其余比较均为 <code>shallowEqual</code> 浅比较）<br>新老对比分为如下几种情况：</p>
+<ol>
+<li>storeState 和 props 都相等，直接返回第一次 <code>handleFirstCall</code> 函数执行结果的 mergedProps</li>
+</ol>
+<p><code>handleFirstCall</code>:<br>必定执行 mapStateToProps(state, ownProps)<br>必定执行 mapDispatchToProps(dispatch, ownProps)<br>合并结果 mergedProps</p>
+<ol>
+<li>storeState 不等 props 不等</li>
+</ol>
+<p><code>handleNewPropsAndNewState</code>：<br>必定执行 mapStateToProps(state, ownProps)，因为 state 有变动<br>只有订阅了ownProps，才会执行 <code>mapDispatchToProps</code>，因为 state 变动与 mapDispatchToProps 无影响<br>合并结果 mergedProps</p>
+<ol>
+<li>storeState 相等 props 不等，执行 <code>handleNewProps</code>：</li>
+</ol>
+<p><code>handleNewProps</code>：<br>只有订阅了ownProps，才会执行 <code>mapStateToProps</code>， 因为 state 无变动。<br>只有订阅了ownProps，才会执行 <code>mapDispatchToProps</code>，因为 state 变动与 mapDispatchToProps 无影响。<br>合并结果 mergedProps</p>
+<ol>
+<li>storeState 不等，props 相等</li>
+</ol>
+<p><code>handleNewState</code>：<br>必定执行 mapStateToProps(state, ownProps)<br>对新的 stateProps 与上一次结果做浅比较判断，浅比较失败才重新计算 mergedProps，否则返回旧的结果。（就相当月 PureComponent 优化了）。</p>
+<p>(第 4 种和第 1 种差别就在于 props 和 state 一旦同时变化就注定要更新组件)。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>react-redux 核心就这么多。其本质就是利用 context 连接 store 和 react。通过 connect 来决定哪儿些组件需要响应 redux 的数据流变化，并做了通用的方案做优化。<br>这里借鉴一张导图：</p>
+<img src="/2019/02/01/redux源码理解2/a2.png" alt="a2.png" title=""> 
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a href="https://www.jianshu.com/p/d80ab5e105a9" target="_blank" rel="external">[源码阅读] 高性能和可扩展的React-Redux</a></li>
+<li><a href="https://github.com/hufeng/iThink/issues/4" target="_blank" rel="external">为什么我的this.props.children不能re-render</a></li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/redux/" rel="tag">redux</a>
+          
+            <a href="/tags/前端源码解析/" rel="tag">前端源码解析</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/26/redux源码解析/" rel="next" title="redux 深入探究">
+                <i class="fa fa-chevron-left"></i> redux 深入探究
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="CaelumTian" />
+            
+              <p class="site-author-name" itemprop="name">CaelumTian</p>
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>LinkIn</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-globe"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Provider"><span class="nav-number">1.</span> <span class="nav-text">Provider</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#connect"><span class="nav-number">2.</span> <span class="nav-text">connect</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#connectAdvanced-高阶函数"><span class="nav-number">2.1.</span> <span class="nav-text">connectAdvanced 高阶函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何优化？"><span class="nav-number">2.2.</span> <span class="nav-text">如何优化？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#this-props-children"><span class="nav-number">2.2.1.</span> <span class="nav-text">this.props.children</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#makeDerivedPropsSelector-amp-amp-makeChildElementSelector"><span class="nav-number">2.2.2.</span> <span class="nav-text">makeDerivedPropsSelector && makeChildElementSelector</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#makeChildElementSelector"><span class="nav-number">2.2.3.</span> <span class="nav-text">makeChildElementSelector</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#makeDerivedPropsSelector"><span class="nav-number">2.2.4.</span> <span class="nav-text">makeDerivedPropsSelector</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#selectFactory"><span class="nav-number">2.2.4.1.</span> <span class="nav-text">selectFactory</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">4.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaelumTian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

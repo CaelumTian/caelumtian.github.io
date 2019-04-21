@@ -5,7 +5,7 @@
   
 
 
-<html class="theme-next pisces use-motion" lang="zh-Hans">
+<html class="theme-next mist use-motion" lang="zh-Hans">
 <head>
   <meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -81,18 +81,18 @@
 
 
 
-<meta name="description" content="redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware()。">
+<meta name="description" content="redux 的思想前面已经介绍过了。本文主要简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware">
 <meta name="keywords" content="redux,前端源码解析">
 <meta property="og:type" content="article">
-<meta property="og:title" content="redux 源码解析">
+<meta property="og:title" content="redux 深入探究">
 <meta property="og:url" content="http://yoursite.com/2019/01/26/redux源码解析/index.html">
 <meta property="og:site_name" content="CaelumTian的博客">
-<meta property="og:description" content="redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware()。">
+<meta property="og:description" content="redux 的思想前面已经介绍过了。本文主要简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-03-28T11:54:42.112Z">
+<meta property="og:updated_time" content="2019-04-16T06:14:28.683Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="redux 源码解析">
-<meta name="twitter:description" content="redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware()。">
+<meta name="twitter:title" content="redux 深入探究">
+<meta name="twitter:description" content="redux 的思想前面已经介绍过了。本文主要简单的看下，redux 的具体实现。redux 主要提供了如下几个功能：   创建 store，即：createStore()。 创建出来的 store 提供subscribe，dispatch，getState这些方法。 将多个reducer合并为一个reducer，即：combineReducers()。 应用中间件，即applyMiddleware">
 
 
 
@@ -100,7 +100,7 @@
   var NexT = window.NexT || {};
   var CONFIG = {
     root: '/',
-    scheme: 'Pisces',
+    scheme: 'Mist',
     version: '5.1.4',
     sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
     fancybox: true,
@@ -128,7 +128,7 @@
 
 
 
-  <title>redux 源码解析 | CaelumTian的博客</title>
+  <title>redux 深入探究 | CaelumTian的博客</title>
   
 
 
@@ -282,7 +282,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">redux 源码解析</h1>
+          <h1 class="post-title" itemprop="name headline">redux 深入探究</h1>
         
 
         <div class="post-meta">
@@ -304,6 +304,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/前端源码解析/" itemprop="url" rel="index">
+                    <span itemprop="name">前端源码解析</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -332,7 +354,7 @@
       
 
       
-        <p>redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能： </p>
+        <p>redux 的思想前面已经介绍过了。本文主要简单的看下，redux 的具体实现。redux 主要提供了如下几个功能： </p>
 <ul>
 <li>创建 store，即：createStore()。</li>
 <li>创建出来的 store 提供subscribe，dispatch，getState这些方法。</li>
@@ -357,7 +379,7 @@
 <p>为了方便复用，我们扩展其为一个函数： </p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">dispatchAndLog</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    store.dispatch(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <h3 id="重写-dispatch"><a href="#重写-dispatch" class="headerlink" title="重写 dispatch"></a>重写 dispatch</h3><p>现在我们可以通过调用 <code>dispatchAndLog</code> 来完成带有日志的 dispath。日志记录功能可以直接反映到 dispath 上面，不改变原有的用法，更直接些。通过复写 dispath 来实现扩展：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 保存 dispath 副本</span></div><div class="line"><span class="keyword">let</span> next = store.dispatch;</div><div class="line">store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    <span class="keyword">let</span> result = store.dispatch(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">    <span class="comment">// 返回 action</span></div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 保存 dispath 副本</span></div><div class="line"><span class="keyword">let</span> next = store.dispatch;</div><div class="line">store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">    <span class="keyword">let</span> result = next(action);</div><div class="line">    <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">    <span class="comment">// 返回 action</span></div><div class="line">    <span class="keyword">return</span> result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>现在我们随便使用 dispath 就可以实现日志的打印，而不用费事的去使用 <code>dispatchAndLog</code> 函数。</p>
 <h3 id="新的扩展"><a href="#新的扩展" class="headerlink" title="新的扩展"></a>新的扩展</h3><p>实际开发中，我们可能不仅需要日志功能，还有可能需要其他的扩展功能。比如异常上报。为此我们需要将上述操作写成两个函数：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsLogFunc</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发: '</span>, action.type);</div><div class="line">        <span class="keyword">let</span> result = next(action);</div><div class="line">        <span class="built_in">console</span>.log(<span class="string">'action 触发完毕'</span>, store.getState());</div><div class="line">        <span class="comment">// 返回 action</span></div><div class="line">        <span class="keyword">return</span> result;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"><span class="function"><span class="keyword">function</span> <span class="title">extendsErrorPublish</span>(<span class="params">store, action</span>) </span>&#123;</div><div class="line">    <span class="keyword">let</span> next = store.dispatch;</div><div class="line">    store.diapatch = <span class="function"><span class="keyword">function</span> (<span class="params">store, action</span>) </span>&#123;</div><div class="line">        <span class="keyword">try</span> &#123;</div><div class="line">            <span class="keyword">return</span> next(action)</div><div class="line">        &#125; <span class="keyword">catch</span>(e) &#123;</div><div class="line">            <span class="comment">// 错误处理</span></div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
@@ -424,6 +446,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/02/01/redux源码理解2/" rel="prev" title="react-redux 深入探究">
+                react-redux 深入探究 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -504,7 +530,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">27</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -515,7 +541,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -526,7 +552,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">16</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -652,7 +678,7 @@
 
 
 
-  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
 
 
 
@@ -751,13 +777,6 @@
 
   
   
-
-
-  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
-
-  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
-
-
 
   
   <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>

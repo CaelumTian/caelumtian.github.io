@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="ReactNative," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="CaelumTian的博客" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="本文主要从前端的角度介绍 ReactNative 的用法，主要介绍 ReactNative 的基本用法(布局，样式，动画，手势，特殊API) 帮助大家快速掌握 ReactNaitve。而对于 ReactNative 封装的各种组件就不会过多深入了。（阅读建议：掌握 react 用法，熟悉前端）">
+<meta name="keywords" content="ReactNative">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ReactNative 详解(一) 基础内容之视图相关">
+<meta property="og:url" content="http://yoursite.com/2018/10/12/ReactNative基础/index.html">
+<meta property="og:site_name" content="CaelumTian的博客">
+<meta property="og:description" content="本文主要从前端的角度介绍 ReactNative 的用法，主要介绍 ReactNative 的基本用法(布局，样式，动画，手势，特殊API) 帮助大家快速掌握 ReactNaitve。而对于 ReactNative 封装的各种组件就不会过多深入了。（阅读建议：掌握 react 用法，熟悉前端）">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/2018/10/12/ReactNative基础/a.png">
+<meta property="og:image" content="http://yoursite.com/2018/10/12/ReactNative基础/b.png">
+<meta property="og:updated_time" content="2019-04-14T06:12:56.895Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ReactNative 详解(一) 基础内容之视图相关">
+<meta name="twitter:description" content="本文主要从前端的角度介绍 ReactNative 的用法，主要介绍 ReactNative 的基本用法(布局，样式，动画，手势，特殊API) 帮助大家快速掌握 ReactNaitve。而对于 ReactNative 封装的各种组件就不会过多深入了。（阅读建议：掌握 react 用法，熟悉前端）">
+<meta name="twitter:image" content="http://yoursite.com/2018/10/12/ReactNative基础/a.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/10/12/ReactNative基础/"/>
+
+
+
+
+
+  <title>ReactNative 详解(一) 基础内容之视图相关 | CaelumTian的博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">CaelumTian的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/10/12/ReactNative基础/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ReactNative 详解(一) 基础内容之视图相关</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-12T16:14:59+08:00">
+                2018-10-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/大前端-无线/" itemprop="url" rel="index">
+                    <span itemprop="name">大前端(无线)</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文主要从前端的角度介绍 ReactNative 的用法，主要介绍 ReactNative 的基本用法(布局，样式，动画，手势，特殊API) 帮助大家快速掌握 ReactNaitve。而对于 ReactNative 封装的各种组件就不会过多深入了。（阅读建议：掌握 react 用法，熟悉前端）</p>
+<a id="more"></a>
+<h2 id="视图层"><a href="#视图层" class="headerlink" title="视图层"></a>视图层</h2><p>ReactNative 本质上开发和前端没有任何区别，仅仅是用了 ReactNative 专用的标签（组件）和一套精简过的 css 来完成的绘制。常用的类比如下：</p>
+<ul>
+<li><code>&lt;div&gt;</code> -&gt; <code>&lt;View&gt;</code></li>
+<li><code>&lt;span&gt;</code> -&gt; <code>&lt;Text&gt;</code></li>
+<li><code>&lt;input&gt;, &lt;textarea&gt;</code> -&gt; <code>&lt;TextInput&gt;</code></li>
+<li><code>&lt;img&gt;</code> -&gt; <code>&lt;Image&gt;</code></li>
+<li>其他封装的组件</li>
+</ul>
+<p>而，CSS 不再以 <code>.css</code> 文件的形式存在，而是变成一个通过 <code>StyleSheet</code> 创建的对象。引用的时候不再有 <code>className=&#39;xxx&#39;</code> 的写法，而统一为：<code>style={xxx}</code></p>
+<p>举个例子：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> * <span class="keyword">as</span> React <span class="keyword">from</span> <span class="string">'react'</span>;</div><div class="line"><span class="keyword">import</span> &#123;View, Text, StyleSheet&#125; <span class="keyword">from</span> <span class="string">'react-native'</span>;</div><div class="line"></div><div class="line"><span class="keyword">const</span> Style = StyleSheet.create(&#123;</div><div class="line">    wrap: &#123;</div><div class="line">        justifyContent: <span class="string">'center'</span>,</div><div class="line">        height: <span class="string">'100%'</span>,</div><div class="line">        alignItems: <span class="string">'center'</span></div><div class="line">    &#125;</div><div class="line">&#125;)</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;View style=&#123;Style.wrap&#125;&gt;</div><div class="line">                &lt;Text&gt;hello world&lt;<span class="regexp">/Text&gt;</span></div><div class="line"><span class="regexp">            &lt;/</span>View&gt;</div><div class="line">        );</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>效果如下：</p>
+<img src="/2018/10/12/ReactNative基础/a.png" alt="a.png" title=""> 
+<p>似不似很简单。</p>
+<h3 id="Style-样式"><a href="#Style-样式" class="headerlink" title="Style 样式"></a>Style 样式</h3><p>ReactNative 使用的是阉割版的 css，需要用 StyleSheet.create 来创建样式。没有样式文件一说，统统 js。大部分，常用的 css 样式你都可以在 ReactNative 中找到(注意写成驼峰形式)。这里列举几个和 css 表现不太一致的样式：</p>
+<h4 id="与-css-对比"><a href="#与-css-对比" class="headerlink" title="与 css 对比"></a>与 css 对比</h4><p>差异如下：</p>
+<ol>
+<li>fontWeight：去掉了 <code>bolder</code> 属性；</li>
+<li>textAlignVertical：center 取代了 middle，并阉割了 baseline, sub 等值</li>
+<li>textDecorationLine：阉割了 overline, blink 取值</li>
+<li>textDecorationStyle： 阉割了 wavy 取值</li>
+<li>position：阉割了 static, fixed 取值 （注意：在 ReactNative 里面，absolute 定位不再相对于父辈非 static 的元素定位，变简单了，直接相对于父元素定位。）</li>
+<li>magrin： 只能定义一个参数，用以表示上、右、下、左4个方位的外补白</li>
+<li>marginHorizontal：CSS中没有对应的属性，相当于同时设置marginRight和marginLeft</li>
+<li>marginVertical：CSS中没有对应的属性，相当于同时设置marginTop和marginBottom</li>
+<li>padding 同 margin</li>
+<li>borderStyle：阉割了 none, hidden, double, groove, ridge, inset, outset 取值，且无方向分拆属性</li>
+<li>shadowColor：对应 CSS 中的 box-shadow 属性中的颜色定义</li>
+<li>shadowOffset：取值 {width: number, height: number} ，对应 CSS 中的 box-shadow 属性中的阴影偏移定义</li>
+<li>shadowRadius：在 CSS 中，阴影的圆角大小取决于元素的圆角定义，不需要额外定义</li>
+<li>shadowOpacity：对应 CSS 中的 box-shadow 属性中的阴影透明度定义</li>
+<li>transform: 写法变成数组，例如平移x,y  [{translateX: number}, {translateY: number}]</li>
+<li>Flex 系列后面单独说</li>
+<li>overflow：阉割了 scroll, auto 取值</li>
+<li>elevation： <code>Android</code> 特有，css 无</li>
+<li>resizeMode：CSS 中没有对应的属性，可以参考 background-size 属性</li>
+<li>tintColor：<code>iOS</code> 特有 CSS中没有对应的属性，iOS 图像上特殊的色彩，改变不透明像素的颜色</li>
+<li>其他各段特有属性，不再一一列举</li>
+</ol>
+<p>取值：<br>在 ReactNative 中，没有 <code>px</code> 单位，统一为数字 <code>width: 10</code> ，长度单位为 dp。<br>这样，就省略了有前端在移动端适配这一环节，当然如果你想用 fixedWidth 方式适配也不是不行，ReactNative 提供了获取相应的计算值方案，这里不深入讲解，有兴趣的可参考下面资料：</p>
+<ul>
+<li><a href="https://www.jianshu.com/p/7836523b4d20" target="_blank" rel="external">React Native 分辨率适配(px,dp)</a></li>
+<li><a href="https://www.cnblogs.com/JLZT1223/p/6784449.html" target="_blank" rel="external">Android开发中dp、dpi、px的区别</a></li>
+</ul>
+<p>同时，width，height 支持百分比单位 (低版本，并不支持)。</p>
+<p>还有一点要注意的就是，ReactNative 并不支持样式继承。<br>对于样式覆盖，我们可以给 style=[{}, {}] 一个数组，倒是可以。</p>
+<h4 id="flex-布局"><a href="#flex-布局" class="headerlink" title="flex 布局"></a>flex 布局</h4><p>在 ReactNative 不再有所谓的 <code>display</code> 属性。除了 <code>position</code>，布局上采用 <code>flexbox</code> 布局。熟悉前端的大家一定不陌生。但是在 ReactNative 中，默认的 <code>flexDirection</code> 方向为 <code>column</code> 纵向。且相应的属性仍有不少删减：</p>
+<img src="/2018/10/12/ReactNative基础/b.png" alt="b.png" title="">
+<h3 id="常用组件差别"><a href="#常用组件差别" class="headerlink" title="常用组件差别"></a>常用组件差别</h3><p>我们来看下，标签(组件)的差别。<br>在 ReactNative 中，文本必须被包裹在 <code>&lt;Text&gt;</code> 中（而在前端这并不是强制的，但是我推荐文本至少要包裹在 <code>span</code> 之类的内联元素中，而不是暴露在 <code>div</code> 中，当初了拖拽选蓝的时候，你会发现这个规则非常的有帮助）<br>前端常用的 <code>input, textarea</code> 处理输入，到了 ReactNative 统一为 <code>TextInput</code> 组件。</p>
+<h4 id="TextInput"><a href="#TextInput" class="headerlink" title="TextInput"></a>TextInput</h4><p>默认为单行输入框，这就和 <code>input</code> 是一样的了， 大部分属性和前端一致。<br>列举几个不一样的常用属性：</p>
+<ul>
+<li>editable：如果为false，文本框是不可编辑的。默认值为true。</li>
+<li>keyboardType：决定弹出何种软键盘类型，譬如numeric（纯数字键盘)</li>
+<li>placeholderTextColor：占位字符串（placeholder）颜色</li>
+<li>secureTextEntry：密码输入框效果</li>
+<li>selection：取值 {start: number,end: number}，设置选中文字的范围（指定首尾的索引值）。如果首尾为同一索引位置，则相当于指定光标的位置</li>
+<li>selectTextOnFocus：如果为true，当获得焦点的时候，所有的文字都会被选中</li>
+<li>autoFocus：如果为true，在componentDidMount后会获得焦点。默认值为false</li>
+</ul>
+<p>可以看出，ReactNative 上文本输入框能力的强大，许多焦点设置都有对应的属性来实现，同时还额外提供了输入修正等能力。有兴趣的可以看文档。</p>
+<p>那么，如果我想要多行文本输入 <code>textarea</code> 呢？<br>我们可以通过设置：<code>multiline = true</code> 来实现，同时我们还可以指定输入框最大行数：<code>numberOfLines</code>。另外对于多行文本输入，还提供了根据输入内容，自动转换成可点击URL的设定：<code>dataDetectorTypes</code>。</p>
+<p>有了这些，我们还需要获得和设置文本框的值。设置我们可以通过 <code>value</code> 属性。但是获取就没有那么容易了，在 ReactNative 中，<code>TextInput</code> 最终会被转换成 Native 原生节点。并不是DOM节点，所以我们无法通过 <code>ref</code> 手段来像前端那样直接获取节点属性。所以我们必须采用受控组件的方式，来通过 <code>state</code> 来获取值。同样我们也可以监听 <code>onChangeText</code> 事件，来实时得到文本变化的内容 (这也是唯一的获取手段)。</p>
+<p>TextInput 支持事件主要有：</p>
+<ul>
+<li>onChange：当文本框内容变化时调用此回调函数。回调参数为{ nativeEvent: { eventCount, target, text} }</li>
+<li>onChangeText：onChange 的简化版，只有 text</li>
+<li>onEndEditing：当文本输入结束后调用此回调函数</li>
+<li>onKeyPress：当一个键被按下的时候调用此回调。传递给回调函数的参数为{ nativeEvent: { key: keyValue } }，其中keyValue即为被按下的键。会在onChange之前调用。注意：在Android上只有软键盘会触发此事件，物理键盘不会触发。</li>
+<li>onSubmitEditing：此回调函数当软键盘的确定/提交按钮被按下的时候调用此函数，所传参数为{nativeEvent: {text, eventCount, target}}。如果multiline={true}，此属性不可用。</li>
+</ul>
+<p>同样还有一些和焦点，选蓝有关的事件，也不一一介绍了。总之很全面，嘿嘿。</p>
+<p>在前端，我们还会关注一个问题就是，键盘弹起遮挡当前内容。这个可以通过使用 <code>KeyboardAvoidingView</code> 组件来解决。<br>当然了，熟悉 Android 的，我们也可以在 native 端设置 <code>android:windowSoftInputMode=&quot;adjustPan&quot;</code> 来解决哦。</p>
+<p>键盘遮挡问题参考：</p>
+<ul>
+<li><a href="https://www.jianshu.com/p/020d2d1a2ab1" target="_blank" rel="external">https://www.jianshu.com/p/020d2d1a2ab1</a></li>
+</ul>
+<h4 id="Image"><a href="#Image" class="headerlink" title="Image"></a>Image</h4><p>基本格式：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;Image source=&#123;xxx&#125;&gt;</div></pre></td></tr></table></figure>
+<p>和前端不同，在 ReactNative 中，如果使用静态图片地址，地址必须是静态字符串，不能包含变量。如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 正确</span></div><div class="line">&lt;Image source=&#123;<span class="built_in">require</span>(<span class="string">'./my-icon.png'</span>)&#125; /&gt;;</div><div class="line"></div><div class="line"><span class="comment">// 错误</span></div><div class="line"><span class="keyword">var</span> icon = <span class="keyword">this</span>.props.active ? <span class="string">'my-icon-active'</span> : <span class="string">'my-icon-inactive'</span>;</div><div class="line">&lt;Image source=&#123;<span class="built_in">require</span>(<span class="string">'./'</span> + icon + <span class="string">'.png'</span>)&#125; /&gt;;</div><div class="line"></div><div class="line"><span class="comment">// 正确</span></div><div class="line"><span class="keyword">var</span> icon = <span class="keyword">this</span>.props.active</div><div class="line">  ? <span class="built_in">require</span>(<span class="string">'./my-icon-active.png'</span>)</div><div class="line">  : <span class="built_in">require</span>(<span class="string">'./my-icon-inactive.png'</span>);</div><div class="line">&lt;Image source=&#123;icon&#125; /&gt;;</div></pre></td></tr></table></figure>
+<p>这主要是因为，require 时在编译时期执行，而非运行使其执行。</p>
+<p>如果加载网络图片，格式如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">&lt;Image source=&#123;&#123;<span class="attr">uri</span>: <span class="string">'https://facebook.github.io/react/logo-og.png'</span>&#125;&#125;</div><div class="line">       style=&#123;&#123;<span class="attr">width</span>: <span class="number">400</span>, <span class="attr">height</span>: <span class="number">400</span>&#125;&#125; /&gt;</div></pre></td></tr></table></figure>
+<p>注意，这里必须给图片尺寸(静态资源不需要)。同样 uri 后面可以跟，base64 的资源。 </p>
+<p>ReactNative 还提供了对网络图片，更加精细的加载请求(设置HTTP头部等)，不过多介绍。<br>另外，对于混合资源等细节，请参阅文档。</p>
+<p>思考一个问题，如果我们想加载一个背景图片呢？ReactNative 提供了 <code>ImageBackground</code> 组件来解决这一问题。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">&lt;ImageBackground source=&#123;...&#125; style=&#123;&#123;<span class="attr">width</span>: <span class="string">'100%'</span>, <span class="attr">height</span>: <span class="string">'100%'</span>&#125;&#125;&gt;</div><div class="line">    &lt;Text&gt;Inside&lt;<span class="regexp">/Text&gt;</span></div><div class="line"><span class="regexp">&lt;/</span>ImageBackground&gt;</div></pre></td></tr></table></figure>
+<p>想了想，常用的视图有关就这么多了呢。剩下那些扩展组件，需要使用哪儿个查哪儿个就好了。</p>
+<h2 id="改变视图"><a href="#改变视图" class="headerlink" title="改变视图"></a>改变视图</h2><p>有了布局等内容，我们现在思考如何改变某一部分样式。在前端改变 css 或者 style 即可。而在 ReactNative 中，第一种修改方式就是讲组件样式作为 <code>state</code> 来处理。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">const</span> Style = StyleSheet.create(&#123;</div><div class="line">    style1: &#123;</div><div class="line">        width: <span class="number">50</span>,</div><div class="line">        height: <span class="number">50</span>,</div><div class="line">        backgroundColor: <span class="string">'#ff0000'</span></div><div class="line">    &#125;,</div><div class="line">    style2: &#123;</div><div class="line">        width: <span class="number">50</span>,</div><div class="line">        height: <span class="number">50</span>,</div><div class="line">        backgroundColor: <span class="string">'#00ff00'</span></div><div class="line">    &#125;</div><div class="line">&#125;);</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    <span class="keyword">constructor</span>(props) &#123;</div><div class="line">        <span class="keyword">this</span>.state = &#123;</div><div class="line">            style: Style.style2</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;View&gt;</div><div class="line">                &lt;View style=&#123;<span class="keyword">this</span>.state.style&#125;&gt;&lt;/View&gt;</div><div class="line">                &lt;Button onPress=&#123;()=&gt;&#123;<span class="keyword">this</span>.setState(&#123;<span class="attr">style</span>: Style.style2&#125;)&#125;&#125;/&gt;</div><div class="line">            &lt;<span class="regexp">/View&gt;</span></div><div class="line"><span class="regexp">        );</span></div><div class="line"><span class="regexp">    &#125;</span></div><div class="line"><span class="regexp">&#125;</span></div></pre></td></tr></table></figure>
+<p>但是这里有个问题，我们知道触发 <code>setState</code> 会导致树 re-render。频繁的改变 <code>setState</code> 就会引起页面卡顿。这里我们就需要一种像直接操作 DOM 的方案，来改变一个组件的样式。</p>
+<h3 id="setNativeProp"><a href="#setNativeProp" class="headerlink" title="setNativeProp"></a>setNativeProp</h3><p>在 React Native 中，setNativeProps就是等价于直接操作 DOM 节点的方法。setNativeProps 一般来说只是用来创建连续的动画，同时避免渲染组件结构和同步太多视图变化所带来的大量开销。<br>通过 ref 获得组件的引用，然后就可以直接使用了。距离如下： </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// React16 语法</span></div><div class="line"><span class="keyword">this</span>.viewRef.current.setNativeProps(&#123;</div><div class="line">    width: <span class="number">100</span>,</div><div class="line">    height: <span class="number">100</span></div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>这里要注意，setNativeProps 只能直接作用在 RN 组件上，也就是说不能作用在自定义组件上面(这时候，请考虑 React.forwardRef 来转发 ref)。</p>
+<p>setNativeProps 还可以用来直接改变 <code>TextInput</code> 的值：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">this</span>.textRef.setNativeProps(&#123;<span class="attr">text</span>: <span class="string">''</span>&#125;);</div></pre></td></tr></table></figure>
+<h3 id="获取节点样式信息"><a href="#获取节点样式信息" class="headerlink" title="获取节点样式信息"></a>获取节点样式信息</h3><p>在前端有时候我们需要获取元素的宽高，在屏幕中的位置信息等。这个要怎么计算呢？</p>
+<h4 id="屏幕宽高-Dimensions"><a href="#屏幕宽高-Dimensions" class="headerlink" title="屏幕宽高 Dimensions"></a>屏幕宽高 Dimensions</h4><p>获取屏幕宽高，React Native 提供了直接的获取方法：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">let</span> &#123;width, height, scale, fontScale&#125; = Dimensions.get(<span class="string">'window'</span>);</div></pre></td></tr></table></figure>
+<p>同样，如果我们想监听屏幕变化，<code>Dimensions.addEventListener(&#39;change&#39;, callback)</code> 即可。</p>
+<h4 id="组件位置和大小"><a href="#组件位置和大小" class="headerlink" title="组件位置和大小"></a>组件位置和大小</h4><p>1.onLayout 事件属性</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">_onLayout(event)&#123;</div><div class="line">    <span class="keyword">let</span> &#123;x,y,width,height&#125; = e.nativeEvent.layout</div><div class="line">&#125;</div><div class="line"></div><div class="line">&lt;View onLayout=&#123;(e) =&gt; <span class="keyword">this</span>._onLayout&#125;&gt;&lt;/View&gt;</div></pre></td></tr></table></figure>
+<p>当组件重新渲染时，该方法就能重新获取到元素的宽高和位置信息，但是有时组件并没有重新render那么就获取不到正确的值，例如页面滚动，但是state没有发生变化，组件也就没有重新渲染。</p>
+<p>2.元素自带measure方法</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;View ref=&#123;(view) =&gt; <span class="keyword">this</span>.myView = view&#125;&gt;&lt;/View&gt;</div></pre></td></tr></table></figure>
+<p>然后需要注意的是需要在componentDidMount方法里面添加一个定时器，定时器里面再进行测量，否则拿到的数据都为0.</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">componentDidMount()&#123;</div><div class="line">    setTimeOut(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</div><div class="line">      <span class="keyword">this</span>.myView.measure(<span class="function">(<span class="params">x, y, width, height, left, top</span>) =&gt;</span> &#123;</div><div class="line">        <span class="comment">//todo</span></div><div class="line">        &#125;)</div><div class="line">    &#125;);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>注意不能用在自定义组件上面哦，但是下面这个方法可以用在自定义组件上面。</p>
+<p>3.使用UIManager measure方法<br>首先引入：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123;</div><div class="line">    UIManager,</div><div class="line">    findNodeHandle</div><div class="line">&#125; <span class="keyword">from</span> <span class="string">'react-native'</span>;</div></pre></td></tr></table></figure>
+<p>再加入：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&lt;MyComponent ref=&#123;<span class="keyword">this</span>.myComponent&#125; /&gt;</div></pre></td></tr></table></figure>
+<p>最后测量一下即可：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">UIManager.measure(findNodeHandle(<span class="keyword">this</span>.myComponent),(x,y,width,height,pageX,pageY)=&gt;&#123;</div><div class="line">    <span class="comment">//todo</span></div><div class="line">&#125;)</div></pre></td></tr></table></figure>
+<p>同样的，这个也不能在 <code>componentDidMount</code> 后立即计算。</p>
+<h2 id="Animated-动画"><a href="#Animated-动画" class="headerlink" title="Animated 动画"></a>Animated 动画</h2><p>在动画方面，ReactNative 使用 Animated 来做动画。Animated仅封装了四个可以动画化的组件：View、Text、Image和ScrollView。(Animated.createAnimatedComponent() 可以封装自定义组件)，举个例子：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">import</span> &#123;Animated&#125; <span class="keyword">from</span> <span class="string">'react-native'</span>;</div><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">App</span> <span class="keyword">extends</span> <span class="title">React</span>.<span class="title">Component</span> </span>&#123;</div><div class="line">    <span class="keyword">constructor</span>(props) &#123;</div><div class="line">        <span class="keyword">super</span>(props);</div><div class="line">        <span class="comment">// 一个动画变量</span></div><div class="line">        <span class="keyword">this</span>.scaleValue = <span class="keyword">new</span> Animated.Value(<span class="number">0</span>);</div><div class="line">    &#125;</div><div class="line">    fadeIn() &#123;</div><div class="line">        <span class="keyword">let</span> fade = Animated.timing(</div><div class="line">            <span class="keyword">this</span>.scaleValue,</div><div class="line">            &#123;</div><div class="line">                toValue: <span class="number">1</span>,</div><div class="line">                duration: <span class="number">2000</span></div><div class="line">            &#125;</div><div class="line">        );</div><div class="line">        <span class="comment">// 也可以 fade.stop</span></div><div class="line">        fade.start();</div><div class="line">    &#125;</div><div class="line">    render() &#123;</div><div class="line">        <span class="keyword">return</span> (</div><div class="line">            &lt;View&gt;</div><div class="line">                &lt;Animated.View</div><div class="line">                    style=&#123;&#123;</div><div class="line">                        width: <span class="number">50</span>,</div><div class="line">                        height: <span class="number">50</span>,</div><div class="line">                        transform: [&#123;<span class="attr">scale</span>: <span class="keyword">this</span>.scaleValue&#125;],</div><div class="line">                        backgroundColor: <span class="string">'#2ede2e'</span>,</div><div class="line">                    &#125;&#125;&gt;&lt;/Animated.View&gt;</div><div class="line">                &lt;Button </div><div class="line">                    title="改变样式" </div><div class="line">                    onPress=&#123;() =&gt; &#123;</div><div class="line">                        this.fadeIn();</div><div class="line">                    &#125;&#125;/&gt;</div><div class="line">            &lt;/View&gt;</div><div class="line">        );</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>Animated 主要是以声明的形式来定义动画的输入与输出 （Animated.Value 变量），在其中建立一个可配置的变化函数，然后使用简单的 <code>start/stop</code> 方法来控制动画按顺序执行。</p>
+<p>Animated 提供的动画类型：</p>
+<ul>
+<li>Animated.decay()以指定的初始速度开始变化，然后变化速度越来越慢直至停下。</li>
+<li>Animated.spring()提供了一个简单的弹簧物理模型.</li>
+<li>Animated.timing()使用easing 函数让数值随时间动起来。</li>
+</ul>
+<p>同时还提供了组合动画的方式：</p>
+<ul>
+<li>Animated.delay(time) 在给定延迟后开始动画。</li>
+<li>Animated.parallel(animations, config?) 同时启动多个动画。</li>
+<li>Animated.sequence(animations) 按顺序启动动画，等待每一个动画完成后再开始下一个动画。</li>
+<li>Animated.stagger(time, animations) 按照给定的延时间隔，顺序并行的启动动画。</li>
+<li>Animated.loop(animation, config?) 无限循环一个指定的动画</li>
+</ul>
+<p>例如：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">Animated.sequence([</div><div class="line">  <span class="comment">// decay, then spring to start and twirl</span></div><div class="line">  Animated.decay(position, &#123;</div><div class="line">    <span class="comment">// coast to a stop</span></div><div class="line">    velocity: &#123; <span class="attr">x</span>: gestureState.vx, <span class="attr">y</span>: gestureState.vy &#125;, <span class="comment">// velocity from gesture release</span></div><div class="line">    deceleration: <span class="number">0.997</span></div><div class="line">  &#125;),</div><div class="line">  Animated.parallel([</div><div class="line">    <span class="comment">// after decay, in parallel:</span></div><div class="line">    Animated.spring(position, &#123;</div><div class="line">      toValue: &#123; <span class="attr">x</span>: <span class="number">0</span>, <span class="attr">y</span>: <span class="number">0</span> &#125; <span class="comment">// return to start</span></div><div class="line">    &#125;),</div><div class="line">    Animated.timing(twirl, &#123;</div><div class="line">      <span class="comment">// and twirl</span></div><div class="line">      toValue: <span class="number">360</span></div><div class="line">    &#125;)</div><div class="line">  ])</div><div class="line">]).start(); <span class="comment">// start the sequence group</span></div></pre></td></tr></table></figure>
+<p>同事，对于 Aniamted.Value 还提供了加减乘除以及取余运算，插值器等，需要的自己看吧。</p>
+<h3 id="动画有点卡，试试-useNativeDriver"><a href="#动画有点卡，试试-useNativeDriver" class="headerlink" title="动画有点卡，试试 useNativeDriver"></a>动画有点卡，试试 useNativeDriver</h3><p>我在模拟器上，改变动画确实卡的要命。这个 RN 同样提供了一个方案：启动原生动化。在动画中启用原生驱动非常简单。只需在开始动画之前，在动画配置中加入一行useNativeDriver: true，如下所示：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">Animated.timing(<span class="keyword">this</span>.state.animatedValue, &#123;</div><div class="line">    toValue: <span class="number">1</span>,</div><div class="line">    duration: <span class="number">500</span>,</div><div class="line">    useNativeDriver: <span class="literal">true</span> <span class="comment">// 加上这一行</span></div><div class="line">&#125;).start();</div></pre></td></tr></table></figure>
+<blockquote>
+<p>Animated的 API 是可序列化的（即可转化为字符串表达以便通信或存储）。通过启用原生驱动，我们在启动动画前就把其所有配置信息都发送到原生端，利用原生代码在 UI 线程执行动画，而不用每一帧都在两端间来回沟通。如此一来，动画一开始就完全脱离了 JS 线程，因此此时即便 JS 线程被卡住，也不会影响到动画了。</p>
+</blockquote>
+<p>然而，并不是所有的属性都可以启用原生动画，只有  <code>non-layout</code> 类型的属性才可以。那这就很尴尬了，我想要实现一个折叠面板，也卡的我难受。咋弄呢？</p>
+<h3 id="LayoutAnimation"><a href="#LayoutAnimation" class="headerlink" title="LayoutAnimation"></a>LayoutAnimation</h3><p>它常用来更新 flexbox 布局，因为它可以无需测量或者计算特定属性就能直接产生动画。(感觉和 Android 的 <code>&lt;LayoutAnimation&gt;</code> 有关呢)。使用也十分的简单：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">_changeView() &#123;</div><div class="line">    LayoutAnimation.spring();</div><div class="line">    <span class="keyword">this</span>.setState(&#123;<span class="attr">w</span>: <span class="keyword">this</span>.state.w + <span class="number">15</span>, <span class="attr">h</span>: <span class="keyword">this</span>.state.h + <span class="number">15</span>&#125;)</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>只需要在改动之前，调用一下 LayoutAnimation 即可。同样，LayoutAnimation 也提供了其他动画方式(easeInEaseOut, linear, spring)，和动画的基础配置。<br>这里有一点要注意的是，如果在 Android 需要加入如下内容：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// 在执行任何动画代码之前，比如在入口文件App.js中执行</span></div><div class="line">UIManager.setLayoutAnimationEnabledExperimental &amp;&amp;</div><div class="line">  UIManager.setLayoutAnimationEnabledExperimental(<span class="literal">true</span>);</div></pre></td></tr></table></figure>
+<p>除了这些，ReactNative 还提供了滚动，滑动等事件值映射到动画值上面。<code>Animated.Event</code> 这样就可以将动画和手势结合起来。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>其实 RN 的动画效果并不是很好，我们看见只有动画脱离了 JS (useNativeDriver) 才好点，这其中和 js 到 native 的频繁通信有很大的关系。脱离通信就好多了。<br>联系到，如果我们想做一些，复杂的交互动画效果，同样会产生问题。频繁的通信，序列化与反序列化。<br>这里推荐一篇文章，其解决思路可以参考：</p>
+<ul>
+<li><a href="http://taobaofed.org/blog/2018/05/31/a-rich-interaction-solution-based-on-bindingx/" target="_blank" rel="external">基于 BindingX 的富交互解决方案</a>  </li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ReactNative/" rel="tag">ReactNative</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/19/从js角度看dart3/" rel="next" title="从 javascript 角度看 Dart【三】">
+                <i class="fa fa-chevron-left"></i> 从 javascript 角度看 Dart【三】
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/10/16/ReactNative基础2/" rel="prev" title="ReactNative 详解(二) 基础内容之手势处理">
+                ReactNative 详解(二) 基础内容之手势处理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="CaelumTian" />
+            
+              <p class="site-author-name" itemprop="name">CaelumTian</p>
+              <p class="site-description motion-element" itemprop="description">你若盛开，清风自来，心若沉浮 浅笑安然</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/T-phantom" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://www.linkedin.com/in/caelumtian/" target="_blank" title="LinkIn">
+                      
+                        <i class="fa fa-fw fa-globe"></i>LinkIn</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="caelumtian@gmail.com" target="_blank" title="E-Mail">
+                      
+                        <i class="fa fa-fw fa-globe"></i>E-Mail</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="http://weibo.com/u/3789103367" target="_blank" title="Weibo">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Weibo</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://twitter.com/CaelumTian" target="_blank" title="Twitter">
+                      
+                        <i class="fa fa-fw fa-globe"></i>Twitter</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                Links
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://eux.baidu.com" title="百度EUX" target="_blank">百度EUX</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#视图层"><span class="nav-number">1.</span> <span class="nav-text">视图层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Style-样式"><span class="nav-number">1.1.</span> <span class="nav-text">Style 样式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#与-css-对比"><span class="nav-number">1.1.1.</span> <span class="nav-text">与 css 对比</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#flex-布局"><span class="nav-number">1.1.2.</span> <span class="nav-text">flex 布局</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常用组件差别"><span class="nav-number">1.2.</span> <span class="nav-text">常用组件差别</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TextInput"><span class="nav-number">1.2.1.</span> <span class="nav-text">TextInput</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Image"><span class="nav-number">1.2.2.</span> <span class="nav-text">Image</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#改变视图"><span class="nav-number">2.</span> <span class="nav-text">改变视图</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#setNativeProp"><span class="nav-number">2.1.</span> <span class="nav-text">setNativeProp</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#获取节点样式信息"><span class="nav-number">2.2.</span> <span class="nav-text">获取节点样式信息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#屏幕宽高-Dimensions"><span class="nav-number">2.2.1.</span> <span class="nav-text">屏幕宽高 Dimensions</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#组件位置和大小"><span class="nav-number">2.2.2.</span> <span class="nav-text">组件位置和大小</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Animated-动画"><span class="nav-number">3.</span> <span class="nav-text">Animated 动画</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#动画有点卡，试试-useNativeDriver"><span class="nav-number">3.1.</span> <span class="nav-text">动画有点卡，试试 useNativeDriver</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LayoutAnimation"><span class="nav-number">3.2.</span> <span class="nav-text">LayoutAnimation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">3.3.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">CaelumTian</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

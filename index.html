@@ -5,7 +5,7 @@
   
 
 
-<html class="theme-next pisces use-motion" lang="zh-Hans">
+<html class="theme-next mist use-motion" lang="zh-Hans">
 <head>
   <meta charset="UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -99,7 +99,7 @@
   var NexT = window.NexT || {};
   var CONFIG = {
     root: '/',
-    scheme: 'Pisces',
+    scheme: 'Mist',
     version: '5.1.4',
     sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
     fancybox: true,
@@ -265,7 +265,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/26/redux源码解析/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/02/01/redux源码理解2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="CaelumTian">
@@ -284,7 +284,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/01/26/redux源码解析/" itemprop="url">redux 源码解析</a></h1>
+                <a class="post-title-link" href="/2019/02/01/redux源码理解2/" itemprop="url">react-redux 深入探究</a></h1>
         
 
         <div class="post-meta">
@@ -296,8 +296,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-26T16:27:05+08:00">
-                2019-01-26
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-01T14:25:43+08:00">
+                2019-02-01
               </time>
             
 
@@ -306,6 +306,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/前端源码解析/" itemprop="url" rel="index">
+                    <span itemprop="name">前端源码解析</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -335,7 +357,153 @@
 
       
         
-          <p>redux 的思想我们已经看过了。我们简单的看下，redux 的具体实现。redux 主要提供了如下几个功能： </p>
+          <p>之前的文章我们讲解了数据流的作用，还有 redux 的源码。现在思考，如何将 redux 应用到 react 上面呢？<br>首先我们想到 store 可能被多个组件依赖和影响，为此我们应当借助 <code>context</code> 来存储 store 数据。将 store 存储在根元素上，通过 context 进行数据的传递。为了实现这一步，react-redux 提供了 <code>&lt;Provider&gt;</code>：</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/02/01/redux源码理解2/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/26/redux源码解析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="CaelumTian">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="CaelumTian的博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/01/26/redux源码解析/" itemprop="url">redux 深入探究</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-26T16:27:05+08:00">
+                2019-01-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/前端源码解析/" itemprop="url" rel="index">
+                    <span itemprop="name">前端源码解析</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>redux 的思想前面已经介绍过了。本文主要简单的看下，redux 的具体实现。redux 主要提供了如下几个功能： </p>
 <ul>
 <li>创建 store，即：createStore()。</li>
 <li>创建出来的 store 提供subscribe，dispatch，getState这些方法。</li>
@@ -595,8 +763,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/javascript/" itemprop="url" rel="index">
-                    <span itemprop="name">javascript</span>
+                  <a href="/categories/React/" itemprop="url" rel="index">
+                    <span itemprop="name">React</span>
                   </a>
                 </span>
 
@@ -742,8 +910,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/javascript/" itemprop="url" rel="index">
-                    <span itemprop="name">javascript</span>
+                  <a href="/categories/React/" itemprop="url" rel="index">
+                    <span itemprop="name">React</span>
                   </a>
                 </span>
 
@@ -988,7 +1156,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/19/从js角度看dart3/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/03/ReactNative基础4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="CaelumTian">
@@ -1007,7 +1175,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/09/19/从js角度看dart3/" itemprop="url">从 javascript 角度看 Dart【三】</a></h1>
+                <a class="post-title-link" href="/2018/11/03/ReactNative基础4/" itemprop="url">ReactNative 详解(四) 源码之RN启动过程</a></h1>
         
 
         <div class="post-meta">
@@ -1019,8 +1187,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-19T14:06:54+08:00">
-                2018-09-19
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-03T16:14:59+08:00">
+                2018-11-03
               </time>
             
 
@@ -1042,8 +1210,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Flutter/" itemprop="url" rel="index">
-                    <span itemprop="name">Flutter</span>
+                  <a href="/categories/大前端-无线/" itemprop="url" rel="index">
+                    <span itemprop="name">大前端(无线)</span>
                   </a>
                 </span>
 
@@ -1080,10 +1248,10 @@
 
       
         
-          <p>前两篇文章，已经介绍了 Dart 的基础语法部分，并适当的结合 js 来进行对比。总的来看，Dart 设计的还是和 JS 很像的。本文，是最后一篇介绍 Dart 语言的。本文将着重介绍一下，Dart 的一些基础库。  </p>
+          <p>本章主要来探讨一下，RN 的启动过程都做了什么？同时简单的介绍下在 Android 中是如何实现 ReactNative 的。进而引出解决一个重要的问题，ReactNative 的预加载。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/09/19/从js角度看dart3/#more" rel="contents">
+            <a class="btn" href="/2018/11/03/ReactNative基础4/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1134,7 +1302,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/13/从js角度看dart2/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/10/18/ReactNative基础3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="CaelumTian">
@@ -1153,7 +1321,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/09/13/从js角度看dart2/" itemprop="url">从 javascript 角度看 Dart【二】</a></h1>
+                <a class="post-title-link" href="/2018/10/18/ReactNative基础3/" itemprop="url">ReactNative 详解(三) 基础内容之小技巧</a></h1>
         
 
         <div class="post-meta">
@@ -1165,8 +1333,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-13T11:12:32+08:00">
-                2018-09-13
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-18T15:30:26+08:00">
+                2018-10-18
               </time>
             
 
@@ -1188,8 +1356,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Flutter/" itemprop="url" rel="index">
-                    <span itemprop="name">Flutter</span>
+                  <a href="/categories/大前端-无线/" itemprop="url" rel="index">
+                    <span itemprop="name">大前端(无线)</span>
                   </a>
                 </span>
 
@@ -1226,10 +1394,10 @@
 
       
         
-          <p>上篇文章，主要介绍了 Dart 的基本语法（数据类型，函数等），并与 js 进行了简单的对比，方便大家从 js 的角度来快速理解 Dart。本文主要介绍 Dart 中类的使用，总的来看差别不大，在构造函数上我们需要格外注意即可。还有几个 Dart 特有的内容也简单介绍下。    </p>
+          <p>前面两篇已经介绍完了 ReactNative 的基础内容：视图，手势等。基本页面开发应该就没问题了，本章我们介绍下 ReactNative 剩下的一些小技巧。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/09/13/从js角度看dart2/#more" rel="contents">
+            <a class="btn" href="/2018/10/18/ReactNative基础3/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1280,7 +1448,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/10/从js角度看dart/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/10/16/ReactNative基础2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="CaelumTian">
@@ -1299,7 +1467,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/09/10/从js角度看dart/" itemprop="url">从 javascript 角度看 Dart【一】</a></h1>
+                <a class="post-title-link" href="/2018/10/16/ReactNative基础2/" itemprop="url">ReactNative 详解(二) 基础内容之手势处理</a></h1>
         
 
         <div class="post-meta">
@@ -1311,8 +1479,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-10T12:09:50+08:00">
-                2018-09-10
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-16T10:57:12+08:00">
+                2018-10-16
               </time>
             
 
@@ -1334,8 +1502,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Flutter/" itemprop="url" rel="index">
-                    <span itemprop="name">Flutter</span>
+                  <a href="/categories/大前端-无线/" itemprop="url" rel="index">
+                    <span itemprop="name">大前端(无线)</span>
                   </a>
                 </span>
 
@@ -1372,13 +1540,10 @@
 
       
         
-          <p>最近准备尝试下谷歌的 Flutter 开发，因此需要学习一下 dart 语言。本文主要将 javascript 和 dart 进行对比，从而帮助我们快速入门 dart 语言。  </p>
-<h2 id="Dart-简介"><a href="#Dart-简介" class="headerlink" title="Dart 简介"></a>Dart 简介</h2><blockquote>
-<p>Dart是谷歌开发的计算机编程语言，后来被Ecma (ECMA-408)认定为标准。它被用于web、服务器、移动应用和物联网等领域的开发。它是宽松开源许可证（修改的BSD证书）下的开源软件。Dart是面向对象的、类定义的、单继承的语言。它的语法类似C语言，可以转译为JavaScript，支持接口(interfaces)、混入(mixins)、抽象类(abstract classes)、具体化泛型(reified generics)、可选类型(optional typing)和 sound type system。     </p>
-</blockquote>
+          <p>在上篇文章中，我们介绍了 ReactNative 的基础布局，动画相关内容。除此之外，我们还需要和元素有交互才可以。我们看到在 ReactNative 中，有些组件是自带交互事件的，比如 <code>button</code>, <code>Text</code> 就有 <code>onPress</code> 事件。但是我们在普通的 <code>View</code> 上面就没有对应的手势事件。且，向前端那些<code>DOM</code>的手势事件 <code>click</code>等都不存在的。为此，ReactNative 专门提供了几个直接相应处理事件的组件：TouchableHighlight，TouchableNativeFeedback，TouchableOpacity和TouchableWidthoutFeedback。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/09/10/从js角度看dart/#more" rel="contents">
+            <a class="btn" href="/2018/10/16/ReactNative基础2/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -1429,7 +1594,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/03/微信小程序架构原理/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/10/12/ReactNative基础/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="CaelumTian">
@@ -1448,7 +1613,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/09/03/微信小程序架构原理/" itemprop="url">微信小程序架构原理</a></h1>
+                <a class="post-title-link" href="/2018/10/12/ReactNative基础/" itemprop="url">ReactNative 详解(一) 基础内容之视图相关</a></h1>
         
 
         <div class="post-meta">
@@ -1460,8 +1625,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-03T15:09:20+08:00">
-                2018-09-03
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-12T16:14:59+08:00">
+                2018-10-12
               </time>
             
 
@@ -1483,8 +1648,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hybrid-开发/" itemprop="url" rel="index">
-                    <span itemprop="name">Hybrid 开发</span>
+                  <a href="/categories/大前端-无线/" itemprop="url" rel="index">
+                    <span itemprop="name">大前端(无线)</span>
                   </a>
                 </span>
 
@@ -1521,140 +1686,14 @@
 
       
         
-          <p>好久没有整理文章了，懒了啊，补一个最近工作中调研的内容吧。本文主要从源码方面介绍微信小程序的架构原理，并简单总结下这么做的好处。</p>
-<h2 id="微信小程序"><a href="#微信小程序" class="headerlink" title="微信小程序"></a>微信小程序</h2><p>微信小程序包含下面四种文件：  </p>
-<ul>
-<li>js </li>
-<li>json    配置文件</li>
-<li>wxml  小程序专用 xml 文件</li>
-<li>wxss   小程序专用 css 文件     </li>
-</ul>
+          <p>本文主要从前端的角度介绍 ReactNative 的用法，主要介绍 ReactNative 的基本用法(布局，样式，动画，手势，特殊API) 帮助大家快速掌握 ReactNaitve。而对于 ReactNative 封装的各种组件就不会过多深入了。（阅读建议：掌握 react 用法，熟悉前端）</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/09/03/微信小程序架构原理/#more" rel="contents">
+            <a class="btn" href="/2018/10/12/ReactNative基础/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
           <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/16/immer-js源码分析/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="CaelumTian">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="CaelumTian的博客">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/16/immer-js源码分析/" itemprop="url">immer.js 源码分析</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-16T17:28:12+08:00">
-                2018-08-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            
-          
         
       
     </div>
@@ -1742,7 +1781,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">27</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1753,7 +1792,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -1764,7 +1803,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">16</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
@@ -1874,7 +1913,7 @@
 
 
 
-  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
 
 
 
@@ -1973,13 +2012,6 @@
 
   
   
-
-
-  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
-
-  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
-
-
 
   
 
